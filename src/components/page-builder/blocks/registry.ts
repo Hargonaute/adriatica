@@ -1,0 +1,161 @@
+import { type BlockData } from '@/types';
+import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library } from 'lucide-react';
+import React from 'react';
+
+import { RichTextEditor, RichTextPreview } from './rich-text/RichTextBlock';
+import { ImageEditor, ImagePreview } from './image/ImageBlock';
+import { VideoEditor, VideoPreview } from './video/VideoBlock';
+import { FormEditor, FormPreview } from './form/FormBlock';
+import { HeroEditor, HeroPreview } from './hero/HeroBlock';
+import { ColumnsEditor, ColumnsPreview } from './columns/ColumnsBlock';
+import { SpacerEditor, SpacerPreview } from './spacer/SpacerBlock';
+import { CtaEditor, CtaPreview } from './cta/CtaBlock';
+import { CollectionListEditor, CollectionListPreview } from './collection-list/CollectionListBlock';
+
+export type BlockConfig<T extends BlockData = BlockData> = {
+  type: T['type'];
+  label: string;
+  description: string;
+  icon: React.ElementType;
+  createDefault: () => Omit<T, 'id' | 'type'> & Partial<Pick<T, 'type'>>;
+  Editor: React.ComponentType<{ block: T; onChange: (updates: Partial<T>) => void }>;
+  Preview: React.ComponentType<{ block: T; className?: string }>;
+  validate?: (data: unknown) => { success: boolean; error?: string };
+};
+
+export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
+  'hero': {
+    type: 'hero',
+    label: 'Hero',
+    description: 'Full-width hero with headline, CTA, and background',
+    icon: Sparkles,
+    createDefault: () => ({
+      headline: 'Your Compelling Headline',
+      subheadline: 'Supporting text that explains your value proposition.',
+      ctaLabel: 'Get Started',
+      ctaUrl: '#',
+      backgroundImage: '',
+      overlay: false,
+      minHeight: 'md',
+      textColor: 'light',
+    }),
+    Editor: HeroEditor,
+    Preview: HeroPreview,
+  },
+  'rich-text': {
+    type: 'rich-text',
+    label: 'Rich Text',
+    description: 'Formatted text with headings, lists, links',
+    icon: FileText,
+    createDefault: () => ({
+      content: '<p>Start typing your content here...</p>',
+    }),
+    Editor: RichTextEditor,
+    Preview: RichTextPreview,
+  },
+  'image': {
+    type: 'image',
+    label: 'Image',
+    description: 'Single image with alt text and optional caption',
+    icon: ImageIcon,
+    createDefault: () => ({
+      url: '',
+      alt: '',
+      caption: '',
+      objectFit: 'cover',
+      linkUrl: '',
+    }),
+    Editor: ImageEditor,
+    Preview: ImagePreview,
+  },
+  'video': {
+    type: 'video',
+    label: 'Video',
+    description: 'YouTube, Vimeo, or direct MP4 video',
+    icon: Video,
+    createDefault: () => ({
+      url: '',
+      title: '',
+      autoPlay: false,
+      muted: false,
+      loop: false,
+    }),
+    Editor: VideoEditor,
+    Preview: VideoPreview,
+  },
+  'columns': {
+    type: 'columns',
+    label: 'Columns',
+    description: 'Feature grid with icon, title, and body text',
+    icon: LayoutGrid,
+    createDefault: () => ({
+      columns: 3,
+      gap: 'md',
+      items: [
+        { id: crypto.randomUUID(), icon: '🚀', title: 'Fast', body: 'Lightning-fast performance out of the box.' },
+        { id: crypto.randomUUID(), icon: '🔒', title: 'Secure', body: 'Enterprise-grade security you can trust.' },
+        { id: crypto.randomUUID(), icon: '🎨', title: 'Beautiful', body: 'Stunning design that converts visitors.' },
+      ],
+    }),
+    Editor: ColumnsEditor,
+    Preview: ColumnsPreview,
+  },
+  'cta': {
+    type: 'cta',
+    label: 'Call to Action',
+    description: 'Headline with primary and secondary buttons',
+    icon: MousePointerClick,
+    createDefault: () => ({
+      headline: 'Ready to get started?',
+      body: 'Join thousands of teams already using our platform.',
+      primaryLabel: 'Get Started Free',
+      primaryUrl: '#',
+      secondaryLabel: 'Talk to Sales',
+      secondaryUrl: '#contact',
+    }),
+    Editor: CtaEditor,
+    Preview: CtaPreview,
+  },
+  'form': {
+    type: 'form',
+    label: 'Form',
+    description: 'Contact or lead form linked to a collection',
+    icon: FormInput,
+    createDefault: () => ({
+      collectionId: '',
+      submitLabel: 'Submit',
+      successMessage: "Thank you! We'll be in touch.",
+    }),
+    Editor: FormEditor,
+    Preview: FormPreview,
+  },
+  'spacer': {
+    type: 'spacer',
+    label: 'Spacer',
+    description: 'Explicit vertical whitespace between blocks',
+    icon: Minus,
+    createDefault: () => ({
+      height: 'md',
+    }),
+    Editor: SpacerEditor,
+    Preview: SpacerPreview,
+  },
+  'collection-list': {
+    type: 'collection-list',
+    label: 'Collection List',
+    description: 'Display items from any CMS collection as a grid or list',
+    icon: Library,
+    createDefault: () => ({
+      collectionId: '',
+      displayFields: [],
+      layout: 'grid-3',
+      limit: 12,
+      imageField: '',
+      titleField: '',
+    }),
+    Editor: CollectionListEditor,
+    Preview: CollectionListPreview,
+  },
+};
+
+export type BlockType = keyof typeof BLOCKS_REGISTRY;
