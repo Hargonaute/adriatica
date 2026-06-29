@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
 
-// Dashboard sub-paths that are publicly accessible (no auth required)
-const DASHBOARD_PUBLIC = ['/dashboard'];
+// Dashboard sub-paths that are publicly accessible (no auth required).
+// Only the login page itself is public; everything else under /dashboard
+// requires an authenticated session.
+const DASHBOARD_PUBLIC = ['/dashboard/login'];
 
 // Mutating API routes that require authentication
 const PROTECTED_API_PATHS: string[] = [

@@ -2,10 +2,16 @@
 
 import { createAuthClient } from 'better-auth/react';
 
-// When client and server share the same domain, baseURL is optional.
-// We set it explicitly so it works correctly during SSR.
+// Resolve baseURL at runtime so the same bundle works on localhost and in
+// production without rebuilding. In the browser we use the current origin;
+// during SSR we fall back to NEXT_PUBLIC_APP_URL.
+function resolveBaseURL(): string {
+  if (typeof window !== 'undefined') return window.location.origin;
+  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+}
+
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
+  baseURL: resolveBaseURL(),
 });
 
 export const { signIn, signOut, signUp, useSession } = authClient;

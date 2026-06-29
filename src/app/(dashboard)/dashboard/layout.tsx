@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { FileText, Database, Image as ImageIcon, Settings, LayoutDashboard } from 'lucide-react';
+import { FileText, Database, Image as ImageIcon, Settings, LayoutDashboard, UserCog } from 'lucide-react';
 import { SidebarSignOut } from '@/components/dashboard/SidebarSignOut';
 import { db } from '@/lib/db';
 import { collections } from '@/lib/db/schema';
@@ -103,6 +103,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         {/* Bottom */}
         <div className="px-3 py-4 border-t border-white/10 space-y-0.5 shrink-0">
+          <Link
+            href="/dashboard/account"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-all text-sm font-medium"
+          >
+            <UserCog className="h-4 w-4 shrink-0" />
+            Account
+          </Link>
           <Link
             href="/dashboard/settings/database"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-all text-sm font-medium"

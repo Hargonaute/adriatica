@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RichTextInput } from '@/components/ui/rich-text-input';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Pencil, Trash2, X, Check, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, X, Check, Upload, Download, FileUp } from 'lucide-react';
 import Link from 'next/link';
+import { BulkImportDialog } from '@/components/dashboard/BulkImportDialog';
+import { buildTemplateCSV, downloadCSV } from '@/lib/csv';
 
 interface Field {
   id: string;
@@ -261,6 +263,7 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -352,12 +355,41 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
             <p className="text-muted-foreground text-sm">{items.length} item{items.length !== 1 ? 's' : ''}</p>
           </div>
         </div>
-        {!showCreateForm && (
-          <Button onClick={() => { setShowCreateForm(true); setEditingId(null); }}>
-            <Plus className="h-4 w-4 mr-1.5" /> New Item
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {fields.length > 0 && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadCSV(`${collection.slug}-template.csv`, buildTemplateCSV(fields))}
+                title="Download an empty CSV with the correct headers"
+              >
+                <Download className="h-4 w-4 mr-1.5" /> Template
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowBulkImport(true)}
+              >
+                <FileUp className="h-4 w-4 mr-1.5" /> Bulk Import
+              </Button>
+            </>
+          )}
+          {!showCreateForm && (
+            <Button onClick={() => { setShowCreateForm(true); setEditingId(null); }}>
+              <Plus className="h-4 w-4 mr-1.5" /> New Item
+            </Button>
+          )}
+        </div>
       </div>
+
+      <BulkImportDialog
+        open={showBulkImport}
+        onOpenChange={setShowBulkImport}
+        collectionId={id}
+        fields={fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required }))}
+        onImported={fetchData}
+      />
 
       {/* No fields warning */}
       {fields.length === 0 && (
