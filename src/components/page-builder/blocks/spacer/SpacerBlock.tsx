@@ -46,9 +46,9 @@ export function SpacerEditor({
         </Select>
       </div>
       <div
-        className={`w-full border-2 border-dashed border-muted rounded flex items-center justify-center text-xs text-muted-foreground ${heightMap[block.height ?? 'md']}`}
+        className={`w-full border-2 border-dashed border-muted rounded flex items-center justify-center text-xs text-muted-foreground ${heightMap[(block.height ?? 'md') as keyof typeof heightMap]}`}
       >
-        Spacer — {heightLabel[block.height ?? 'md']}
+        Spacer — {heightLabel[(block.height ?? 'md') as keyof typeof heightLabel]}
       </div>
     </div>
   );
@@ -57,5 +57,5 @@ export function SpacerEditor({
 // ── Preview ───────────────────────────────────────────────────────────────
 
 export function SpacerPreview({ block }: { block: BlockData & { type: 'spacer' } }) {
-  return <div className={heightMap[block.height ?? 'md']} aria-hidden="true" />;
+  return <div className={heightMap[(block.height ?? 'md') as keyof typeof heightMap]} aria-hidden="true" />;
 }

@@ -154,7 +154,7 @@ export function FormPreview({
             {fields.map((field) => (
                 <div key={field.id} className="space-y-2">
                     <Label>
-                        {field.label} {field.required && <span className="text-red-500">*</span>}
+                        {field.label} {field.required && <span className="text-destructive">*</span>}
                     </Label>
                     
                     {field.type === 'textarea' ? (

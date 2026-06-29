@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { entries } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { generateEntrySlug } from '@/lib/db/generateEntrySlug';
 
 // GET /api/entries?collectionId=X — list all items in a collection
 export async function GET(request: Request) {
@@ -34,9 +35,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'collectionId and data required' }, { status: 400 });
     }
 
+    const slug = await generateEntrySlug(body.collectionId, body.data);
+
     const [newEntry] = await db
       .insert(entries)
-      .values({ collectionId: body.collectionId, data: body.data })
+      .values({
+        collectionId: body.collectionId,
+        data: body.data,
+        slug,
+        status: 'published',
+        publishedAt: new Date(),
+      })
       .returning();
 
     return NextResponse.json(newEntry, { status: 201 });

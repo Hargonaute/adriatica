@@ -1,5 +1,5 @@
 import { type BlockData } from '@/types';
-import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library, Mail, PhoneCall, Type, CalendarDays, AlignLeft } from 'lucide-react';
 import React from 'react';
 
 import { RichTextEditor, RichTextPreview } from './rich-text/RichTextBlock';
@@ -11,6 +11,12 @@ import { ColumnsEditor, ColumnsPreview } from './columns/ColumnsBlock';
 import { SpacerEditor, SpacerPreview } from './spacer/SpacerBlock';
 import { CtaEditor, CtaPreview } from './cta/CtaBlock';
 import { CollectionListEditor, CollectionListPreview } from './collection-list/CollectionListBlock';
+import { NewsletterEditor, NewsletterPreview } from './newsletter/NewsletterBlock';
+import { ContactFormEditor, ContactFormPreview } from './contact-form/ContactFormBlock';
+import { BoundTextEditor, BoundTextPreview } from './bound/BoundTextBlock';
+import { BoundImageEditor, BoundImagePreview } from './bound/BoundImageBlock';
+import { BoundRichTextEditor, BoundRichTextPreview } from './bound/BoundRichTextBlock';
+import { BoundDateEditor, BoundDatePreview } from './bound/BoundDateBlock';
 
 export type BlockConfig<T extends BlockData = BlockData> = {
   type: T['type'];
@@ -27,17 +33,25 @@ export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
   'hero': {
     type: 'hero',
     label: 'Hero',
-    description: 'Full-width hero with headline, CTA, and background',
+    description: 'Full-width hero with headline, CTAs, and image — identical to the live home page',
     icon: Sparkles,
     createDefault: () => ({
-      headline: 'Your Compelling Headline',
-      subheadline: 'Supporting text that explains your value proposition.',
-      ctaLabel: 'Get Started',
-      ctaUrl: '#',
+      // Empty strings mean "fall back to HeroSection's built-in defaults", so a
+      // freshly dropped block renders the exact home-page hero out of the box.
+      headline: '',
+      subheadline: '',
+      ctaLabel: '',
+      ctaUrl: '',
+      ctaSecondaryLabel: '',
+      ctaSecondaryUrl: '',
       backgroundImage: '',
       overlay: false,
       minHeight: 'md',
       textColor: 'light',
+      // The real <HeroSection> handles its own pt-24 pb-16, so suppress the
+      // outer section padding to avoid doubling.
+      paddingTop: 'none',
+      paddingBottom: 'none',
     }),
     Editor: HeroEditor,
     Preview: HeroPreview,
@@ -155,6 +169,74 @@ export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
     }),
     Editor: CollectionListEditor,
     Preview: CollectionListPreview,
+  },
+  'newsletter': {
+    type: 'newsletter',
+    label: 'Newsletter',
+    description: 'Email subscription section with image and brand colour',
+    icon: Mail,
+    createDefault: () => ({
+      heading: 'Newsletter',
+      body: 'Restez informé sur les dernières nouveautés de Maghreb Adriatica!',
+      buttonLabel: "S'inscrire",
+      imageUrl: '',
+      sectionBg: 'brand-red',
+      paddingTop: 'none',
+      paddingBottom: 'none',
+    }),
+    Editor: NewsletterEditor,
+    Preview: NewsletterPreview,
+  },
+  'contact-form': {
+    type: 'contact-form',
+    label: 'Contact Form',
+    description: 'Full contact section with form and side image',
+    icon: PhoneCall,
+    createDefault: () => ({
+      heading: 'Nous contacter',
+      body: 'Notre équipe serait ravie de vous entendre.',
+      imageUrl: '',
+      paddingTop: 'none',
+      paddingBottom: 'none',
+    }),
+    Editor: ContactFormEditor,
+    Preview: ContactFormPreview,
+  },
+  'bound-text': {
+    type: 'bound-text',
+    label: 'Bound Text',
+    description: 'Displays a text, number, email, or textarea field from the current item',
+    icon: Type,
+    createDefault: () => ({ fieldKey: null }),
+    Editor: BoundTextEditor,
+    Preview: BoundTextPreview,
+  },
+  'bound-image': {
+    type: 'bound-image',
+    label: 'Bound Image',
+    description: 'Displays an image field from the current item',
+    icon: ImageIcon,
+    createDefault: () => ({ fieldKey: null }),
+    Editor: BoundImageEditor,
+    Preview: BoundImagePreview,
+  },
+  'bound-rich-text': {
+    type: 'bound-rich-text',
+    label: 'Bound Rich Text',
+    description: 'Renders a rich-text field from the current item as formatted HTML',
+    icon: AlignLeft,
+    createDefault: () => ({ fieldKey: null }),
+    Editor: BoundRichTextEditor,
+    Preview: BoundRichTextPreview,
+  },
+  'bound-date': {
+    type: 'bound-date',
+    label: 'Bound Date',
+    description: 'Displays a date field from the current item',
+    icon: CalendarDays,
+    createDefault: () => ({ fieldKey: null }),
+    Editor: BoundDateEditor,
+    Preview: BoundDatePreview,
   },
 };
 

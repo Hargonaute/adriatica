@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { HeroSection } from '@/components/home/HeroSection';
 
 // ── Editor ────────────────────────────────────────────────────────────────
 
@@ -126,62 +126,20 @@ export function HeroEditor({
 }
 
 // ── Preview ───────────────────────────────────────────────────────────────
-
-const minHeightMap = {
-  sm: 'min-h-[50vh]',
-  md: 'min-h-[70vh]',
-  lg: 'min-h-[90vh]',
-  screen: 'min-h-screen',
-};
+// Pixel-perfect: renders the real <HeroSection> from src/components/home so a
+// block dropped on the canvas looks identical to the live home page. Falsy
+// values pass through as undefined so HeroSection's built-in defaults apply.
 
 export function HeroPreview({ block }: { block: BlockData & { type: 'hero' } }) {
-  const textClass = block.textColor === 'dark' ? 'text-gray-900' : 'text-white';
-  const minH = minHeightMap[block.minHeight ?? 'md'];
-
   return (
-    <div
-      className={cn(
-        'relative flex items-center justify-center w-full',
-        minH,
-        !block.backgroundImage && 'bg-gradient-to-br from-gray-900 to-gray-700'
-      )}
-      style={
-        block.backgroundImage
-          ? { backgroundImage: `url(${block.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-          : undefined
-      }
-    >
-      {block.overlay && (
-        <div className="absolute inset-0 bg-black/50" />
-      )}
-      <div className={cn('relative z-10 text-center max-w-3xl mx-auto px-6 space-y-6', textClass)}>
-        <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-          {block.headline || 'Your Headline Here'}
-        </h1>
-        {block.subheadline && (
-          <p className="text-lg md:text-xl opacity-90">{block.subheadline}</p>
-        )}
-        {(block.ctaLabel || block.ctaSecondaryLabel) && (
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-            {block.ctaLabel && (
-              <a
-                href={block.ctaUrl || '#'}
-                className="inline-flex items-center px-6 py-3 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100 transition-colors"
-              >
-                {block.ctaLabel}
-              </a>
-            )}
-            {block.ctaSecondaryLabel && (
-              <a
-                href={block.ctaSecondaryUrl || '#'}
-                className="inline-flex items-center px-6 py-3 rounded-lg border-2 border-current font-semibold hover:bg-white/10 transition-colors"
-              >
-                {block.ctaSecondaryLabel}
-              </a>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+    <HeroSection
+      headline={block.headline || undefined}
+      subheadline={block.subheadline || undefined}
+      primaryCtaLabel={block.ctaLabel || undefined}
+      primaryCtaUrl={block.ctaUrl || undefined}
+      secondaryCtaLabel={block.ctaSecondaryLabel || undefined}
+      secondaryCtaUrl={block.ctaSecondaryUrl || undefined}
+      imageUrl={block.backgroundImage || undefined}
+    />
   );
 }

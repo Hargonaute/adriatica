@@ -16,18 +16,16 @@ export function createBlock(type: BlockType, order: number): Block {
 
   const defaultData = registryEntry.createDefault();
 
-  // Combine defaults with required fields
-  // Casting to BlockData because registry createDefault returns partial/specific data
+  // Base settings come first so createDefault() can override them
   const data: BlockData = {
-    type: type as any,
-    ...defaultData,
-    // Add base settings defaults if not present
     paddingTop: 'md',
     paddingBottom: 'md',
     align: 'left',
     maxWidth: 'full',
     background: 'none',
     hideOnMobile: false,
+    ...defaultData,
+    type: type as any,
   } as BlockData;
 
   return {

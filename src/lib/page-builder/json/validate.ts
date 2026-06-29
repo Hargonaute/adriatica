@@ -5,21 +5,72 @@ import { BLOCKS_REGISTRY } from '@/components/page-builder/blocks/registry';
 // Basic Schema Validation using Zod
 // We can expand this to use registry.validate for specifics
 
+// All declared fields are optional. `.passthrough()` is applied below so any
+// future block-specific keys (e.g. RepeaterBlockData.cardTemplate,
+// ContainerBlockData.children, bound block fieldKey) survive the publish
+// pipeline without needing a schema change. Declarations below document the
+// fields the Inspector writes today — keeping them explicit prevents a
+// future `.strict()` swap from silently stripping them.
 const BaseBlockSettingsSchema = z.object({
+  // Layout (static + template)
   paddingTop: z.enum(['none', 'sm', 'md', 'lg', 'xl']).optional(),
   paddingBottom: z.enum(['none', 'sm', 'md', 'lg', 'xl']).optional(),
   align: z.enum(['left', 'center', 'right']).optional(),
   maxWidth: z.enum(['sm', 'md', 'lg', 'full']).optional(),
-  background: z.enum(['none', 'muted', 'dark', 'image']).optional(),
+  background: z.enum(['none', 'muted', 'dark', 'image', 'brand-red', 'brand-green', 'navy']).optional(),
   hideOnMobile: z.boolean().optional(),
   customClassName: z.string().optional(),
+
+  // Typography (template mode)
+  fontSize: z.string().optional(),
+  fontWeight: z.string().optional(),
+  textAlign: z.string().optional(),
+  textColor: z.string().optional(),
+
+  // Box / colour (template mode + container)
+  backgroundColor: z.string().optional(),
+  borderWidth: z.string().optional(),
+  borderRadius: z.string().optional(),
+  borderColor: z.string().optional(),
+  padding: z.string().optional(),
+  margin: z.string().optional(),
+
+  // Flex / grid (template mode + container)
+  gap: z.string().optional(),
+  gridColumns: z.string().optional(),
+  flexDirection: z.string().optional(),
+  alignItems: z.string().optional(),
+  justifyContent: z.string().optional(),
+
+  // Media (template mode)
+  aspectRatio: z.string().optional(),
+  objectFit: z.string().optional(),
+
+  // Container-specific
+  direction: z.enum(['row', 'column']).optional(),
+  containerGap: z.enum(['none', 'sm', 'md', 'lg']).optional(),
+  containerPadding: z.enum(['none', 'sm', 'md', 'lg']).optional(),
+  children: z.array(z.any()).optional(),
+
+  // Repeater-specific
+  collectionId: z.string().optional(),
+  collectionSlug: z.string().optional(),
+  columns: z.union([z.string(), z.number()]).optional(),
+  repeaterGap: z.enum(['sm', 'md', 'lg']).optional(),
+  cardTemplate: z.array(z.any()).optional(),
+
+  // Bound-block field binding
+  fieldKey: z.string().nullable().optional(),
 });
 
 const BlockSchema = z.object({
   id: z.string(),
   type: z.string(),
   order: z.number(),
-  data: BaseBlockSettingsSchema.passthrough(), // Allow other keys, type-specific validation below
+  // .passthrough() keeps any per-block-type keys (hero.headline, image.url,
+  // rich-text.content, etc.) that aren't declared above. Deep per-type
+  // validation runs below via BLOCKS_REGISTRY[type].validate.
+  data: BaseBlockSettingsSchema.passthrough(),
 });
 
 const PageMetaSchema = z.object({

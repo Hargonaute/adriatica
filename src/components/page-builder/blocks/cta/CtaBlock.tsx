@@ -81,11 +81,11 @@ export function CtaPreview({ block }: { block: BlockData & { type: 'cta' } }) {
   return (
     <div className="text-center space-y-6">
       <div className="space-y-3">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+        <h2 className="text-4xl font-semibold tracking-tight text-foreground">
           {block.headline || 'Ready to get started?'}
         </h2>
         {block.body && (
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">{block.body}</p>
+          <p className="text-base text-muted-foreground max-w-xl mx-auto">{block.body}</p>
         )}
       </div>
 

@@ -6,6 +6,7 @@ import Link from '@tiptap/extension-link';
 import { type BlockData } from '@/types';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { PROSE_CLASSES } from '../proseClasses';
 import {
   Bold, Italic, Strikethrough, Code, Link as LinkIcon,
   List, ListOrdered, Quote, Minus, Undo, Redo,
@@ -178,13 +179,19 @@ export function RichTextEditor({
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       Link.configure({ openOnClick: false, autolink: true }),
     ],
     content: block.content,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm p-3 min-h-[120px] focus:outline-none',
+        class: [
+          'prose prose-sm max-w-none p-3 min-h-[120px] focus:outline-none',
+          'prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-[#0f172a]',
+          'prose-a:text-[#BC0D2A] prose-a:underline',
+          'prose-strong:text-[#0f172a]',
+          'prose-ul:list-disc prose-ol:list-decimal',
+        ].join(' '),
       },
     },
     onUpdate: ({ editor }) => {
@@ -214,7 +221,7 @@ export function RichTextPreview({
 }) {
   return (
     <div
-      className={cn('prose prose-sm max-w-none', className)}
+      className={cn(PROSE_CLASSES, className)}
       dangerouslySetInnerHTML={{ __html: block.content }}
     />
   );

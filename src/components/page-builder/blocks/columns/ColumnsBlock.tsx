@@ -149,9 +149,9 @@ export function ColumnsPreview({ block }: { block: BlockData & { type: 'columns'
           {item.icon && (
             <div className="text-3xl">{item.icon}</div>
           )}
-          <h3 className="font-semibold text-lg">{item.title}</h3>
+          <h3 className="text-2xl font-semibold text-foreground">{item.title}</h3>
           {item.body && (
-            <p className="text-muted-foreground text-sm leading-relaxed">{item.body}</p>
+            <p className="text-base text-muted-foreground leading-relaxed">{item.body}</p>
           )}
         </div>
       ))}

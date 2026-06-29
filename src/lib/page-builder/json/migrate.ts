@@ -31,7 +31,9 @@ function migrateBlock(block: LegacyBlock, order: number): Block {
   const newId = block.id || uuidv4();
   const type = block.type;
   
-  const data: Partial<BlockData> & Record<string, any> = { ...block };
+  // New format stores settings nested in block.data; legacy stores them at top level.
+  const source = (block.data && typeof block.data === 'object') ? block.data : block;
+  const data: Partial<BlockData> & Record<string, any> = { ...source };
   
   // Specific migrations
   if ((type === 'image' || type === 'video') && block.src && !block.url) {

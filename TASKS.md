@@ -33,47 +33,61 @@
 
 ## Architecture — state management for template builder
 
-[ ] 3. Binding state needs to be lifted out of local state
-        Symptom: when a user selects a block and opens the 
-        inspector to bind a field, that state can't be shared 
+[x] 3. Binding state needs to be lifted out of local state
+        Symptom: when a user selects a block and opens the
+        inspector to bind a field, that state can't be shared
         between the canvas and inspector with local useState
-        Solution: introduce a small Zustand store ONLY for 
+        Solution: introduce a small Zustand store ONLY for
         the template builder (not the static builder)
         Scope: new file lib/store/templateBuilderStore.ts
         Contains: selectedBlockId, collectionId, bindings map
         Do not touch the static page builder state.
+        Done: created src/lib/store/templateBuilderStore.ts with
+        selectedBlockId, collectionId, bindings, and actions
+        setSelectedBlock, setCollection (implicit clearBindings on
+        collection change), setBinding, removeBinding, clearBindings;
+        installed zustand.
 
 ## Core feature — bindable components
 
-[ ] 4. Replace "Collection Item Fields" auto-block
+[x] 4. Replace "Collection Item Fields" auto-block
         with individual bindable components
         Current: one block that dumps all fields automatically
-        Target: separate blocks — BoundText, BoundImage, 
+        Target: separate blocks — BoundText, BoundImage,
         BoundRichText, BoundDate — each with a field selector
         in the inspector
-        Scope: 
+        Scope:
         - components/page-builder/blocks/bound/ (new folder)
         - Each block has a `fieldKey` prop
-        - Inspector shows dropdown of available fields 
+        - Inspector shows dropdown of available fields
           from the current collection schema (from Drizzle)
         Do tasks 3 first, this depends on the store.
+        Done: created blocks/bound/{BoundText,BoundImage,BoundRichText,BoundDate}Block.tsx;
+        added FieldType/CollectionField/BoundBlockData types; inspector fetches collection
+        fields from store's collectionId and shows type-filtered dropdown in template mode;
+        collection-item-fields removed from registry.
 
-[ ] 5. Container/Card block with child slots
+[x] 5. Container/Card block with child slots
         Symptom: no way to nest components or build a card
         Scope: new ContainerBlock that accepts children blocks
-        Inspector controls: direction (row/col), gap, 
+        Inspector controls: direction (row/col), gap,
         padding, border, border-radius, background
         Children can be any block including bound blocks
         Depends on task 4.
+        Done: ContainerBlock outside registry to avoid circular imports; EditorContext provides
+        selectedBlockId to nested children; recursive updateBlock/removeBlock/duplicateBlock/findBlock
+        in Editor.tsx; nested SortableContext shares outer DndContext; ContainerPreview uses inline CSS.
 
-[ ] 6. Extended inspector for template mode only
+[x] 6. Extended inspector for template mode only
         Current inspector: padding, max-width, alignment, bg
-        Template inspector needs: typography controls, 
+        Template inspector needs: typography controls,
         border, gap, grid columns, aspect ratio
         Scope: extend InspectorPanel with a mode prop
         mode="static" shows current controls
         mode="template" shows extended controls
         No changes to static page inspector behaviour.
+        Done: added mode prop to Inspector/BlockInspectorPanel; template mode appends Typography,
+        Border, Grid/Flex, and Media sections; 8 new fields added to BaseBlockSettings in types.ts.
 
 ## Routing & structure
 
@@ -87,14 +101,70 @@
         Done: routes exist under /collections/[slug] and /collections/[slug]/[itemId];
         detail links now use entry.slug ?? entry.id; detail page resolves by slug first, falls back to id.
 
-[ ] 8. Index template — repeater block
+[x] 8. Index template — repeater block
         The collection index page needs a block that 
         renders one card per collection item
         Scope: new RepeaterBlock in template builder only
         User picks collection, picks card layout (from 
         saved container blocks), renders list
         Depends on tasks 5 and 7.
-```
+```Add these two tasks to TASKS.md:
+
+[ x] 9. Inspector shows nothing when a bound block is 
+        selected in the template editor
+        Symptom: select BoundRichText (or any bound block), 
+        open inspector — field binding dropdown does not appear
+        Likely cause: Inspector is not receiving mode="template" 
+        from the template editor page, so FieldBindingSection 
+        never renders
+        Scope: find where Inspector is rendered inside the 
+        template editor and check the mode prop
+
+[x ] 10. Repeater block — collection selection resets to none
+         and preview shows placeholder instead of real data
+         Symptom: pick a collection in the Repeater inspector, 
+         it switches back to "none"; preview never renders entries
+         Likely cause: RepeaterBlockData changes not being 
+         persisted back through updateBlock, or collectionId 
+         not saved to the block data correctly
+         Scope: RepeaterBlock.tsx inspector onChange handler 
+         and renderPreview.tsx repeater case
+
+         Add to TASKS.md:
+
+[ x] 11. Publish fails with 400 after adding CSS styles 
+        to a template page block
+        Symptom: /api/pages/publish returns 400 Bad Request
+        /api/pages/save-draft also returns 400
+        Likely cause: the publish/save-draft API route 
+        validates the blocks payload and rejects unknown 
+        fields — the new style fields from Task 6 
+        (fontSize, fontWeight, textColor, borderWidth, 
+        borderRadius, gap, gridColumns, aspectRatio) 
+        are not in the validation schema
+        Scope: src/app/api/pages/publish/route.ts and
+        src/app/api/pages/save-draft/route.ts
+
+Add to TASKS.md:
+
+[x ] 12. Inspector does not restore saved block settings 
+        on reopen
+        Symptom: change background to brand-red, save, 
+        close and reopen the editor — inspector shows 
+        "None" instead of brand-red
+        Likely cause: Inspector controlled inputs are not 
+        reading their initial values from the block data — 
+        they use local state initialised to a default 
+        instead of reading from selectedBlock.data
+
+[ ] 13. Typography controls in template inspector 
+        have no visible effect on the rendered block
+        Symptom: change fontSize or fontWeight in inspector,
+        block appearance does not change in editor or preview
+        Likely cause: block components do not read 
+        fontSize/fontWeight/textColor from their data — 
+        the inspector writes the values but nothing consumes them
+
 
 ---
 

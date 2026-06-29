@@ -5,6 +5,7 @@ import { type BlockData } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
 interface Collection {
@@ -62,7 +63,10 @@ export function CollectionListEditor({
         ) : (
           <Select
             value={block.collectionId || ''}
-            onValueChange={v => onChange({ collectionId: v, displayFields: [] })}
+            onValueChange={v => {
+              const col = collections.find(c => c.id === v);
+              onChange({ collectionId: v, collectionSlug: col?.slug ?? '', displayFields: [] });
+            }}
           >
             <SelectTrigger><SelectValue placeholder="— Select a collection —" /></SelectTrigger>
             <SelectContent>
@@ -137,7 +141,7 @@ export function CollectionListEditor({
             </div>
           </div>
 
-          {/* Image field */}
+          {/* Image field — text + image type fields */}
           <div className="space-y-1.5">
             <Label className="text-xs">Image field key <span className="text-muted-foreground">(optional)</span></Label>
             <Select
@@ -148,13 +152,13 @@ export function CollectionListEditor({
               <SelectContent>
                 <SelectItem value="__none__">No image</SelectItem>
                 {selectedCollection.fields
-                  .filter(f => f.type === 'text')
+                  .filter(f => f.type === 'text' || f.type === 'image')
                   .map(f => (
                     <SelectItem key={f.key} value={f.key}>{f.label} ({f.key})</SelectItem>
                   ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">Pick the text field that contains an image URL.</p>
+            <p className="text-xs text-muted-foreground">Pick the field that contains an image URL.</p>
           </div>
 
           {/* Title field */}
@@ -172,6 +176,20 @@ export function CollectionListEditor({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Link to item pages */}
+          <div className="flex items-center justify-between pt-1">
+            <div>
+              <Label className="text-xs">Link cards to item pages</Label>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Each card links to /collections/{(block.collectionSlug as string) || selectedCollection.slug}/&#123;id&#125;
+              </p>
+            </div>
+            <Switch
+              checked={!!(block.linkToItems)}
+              onCheckedChange={v => onChange({ linkToItems: v })}
+            />
           </div>
         </>
       )}
@@ -200,11 +218,13 @@ export function CollectionListPreview({
   const [loading, setLoading] = useState(false);
 
   const collectionId = block.collectionId as string | undefined;
+  const collectionSlug = (block.collectionSlug as string | undefined) ?? '';
   const displayFields = (block.displayFields as string[] | undefined) ?? [];
   const layout = (block.layout as string | undefined) ?? 'grid-3';
   const limit = (block.limit as number | undefined) ?? 12;
   const imageField = (block.imageField as string | undefined) ?? '';
   const titleField = (block.titleField as string | undefined) ?? '';
+  const linkToItems = !!(block.linkToItems);
 
   useEffect(() => {
     if (!collectionId) return;
@@ -257,9 +277,10 @@ export function CollectionListPreview({
       {items.map(item => {
         const imgUrl = imageField ? item.data[imageField] : null;
         const title = titleField ? item.data[titleField] : null;
+        const href = linkToItems && collectionSlug ? `/collections/${collectionSlug}/${item.id}` : null;
 
-        return (
-          <div key={item.id} className="rounded-lg border bg-card overflow-hidden flex flex-col">
+        const cardContent = (
+          <>
             {/* Image */}
             {imgUrl && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -273,7 +294,7 @@ export function CollectionListPreview({
             <div className="p-4 flex-1 space-y-2">
               {/* Title */}
               {title && (
-                <h3 className="font-semibold text-base leading-snug">{String(title)}</h3>
+                <h3 className="text-2xl font-semibold text-foreground leading-snug">{String(title)}</h3>
               )}
               {/* Other visible fields */}
               {visibleFields
@@ -286,6 +307,18 @@ export function CollectionListPreview({
                       <span key={f.key} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                         {val ? '✓' : '✗'} {f.label}
                       </span>
+                    );
+                  }
+                  if (f.type === 'image') {
+                    return (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={f.key}
+                        src={String(val)}
+                        alt={f.label}
+                        className="w-full aspect-video object-cover rounded"
+                        loading="lazy"
+                      />
                     );
                   }
                   if (f.type === 'rich-text') {
@@ -307,6 +340,20 @@ export function CollectionListPreview({
                 {new Date(item.createdAt).toLocaleDateString()}
               </p>
             </div>
+          </>
+        );
+
+        return href ? (
+          <a
+            key={item.id}
+            href={href}
+            className="rounded-lg border bg-card overflow-hidden flex flex-col hover:shadow-md hover:border-primary/40 transition-all"
+          >
+            {cardContent}
+          </a>
+        ) : (
+          <div key={item.id} className="rounded-lg border bg-card overflow-hidden flex flex-col">
+            {cardContent}
           </div>
         );
       })}

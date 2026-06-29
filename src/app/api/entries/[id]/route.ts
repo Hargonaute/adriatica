@@ -25,15 +25,34 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { data } = await request.json();
+    const body = await request.json();
 
-    if (!data || typeof data !== 'object') {
-      return NextResponse.json({ error: 'data object required' }, { status: 400 });
+    const updates: Record<string, any> = {};
+
+    if ('data' in body) {
+      if (!body.data || typeof body.data !== 'object') {
+        return NextResponse.json({ error: 'data must be an object' }, { status: 400 });
+      }
+      updates.data = body.data;
+    }
+
+    if ('slug' in body) updates.slug = body.slug ?? null;
+
+    if ('status' in body) {
+      if (!['draft', 'published'].includes(body.status)) {
+        return NextResponse.json({ error: 'status must be draft or published' }, { status: 400 });
+      }
+      updates.status = body.status;
+      if (body.status === 'published') updates.publishedAt = new Date();
+    }
+
+    if (!Object.keys(updates).length) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
     }
 
     const result = await db
       .update(entries)
-      .set({ data })
+      .set(updates)
       .where(eq(entries.id, id))
       .returning();
 

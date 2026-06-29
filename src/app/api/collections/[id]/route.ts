@@ -31,6 +31,48 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+
+    // Allowed mutable fields and their DB column names
+    const allowed = [
+      'basePath',
+      'itemSlugField',
+      'indexPageId',
+      'detailTemplatePageId',
+    ] as const;
+
+    const updates: Record<string, any> = {};
+    for (const key of allowed) {
+      if (key in body) updates[key] = body[key] ?? null;
+    }
+
+    if (!Object.keys(updates).length) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+    }
+
+    const result = await db
+      .update(collections)
+      .set(updates)
+      .where(eq(collections.id, id))
+      .returning();
+
+    if (!result.length) {
+      return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(result[0]);
+  } catch (error) {
+    console.error('Patch collection error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
