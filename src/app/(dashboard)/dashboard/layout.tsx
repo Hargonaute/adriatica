@@ -5,6 +5,8 @@ import { db } from '@/lib/db';
 import { collections } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 const NAV = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/dashboard/pages', label: 'Pages', icon: FileText },
