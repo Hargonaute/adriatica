@@ -10,6 +10,13 @@ function createPool() {
   const connectionString = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
 
   if (!connectionString) {
+    // Build-time / pre-provisioned environments: construct a pool with a
+    // placeholder URL so module imports don't throw. The Pool constructor
+    // does not open a connection — the first real query will fail loudly
+    // until DATABASE_URL is set.
+    if (process.env.NODE_ENV !== 'development') {
+      return new Pool({ connectionString: 'postgresql://unset:unset@localhost:5432/unset' });
+    }
     throw new Error(
       'DATABASE_URL is not set. Add it to .env.local (see .env.example).'
     );
@@ -23,21 +30,8 @@ function createPool() {
   });
 }
 
-// Lazy proxy: the underlying Pool (and DATABASE_URL check) is created on first
-// use, not on import. Lets builds succeed when env vars aren't set yet; queries
-// at request time will still throw if the DB isn't configured.
-function getPool(): Pool {
-  if (global._pgPool) return global._pgPool;
-  const created = createPool();
-  if (process.env.NODE_ENV !== 'production') {
-    global._pgPool = created;
-  }
-  return created;
-}
+export const pool = global._pgPool ?? createPool();
 
-export const pool = new Proxy({} as Pool, {
-  get(_target, prop, receiver) {
-    const value = Reflect.get(getPool(), prop, receiver);
-    return typeof value === 'function' ? value.bind(getPool()) : value;
-  },
-}) as Pool;
+if (process.env.NODE_ENV !== 'production') {
+  global._pgPool = pool;
+}
