@@ -12,7 +12,7 @@ interface CollectionLite {
   id: string;
   slug: string;
 }
-
+//ddd
 export function ContactForm({
   collectionSlug = "contact",
 }: ContactFormProps = {}) {
