@@ -24,6 +24,14 @@ export default function CollectionsPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newSlug, setNewSlug] = useState('');
+  const [slugEdited, setSlugEdited] = useState(false);
+
+  const slugify = (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
 
   useEffect(() => {
     fetch('/api/collections')
@@ -56,6 +64,7 @@ export default function CollectionsPage() {
       setCollections([newCollection, ...collections]);
       setNewName('');
       setNewSlug('');
+      setSlugEdited(false);
       toast.success('Collection created');
     } catch {
       toast.error('Failed to create collection');
@@ -88,8 +97,8 @@ export default function CollectionsPage() {
                   value={newName}
                   onChange={e => {
                     setNewName(e.target.value);
-                    if (!newSlug) {
-                      setNewSlug(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                    if (!slugEdited) {
+                      setNewSlug(slugify(e.target.value));
                     }
                   }}
                   placeholder="e.g. Team Members"
@@ -100,7 +109,10 @@ export default function CollectionsPage() {
                 <label className="text-sm font-medium">Slug</label>
                 <Input
                   value={newSlug}
-                  onChange={e => setNewSlug(e.target.value)}
+                  onChange={e => {
+                    setSlugEdited(true);
+                    setNewSlug(slugify(e.target.value));
+                  }}
                   placeholder="e.g. team-members"
                   required
                 />
