@@ -47,21 +47,21 @@ export const auth = betterAuth({
           return { data: user };
         },
       },
-      session: {
-        create: {
-          before: async (session: { userId: string }) => {
-            const [row] = await db
-              .select({ email: schema.user.email })
-              .from(schema.user)
-              .where(eq(schema.user.id, session.userId))
-              .limit(1);
-            if (!row || !isEmailAllowed(row.email)) {
-              throw new APIError('FORBIDDEN', {
-                message: 'This account is no longer permitted to sign in.',
-              });
-            }
-            return { data: session };
-          },
+    },
+    session: {
+      create: {
+        before: async (session: { userId: string }) => {
+          const [row] = await db
+            .select({ email: schema.user.email })
+            .from(schema.user)
+            .where(eq(schema.user.id, session.userId))
+            .limit(1);
+          if (!row || !isEmailAllowed(row.email)) {
+            throw new APIError('FORBIDDEN', {
+              message: 'This account is no longer permitted to sign in.',
+            });
+          }
+          return { data: session };
         },
       },
     },
