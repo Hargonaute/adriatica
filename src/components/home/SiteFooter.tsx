@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FooterLinkColumn, FooterLink } from "./FooterLinkColumn";
 
@@ -23,19 +24,14 @@ export function SiteFooter(_props: SiteFooterProps) {
         <div className="flex flex-col lg:flex-row justify-between items-start gap-12 lg:gap-8 mb-16">
           {/* Logo & Description */}
           <div className="w-full lg:w-[35%] flex flex-col gap-6">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center">
-                <div
-                  className="bg-[#BC0D2A] text-black w-14 h-8 flex items-center justify-center font-bold text-xl rounded-sm tracking-tighter"
-                  style={{ fontFamily: "Arial, sans-serif" }}
-                >
-                  TK
-                </div>
-                <div className="h-[2px] w-6 bg-gradient-to-r from-[#BC0D2A] via-white to-green-600 ml-1"></div>
-              </div>
-              <span className="font-[family-name:var(--font-inter)] font-semibold text-2xl tracking-tight text-white">
-                Adriatica
-              </span>
+            <div className="bg-white inline-flex items-center self-start px-4 py-3 rounded-md">
+              <Image
+                src="/images Adriatica/logo.png"
+                alt="Maghreb Adriatica"
+                width={222}
+                height={32}
+                className="h-8 w-auto"
+              />
             </div>
             <p className="text-slate-400 text-[15px] leading-relaxed max-w-sm">
               Design amazing digital experiences that create more happy in the

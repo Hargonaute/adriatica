@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { FileText, Database, Image as ImageIcon, Settings, LayoutDashboard } from 'lucide-react';
 import { SidebarSignOut } from '@/components/dashboard/SidebarSignOut';
@@ -23,22 +24,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <aside className="w-64 bg-[#0b0f19] hidden md:flex flex-col shrink-0 fixed top-0 left-0 bottom-0 z-40 overflow-y-auto">
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/10 shrink-0">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center">
-              <div className="bg-[#BC0D2A] rounded-l-sm w-10 h-7 flex items-center justify-center relative overflow-hidden">
-                <span className="text-white font-bold text-xs italic z-10">TK</span>
-                <div className="absolute inset-0 bg-white/20 -skew-x-12 translate-x-2 w-4" />
-              </div>
-              <div className="flex flex-col ml-2 justify-center">
-                <span className="text-[17px] font-bold tracking-tight text-white leading-none">
-                  <span className="text-[#328542]">A</span>driatica
-                </span>
-                <div className="flex h-0.5 mt-0.5">
-                  <div className="w-1/3 bg-[#BC0D2A]" />
-                  <div className="w-2/3 bg-[#328542]" />
-                </div>
-              </div>
-            </div>
+          <Link href="/" className="inline-flex items-center bg-white rounded-md px-3 py-2">
+            <Image
+              src="/images Adriatica/logo.png"
+              alt="Maghreb Adriatica"
+              width={222}
+              height={32}
+              priority
+              className="h-7 w-auto"
+            />
           </Link>
           <p className="text-white/30 text-[10px] mt-2.5 font-semibold tracking-widest uppercase">
             CMS Dashboard
