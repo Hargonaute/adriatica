@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useCollectionItem } from '@/contexts/CollectionItemContext';
+import { useMockCollectionEntry } from '@/contexts/MockCollectionEntryContext';
+import { useTemplateBuilderStore } from '@/lib/store/templateBuilderStore';
 import { type CollectionItemFieldsBlockData } from '@/types';
 import { PROSE_CLASSES } from '../proseClasses';
 
@@ -76,31 +78,99 @@ export function CollectionItemFieldsPreview({
   block: CollectionItemFieldsBlockData;
 }) {
   const ctx = useCollectionItem();
+  const mockCtx = useMockCollectionEntry();
+  const templateCollectionId = useTemplateBuilderStore((s) => s.collectionId);
   const [entry, setEntry] = useState<EntryPayload | null>(null);
   const [colData, setColData] = useState<CollectionPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!ctx) return;
+    // Real detail page — fetch the actual entry
+    if (ctx) {
+      setLoading(true);
+      fetch(`/api/entries/${ctx.itemId}`)
+        .then(r => r.json())
+        .then((e: EntryPayload) => {
+          setEntry(e);
+          return fetch(`/api/collections/${e.collectionId}`);
+        })
+        .then(r => r.json())
+        .then((c: CollectionPayload) => setColData(c))
+        .catch(() => setError('Failed to load item data'))
+        .finally(() => setLoading(false));
+      return;
+    }
+    // Template editor with mock — just fetch the collection schema; data comes from mockCtx
+    if (mockCtx && templateCollectionId) {
+      setLoading(true);
+      fetch(`/api/collections/${templateCollectionId}`)
+        .then(r => r.json())
+        .then((c: CollectionPayload) => setColData(c))
+        .catch(() => setError('Failed to load collection'))
+        .finally(() => setLoading(false));
+    }
+  }, [ctx?.itemId, mockCtx, templateCollectionId]);
 
-    setLoading(true);
-    fetch(`/api/entries/${ctx.itemId}`)
-      .then(r => r.json())
-      .then((e: EntryPayload) => {
-        setEntry(e);
-        return fetch(`/api/collections/${e.collectionId}`);
-      })
-      .then(r => r.json())
-      .then((c: CollectionPayload) => setColData(c))
-      .catch(() => setError('Failed to load item data'))
-      .finally(() => setLoading(false));
-  }, [ctx?.itemId]);
+  // Template editor with mock data + schema — render sample field values
+  if (!ctx && mockCtx && colData) {
+    const hidden = new Set(block.hiddenFields ?? []);
+    const itemData = mockCtx.entryData;
+    return (
+      <div className="max-w-[860px] mx-auto space-y-8">
+        {colData.fields.map(field => {
+          if (hidden.has(field.key)) return null;
+          const val = itemData[field.key];
+          if (val === undefined || val === null || val === '') return null;
 
-  // No context — editing in page builder dashboard
+          return (
+            <div key={field.id}>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                {field.label}
+              </p>
+
+              {field.type === 'image' && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={String(val)} alt={field.label} className="w-full max-h-[480px] object-cover rounded-2xl" />
+              )}
+
+              {field.type === 'rich-text' && (
+                <div className={PROSE_CLASSES} dangerouslySetInnerHTML={{ __html: String(val) }} />
+              )}
+
+              {field.type === 'textarea' && (
+                <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">{String(val)}</p>
+              )}
+
+              {field.type === 'checkbox' && (
+                <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${val ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {val ? '✓ Yes' : '✗ No'}
+                </span>
+              )}
+
+              {field.type === 'email' && (
+                <a href={`mailto:${String(val)}`} className="text-[#BC0D2A] font-medium hover:underline">
+                  {String(val)}
+                </a>
+              )}
+
+              {(field.type === 'text' || field.type === 'number' || field.type === 'date') && (
+                <p className="text-base text-foreground">{String(val)}</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // No context and no mock — editing in the static page builder dashboard
   if (!ctx) {
     return (
-      <div className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-8 text-center">
+      <div className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-8 text-center relative">
+        <span className="absolute top-1.5 left-2 text-[9px] font-semibold uppercase tracking-wider bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+          collection-item-fields
+        </span>
         <p className="text-muted-foreground text-sm font-medium">
           Item fields will appear here on the live detail page
         </p>

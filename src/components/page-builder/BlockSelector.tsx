@@ -33,7 +33,7 @@ const CATEGORIES: { label: string; types: string[] }[] = [
   { label: 'Media', types: ['image', 'video'] },
   { label: 'Interactive', types: ['form', 'newsletter', 'contact-form', 'collection-list'] },
   { label: 'Layout', types: ['container', 'spacer'] },
-  { label: 'Template', types: ['repeater', 'bound-text', 'bound-image', 'bound-rich-text', 'bound-date'] },
+  { label: 'Template', types: ['repeater', 'collection-item-fields', 'bound-text', 'bound-image', 'bound-rich-text', 'bound-date'] },
 ];
 
 export function BlockSelector({ onAdd, className }: BlockSelectorProps) {

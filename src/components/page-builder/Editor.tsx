@@ -25,6 +25,9 @@ import { Eye, Code, Layout, Save, Globe, ExternalLink, ArrowLeft, Plus } from 'l
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useTemplateBuilderStore } from '@/lib/store/templateBuilderStore';
+import { MockCollectionEntryContext } from '@/contexts/MockCollectionEntryContext';
+import { buildMockEntryData } from '@/lib/mockEntryData';
 
 interface PageBuilderEditorProps {
   initialData: PageData;
@@ -517,7 +520,32 @@ export default function PageBuilderEditor({ initialData, mode = 'static', onSave
     ? { collectionId: parentRepeater.collectionId ?? null }
     : null;
 
+  // ── Mock entry for template mode ─────────────────────────────────────────
+  // When editing a detail template, fetch the collection's field schema and
+  // synthesise a fake entry so bound blocks render realistic sample content
+  // instead of blank boxes.
+  const templateCollectionId = useTemplateBuilderStore((s) => s.collectionId);
+  const [mockEntry, setMockEntry] = useState<{ entryData: Record<string, any> } | null>(null);
+
+  useEffect(() => {
+    if (mode !== 'template' || !templateCollectionId) {
+      setMockEntry(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/collections/${templateCollectionId}`)
+      .then((r) => r.json())
+      .then((col) => {
+        if (cancelled) return;
+        const fields = Array.isArray(col?.fields) ? col.fields : [];
+        setMockEntry({ entryData: buildMockEntryData(fields) });
+      })
+      .catch(() => { if (!cancelled) setMockEntry(null); });
+    return () => { cancelled = true; };
+  }, [mode, templateCollectionId]);
+
   return (
+    <MockCollectionEntryContext.Provider value={mockEntry}>
     <EditorContext.Provider value={{ selectedBlockId, setSelectedBlockId }}>
     <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950">
 
@@ -808,6 +836,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', onSave
       </div>
     </div>
     </EditorContext.Provider>
+    </MockCollectionEntryContext.Provider>
   );
 }
 

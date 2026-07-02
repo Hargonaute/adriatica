@@ -1,5 +1,5 @@
 import { type BlockData } from '@/types';
-import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library, Mail, PhoneCall, Type, CalendarDays, AlignLeft } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library, Mail, PhoneCall, Type, CalendarDays, AlignLeft, ListTree } from 'lucide-react';
 import React from 'react';
 
 import { RichTextEditor, RichTextPreview } from './rich-text/RichTextBlock';
@@ -17,6 +17,7 @@ import { BoundTextEditor, BoundTextPreview } from './bound/BoundTextBlock';
 import { BoundImageEditor, BoundImagePreview } from './bound/BoundImageBlock';
 import { BoundRichTextEditor, BoundRichTextPreview } from './bound/BoundRichTextBlock';
 import { BoundDateEditor, BoundDatePreview } from './bound/BoundDateBlock';
+import { CollectionItemFieldsEditor, CollectionItemFieldsPreview } from './collection-item-fields/CollectionItemFieldsBlock';
 
 export type BlockConfig<T extends BlockData = BlockData> = {
   type: T['type'];
@@ -237,6 +238,15 @@ export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
     createDefault: () => ({ fieldKey: null }),
     Editor: BoundDateEditor,
     Preview: BoundDatePreview,
+  },
+  'collection-item-fields': {
+    type: 'collection-item-fields',
+    label: 'Collection Item Fields',
+    description: "Renders all of the current item's field values in one block",
+    icon: ListTree,
+    createDefault: () => ({ hiddenFields: [] }),
+    Editor: CollectionItemFieldsEditor,
+    Preview: CollectionItemFieldsPreview,
   },
 };
 
