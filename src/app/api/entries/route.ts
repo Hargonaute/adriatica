@@ -1,10 +1,13 @@
 import { db } from '@/lib/db';
 import { entries } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { generateEntrySlug } from '@/lib/db/generateEntrySlug';
+import { auth } from '@/lib/auth/auth';
 
-// GET /api/entries?collectionId=X — list all items in a collection
+// GET /api/entries?collectionId=X — list items in a collection.
+// Public callers only see published entries. Pass ?includeUnpublished=true
+// with a valid dashboard session to include drafts.
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -14,10 +17,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'collectionId query param required' }, { status: 400 });
     }
 
+    let includeUnpublished = false;
+    if (searchParams.get('includeUnpublished') === 'true') {
+      const session = await auth.api.getSession({ headers: request.headers });
+      if (session) includeUnpublished = true;
+    }
+
+    const whereClause = includeUnpublished
+      ? eq(entries.collectionId, collectionId)
+      : and(eq(entries.collectionId, collectionId), eq(entries.status, 'published'));
+
     const result = await db
       .select()
       .from(entries)
-      .where(eq(entries.collectionId, collectionId))
+      .where(whereClause)
       .orderBy(desc(entries.createdAt));
 
     return NextResponse.json(result);

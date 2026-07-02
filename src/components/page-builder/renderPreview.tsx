@@ -44,9 +44,13 @@ function getBaseClasses(data: BlockData) {
   }[data.background || 'none'] ?? 'bg-transparent';
   classes.push(bg);
 
-  // Mobile visibility
+  // Mobile visibility. The base rule `hidden md:block` handles the live
+  // site (viewport-driven). Inside the editor's Preview viewport container
+  // the browser viewport can be wide while the wrapper is narrow, so we
+  // add a container-query override with `!` to force hiding when the
+  // `@container/preview` wrapper is under 768px.
   if (data.hideOnMobile) {
-    classes.push('hidden md:block');
+    classes.push('hidden md:block @max-3xl/preview:!hidden');
   }
 
   return classes.join(' ');
@@ -60,7 +64,8 @@ function getBaseStyles(data: BlockData): React.CSSProperties {
   const styles: React.CSSProperties = {};
 
   const fontSizeMap: Record<string, string> = {
-    sm: '0.875rem', base: '1rem', lg: '1.125rem', xl: '1.25rem', '2xl': '1.5rem',
+    xs: '0.75rem', sm: '0.875rem', base: '1rem', lg: '1.125rem',
+    xl: '1.25rem', '2xl': '1.5rem', '3xl': '1.875rem', '4xl': '2.25rem',
   };
   const fontWeightMap: Record<string, string> = {
     normal: '400', medium: '500', semibold: '600', bold: '700',
@@ -73,6 +78,7 @@ function getBaseStyles(data: BlockData): React.CSSProperties {
   };
   const aspectRatioMap: Record<string, string> = {
     auto: 'auto', square: '1 / 1', video: '16 / 9', portrait: '3 / 4',
+    '1:1': '1 / 1', '4:3': '4 / 3', '16:9': '16 / 9', '3:4': '3 / 4',
   };
   const alignItemsMap: Record<string, string> = {
     start: 'flex-start', end: 'flex-end', center: 'center', stretch: 'stretch', baseline: 'baseline',
@@ -110,6 +116,10 @@ function getBaseStyles(data: BlockData): React.CSSProperties {
   if (textAlign) styles.textAlign = textAlign as React.CSSProperties['textAlign'];
   const color = passthrough(d.textColor);
   if (color) styles.color = color;
+  const textTransform = passthrough(d.textTransform);
+  if (textTransform && textTransform !== 'none') {
+    styles.textTransform = textTransform as React.CSSProperties['textTransform'];
+  }
 
   // Background
   const backgroundColor = passthrough(d.backgroundColor);

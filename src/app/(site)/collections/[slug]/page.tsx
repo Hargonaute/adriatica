@@ -23,7 +23,10 @@ async function getData(slug: string) {
 
   const [colFields, colEntries] = await Promise.all([
     db.select().from(fields).where(eq(fields.collectionId, col.id)).orderBy(fields.order),
-    db.select().from(entries).where(eq(entries.collectionId, col.id)),
+    db
+      .select()
+      .from(entries)
+      .where(and(eq(entries.collectionId, col.id), eq(entries.status, 'published'))),
   ]);
 
   const [templatePage] = col.indexPageId

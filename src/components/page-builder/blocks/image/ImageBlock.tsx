@@ -85,6 +85,31 @@ export function ImageEditor({
 }
 
 // --- Preview Component ---
+const ASPECT_MAP: Record<string, string> = {
+  '1:1': '1 / 1',
+  '4:3': '4 / 3',
+  '16:9': '16 / 9',
+  '3:4': '3 / 4',
+  square: '1 / 1',
+  video: '16 / 9',
+  portrait: '3 / 4',
+};
+
+const WIDTH_MAP: Record<string, string> = {
+  full: '100%',
+  half: '50%',
+  third: '33.3333%',
+  auto: 'auto',
+};
+
+const BORDER_RADIUS_MAP: Record<string, string> = {
+  none: '0',
+  sm: '4px',
+  md: '8px',
+  lg: '16px',
+  full: '9999px',
+};
+
 export function ImagePreview({
   block,
   className
@@ -94,14 +119,43 @@ export function ImagePreview({
 }) {
   if (!block.url) return null;
 
+  const aspect = block.aspectRatio && block.aspectRatio !== 'auto'
+    ? (ASPECT_MAP[block.aspectRatio] ?? undefined)
+    : undefined;
+  const objectFit = block.objectFit ?? 'cover';
+  const widthKey = typeof block.width === 'string' ? block.width : 'full';
+  const width = WIDTH_MAP[widthKey] ?? '100%';
+  // borderRadius may already be applied by the wrapper's baseStyles for
+  // template mode, but honouring it here means the image block reads correctly
+  // in static mode too.
+  const borderRadius = BORDER_RADIUS_MAP[block.borderRadius ?? 'none'];
+  const hideMobile = block.hideOnMobile;
+
+  const wrapperStyle: React.CSSProperties = {
+    width,
+    aspectRatio: aspect,
+    borderRadius,
+    overflow: 'hidden',
+  };
+
+  const imgStyle: React.CSSProperties = {
+    width: '100%',
+    height: aspect ? '100%' : 'auto',
+    objectFit,
+    display: 'block',
+  };
+
   return (
-    <div className={cn("relative w-full overflow-hidden rounded-md", className)}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img 
-            src={block.url} 
-            alt={block.alt || ''} 
-            className="w-full h-auto object-cover"
-        />
+    <div
+      className={cn('relative', hideMobile && 'max-md:hidden @max-3xl/preview:hidden', className)}
+      style={wrapperStyle}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={block.url}
+        alt={block.alt || ''}
+        style={imgStyle}
+      />
     </div>
   );
 }

@@ -6,7 +6,17 @@ import { type PageData } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useTemplateBuilderStore } from '@/lib/store/templateBuilderStore';
 
-export default function PageEditorWrapper({ initialData, isTemplate, templateCollectionId }: { initialData: PageData; isTemplate: boolean; templateCollectionId: string | null }) {
+export default function PageEditorWrapper({
+    initialData,
+    isTemplate,
+    templateKind,
+    templateCollectionId,
+}: {
+    initialData: PageData;
+    isTemplate: boolean;
+    templateKind: 'index' | 'detail' | null;
+    templateCollectionId: string | null;
+}) {
     const router = useRouter();
     const setCollection = useTemplateBuilderStore((s) => s.setCollection);
 
@@ -52,6 +62,7 @@ export default function PageEditorWrapper({ initialData, isTemplate, templateCol
             <PageBuilderEditor
                 initialData={initialData}
                 mode={isTemplate ? 'template' : 'static'}
+                templateKind={isTemplate ? templateKind : null}
                 onSave={handleSave}
                 onPublish={handlePublish}
                 onUnpublish={handleUnpublish}

@@ -32,6 +32,8 @@ const INSPECTOR_FALLBACKS = {
   customClassName: '',
   // Container
   direction: 'column',
+  layout: 'stack',
+  mobileBehavior: 'stack',
   containerGap: 'none',
   containerPadding: 'none',
   alignItems: 'stretch',
@@ -39,6 +41,17 @@ const INSPECTOR_FALLBACKS = {
   // Repeater
   columns: '3',
   repeaterGap: 'md',
+  // Bound Image / Image
+  objectFit: 'cover',
+  width: 'full',
+  // Bound Text
+  textTransform: 'none',
+  as: 'p',
+  // Spacer
+  size: 'md',
+  showDivider: false,
+  dividerColor: '',
+  dividerStyle: 'solid',
 } as const;
 
 // Field types each bound block accepts
@@ -207,6 +220,89 @@ function PageSettingsPanel({
   );
 }
 
+// ── Spacer-specific controls ──────────────────────────────────────────────
+
+function SpacerSection({
+  data,
+  onChange,
+}: {
+  data: BlockData;
+  onChange: (key: keyof BlockData, value: unknown) => void;
+}) {
+  // `size` supersedes legacy `height` — read either so old blocks stay sane.
+  const currentSize = (data as any).size ?? (data as any).height ?? 'md';
+  const showDivider = !!(data as any).showDivider;
+
+  return (
+    <div className="space-y-4">
+      <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Spacer</h4>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Size</Label>
+        <Select
+          value={currentSize}
+          onValueChange={(v) => onChange('size' as keyof BlockData, v)}
+        >
+          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="xs">XS — 8px</SelectItem>
+            <SelectItem value="sm">SM — 16px</SelectItem>
+            <SelectItem value="md">MD — 32px</SelectItem>
+            <SelectItem value="lg">LG — 64px</SelectItem>
+            <SelectItem value="xl">XL — 96px</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">Show Divider</Label>
+        <Switch
+          checked={showDivider}
+          onCheckedChange={(v) => onChange('showDivider' as keyof BlockData, v)}
+        />
+      </div>
+
+      {showDivider && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Divider Color</Label>
+            <div className="flex gap-2">
+              <Input
+                value={(data as any).dividerColor ?? ''}
+                onChange={(e) => onChange('dividerColor' as keyof BlockData, e.target.value)}
+                placeholder="rgba(0,0,0,0.2)"
+                className="h-8 text-xs font-mono flex-1"
+              />
+              {(data as any).dividerColor && (
+                <div
+                  className="h-8 w-8 rounded border shrink-0"
+                  style={{ backgroundColor: (data as any).dividerColor }}
+                />
+              )}
+            </div>
+            <p className="text-[10px] text-muted-foreground">Leave blank for currentColor at 20% opacity.</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Divider Style</Label>
+            <Select
+              value={(data as any).dividerStyle ?? 'solid'}
+              onValueChange={(v) => onChange('dividerStyle' as keyof BlockData, v)}
+            >
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="solid">Solid</SelectItem>
+                <SelectItem value="dashed">Dashed</SelectItem>
+                <SelectItem value="dotted">Dotted</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Repeater-specific controls ─────────────────────────────────────────────
 
 function RepeaterSection({
@@ -307,23 +403,58 @@ function ContainerLayoutSection({
   data: BlockData;
   onChange: (key: keyof BlockData, value: unknown) => void;
 }) {
+  const layout = (data as any).layout ?? 'stack';
   return (
     <div className="space-y-4">
       <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Container</h4>
 
       <div className="space-y-1.5">
-        <Label className="text-xs">Direction</Label>
+        <Label className="text-xs">Layout</Label>
         <Select
-          value={(data as any).direction ?? 'column'}
-          onValueChange={(v) => onChange('direction' as keyof BlockData, v)}
+          value={layout}
+          onValueChange={(v) => onChange('layout' as keyof BlockData, v)}
         >
           <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="column">Column (stacked)</SelectItem>
-            <SelectItem value="row">Row (side by side)</SelectItem>
+            <SelectItem value="stack">Stack (single column)</SelectItem>
+            <SelectItem value="two-col-text-image">Two columns — text · image</SelectItem>
+            <SelectItem value="two-col-image-text">Two columns — image · text</SelectItem>
+            <SelectItem value="three-col">Three columns</SelectItem>
           </SelectContent>
         </Select>
       </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Mobile behavior</Label>
+        <Select
+          value={(data as any).mobileBehavior ?? 'stack'}
+          onValueChange={(v) => onChange('mobileBehavior' as keyof BlockData, v)}
+        >
+          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="stack">Stack (single column)</SelectItem>
+            <SelectItem value="same">Same as desktop</SelectItem>
+            <SelectItem value="hide">Hide on mobile</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Direction only meaningful when layout === 'stack' */}
+      {layout === 'stack' && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">Direction</Label>
+          <Select
+            value={(data as any).direction ?? 'column'}
+            onValueChange={(v) => onChange('direction' as keyof BlockData, v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="column">Column (stacked)</SelectItem>
+              <SelectItem value="row">Row (side by side)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
@@ -449,6 +580,199 @@ function ContainerLayoutSection({
   );
 }
 
+// ── Shared sizing controls (image + bound-image) ───────────────────────────
+
+function ImageSizingSection({
+  data,
+  onChange,
+}: {
+  data: BlockData;
+  onChange: (key: keyof BlockData, value: unknown) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Image</h4>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Aspect Ratio</Label>
+          <Select
+            value={(data as any).aspectRatio ?? 'auto'}
+            onValueChange={(v) => onChange('aspectRatio' as keyof BlockData, v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto</SelectItem>
+              <SelectItem value="1:1">1:1</SelectItem>
+              <SelectItem value="4:3">4:3</SelectItem>
+              <SelectItem value="16:9">16:9</SelectItem>
+              <SelectItem value="3:4">3:4</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Object Fit</Label>
+          <Select
+            value={(data as any).objectFit ?? 'cover'}
+            onValueChange={(v) => onChange('objectFit' as keyof BlockData, v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cover">Cover</SelectItem>
+              <SelectItem value="contain">Contain</SelectItem>
+              <SelectItem value="fill">Fill</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Width</Label>
+          <Select
+            value={(data as any).width ?? 'full'}
+            onValueChange={(v) => onChange('width' as keyof BlockData, v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="full">Full</SelectItem>
+              <SelectItem value="half">Half</SelectItem>
+              <SelectItem value="third">Third</SelectItem>
+              <SelectItem value="auto">Auto</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Border Radius</Label>
+          <Select
+            value={(data as any).borderRadius ?? 'none'}
+            onValueChange={(v) => onChange('borderRadius' as keyof BlockData, v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="sm">Small (4px)</SelectItem>
+              <SelectItem value="md">Medium (8px)</SelectItem>
+              <SelectItem value="lg">Large (16px)</SelectItem>
+              <SelectItem value="full">Full (9999px)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Label className="text-xs">Hide on Mobile</Label>
+        <Switch
+          checked={!!(data as any).hideOnMobile}
+          onCheckedChange={(v) => onChange('hideOnMobile' as keyof BlockData, v)}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── Bound Text typography controls ─────────────────────────────────────────
+
+function BoundTextTypographySection({
+  data,
+  onChange,
+  includeAs = false,
+}: {
+  data: BlockData;
+  onChange: (key: keyof BlockData, value: unknown) => void;
+  /** When true, exposes the HTML tag selector (Bound Text only, not Bound Rich Text). */
+  includeAs?: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Typography</h4>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Font Size</Label>
+          <Select
+            value={(data as any).fontSize ?? 'base'}
+            onValueChange={(v) => onChange('fontSize' as keyof BlockData, v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="xs">XS (12px)</SelectItem>
+              <SelectItem value="sm">SM (14px)</SelectItem>
+              <SelectItem value="base">Base (16px)</SelectItem>
+              <SelectItem value="lg">LG (18px)</SelectItem>
+              <SelectItem value="xl">XL (20px)</SelectItem>
+              <SelectItem value="2xl">2XL (24px)</SelectItem>
+              <SelectItem value="3xl">3XL (30px)</SelectItem>
+              <SelectItem value="4xl">4XL (36px)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Font Weight</Label>
+          <Select
+            value={(data as any).fontWeight ?? 'normal'}
+            onValueChange={(v) => onChange('fontWeight' as keyof BlockData, v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="normal">Normal (400)</SelectItem>
+              <SelectItem value="medium">Medium (500)</SelectItem>
+              <SelectItem value="semibold">Semibold (600)</SelectItem>
+              <SelectItem value="bold">Bold (700)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Color</Label>
+        <Input
+          value={(data as any).textColor ?? ''}
+          onChange={(e) => onChange('textColor' as keyof BlockData, e.target.value)}
+          placeholder="#1a1a1a or var(--foreground)"
+          className="h-8 text-xs font-mono"
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Text Transform</Label>
+        <Select
+          value={(data as any).textTransform ?? 'none'}
+          onValueChange={(v) => onChange('textTransform' as keyof BlockData, v)}
+        >
+          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            <SelectItem value="uppercase">Uppercase</SelectItem>
+            <SelectItem value="lowercase">Lowercase</SelectItem>
+            <SelectItem value="capitalize">Capitalize</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {includeAs && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">Render As</Label>
+          <Select
+            value={(data as any).as ?? 'p'}
+            onValueChange={(v) => onChange('as' as keyof BlockData, v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="p">Paragraph (p)</SelectItem>
+              <SelectItem value="h1">Heading 1 (h1)</SelectItem>
+              <SelectItem value="h2">Heading 2 (h2)</SelectItem>
+              <SelectItem value="h3">Heading 3 (h3)</SelectItem>
+              <SelectItem value="h4">Heading 4 (h4)</SelectItem>
+              <SelectItem value="span">Inline (span)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Block-level Inspector panel ────────────────────────────────────────────
 
 function FieldBindingSection({
@@ -467,9 +791,25 @@ function FieldBindingSection({
   collectionIdOverride?: string | null;
 }) {
   const storeCollectionId = useTemplateBuilderStore((s) => s.collectionId);
-  const collectionId = collectionIdOverride ?? storeCollectionId;
+  const contextCollectionId = collectionIdOverride ?? storeCollectionId;
+
+  // When no collection context is available (edge case: bound block used
+  // outside a template / repeater), let the user pick any collection manually.
+  const [manualCollectionId, setManualCollectionId] = useState<string | null>(null);
+  const [allCollections, setAllCollections] = useState<Array<{ id: string; name: string }>>([]);
+  const collectionId = contextCollectionId ?? manualCollectionId;
+  const showCollectionPicker = !contextCollectionId;
+
   const [fields, setFields] = useState<CollectionField[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!showCollectionPicker) return;
+    fetch('/api/collections')
+      .then((r) => r.json())
+      .then((data) => setAllCollections(Array.isArray(data) ? data : []))
+      .catch(() => setAllCollections([]));
+  }, [showCollectionPicker]);
 
   useEffect(() => {
     if (!collectionId) { setFields([]); return; }
@@ -488,8 +828,31 @@ function FieldBindingSection({
     <div className="space-y-4">
       <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Field Binding</h4>
 
+      {showCollectionPicker && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">Collection</Label>
+          <Select
+            value={manualCollectionId ?? '__none__'}
+            onValueChange={(v) => setManualCollectionId(v === '__none__' ? null : v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Pick a collection" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">— None —</SelectItem>
+              {allCollections.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground">
+            No template collection detected — pick one to browse its fields.
+          </p>
+        </div>
+      )}
+
       {!collectionId ? (
-        <p className="text-xs text-muted-foreground">No collection set for this template.</p>
+        !showCollectionPicker && (
+          <p className="text-xs text-muted-foreground">No collection set for this template.</p>
+        )
       ) : loading ? (
         <p className="text-xs text-muted-foreground">Loading fields…</p>
       ) : filtered.length === 0 ? (
@@ -559,6 +922,10 @@ function BlockInspectorPanel({
 
   const isContainer = selectedBlock.type === 'container';
   const isRepeater = selectedBlock.type === 'repeater';
+  const isSpacer = selectedBlock.type === 'spacer';
+  const isImage = selectedBlock.type === 'image' || selectedBlock.type === 'bound-image';
+  const isBoundText = selectedBlock.type === 'bound-text';
+  const isBoundRichText = selectedBlock.type === 'bound-rich-text';
 
   return (
     <div className="p-4 space-y-6">
@@ -566,6 +933,14 @@ function BlockInspectorPanel({
         <h3 className="font-semibold tracking-tight">Inspector</h3>
         <p className="text-xs text-muted-foreground mt-0.5">Editing {selectedBlock.type}</p>
       </div>
+
+      {/* Spacer-specific controls */}
+      {isSpacer && (
+        <>
+          <SpacerSection data={data as BlockData} onChange={handleChange} />
+          <Separator />
+        </>
+      )}
 
       {/* Repeater-specific controls */}
       {isRepeater && (
@@ -579,6 +954,26 @@ function BlockInspectorPanel({
       {isContainer && (
         <>
           <ContainerLayoutSection data={data as BlockData} onChange={handleChange} />
+          <Separator />
+        </>
+      )}
+
+      {/* Image sizing (regular + bound) */}
+      {isImage && (
+        <>
+          <ImageSizingSection data={data as BlockData} onChange={handleChange} />
+          <Separator />
+        </>
+      )}
+
+      {/* Bound Text / Bound Rich Text typography */}
+      {(isBoundText || isBoundRichText) && (
+        <>
+          <BoundTextTypographySection
+            data={data as BlockData}
+            onChange={handleChange}
+            includeAs={isBoundText}
+          />
           <Separator />
         </>
       )}

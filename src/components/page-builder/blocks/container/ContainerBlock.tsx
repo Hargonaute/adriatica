@@ -69,6 +69,8 @@ export function createContainerBlock(order: number): Block {
     data: {
       type: 'container',
       direction: 'column',
+      layout: 'stack',
+      mobileBehavior: 'stack',
       containerGap: 'md',
       containerPadding: 'none',
       paddingTop: 'md',
@@ -396,13 +398,36 @@ export function ContainerEditorCard({
 
 // ── Container preview (used by renderPreview.tsx) ────────────────────────────
 
+// Resolves layout preset into base flex/grid styles.
+// 'stack' → falls back to the block's own direction (existing behaviour).
+function getLayoutStyles(
+  layout: NonNullable<ContainerBlockData['layout']>,
+  direction: ContainerBlockData['direction']
+): React.CSSProperties {
+  switch (layout) {
+    case 'two-col-text-image':
+      return { display: 'flex', flexDirection: 'row' };
+    case 'two-col-image-text':
+      return { display: 'flex', flexDirection: 'row-reverse' };
+    case 'three-col':
+      return { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' };
+    case 'stack':
+    default:
+      return { display: 'flex', flexDirection: direction };
+  }
+}
+
 export function ContainerPreview({ block }: { block: ContainerBlockData }) {
   const children = block.children ?? [];
   const direction = block.direction ?? 'column';
+  const layout = block.layout ?? 'stack';
+  const mobileBehavior = block.mobileBehavior ?? 'stack';
+
+  const layoutStyles = getLayoutStyles(layout, direction);
+  const isMultiColumn = layout !== 'stack';
 
   const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: direction,
+    ...layoutStyles,
     gap: GAP_MAP[block.containerGap ?? 'none'],
     padding: PADDING_MAP[block.containerPadding ?? 'none'],
     backgroundColor: block.backgroundColor || undefined,
@@ -417,8 +442,24 @@ export function ContainerPreview({ block }: { block: ContainerBlockData }) {
       : {}),
   };
 
+  // Below 768px: stack → force column / one-column grid; hide → display: none.
+  // 'same' leaves the desktop layout untouched.
+  //
+  // We emit BOTH viewport-based (`max-md:*`) and container-query-based
+  // (`@max-3xl/preview:*`) variants so the rule fires:
+  //   • on the live site — where the viewport width drives responsiveness, and
+  //   • inside the editor's Preview viewport container — where the wrapper is
+  //     an `@container/preview` narrower than the browser viewport, so plain
+  //     `max-md:*` wouldn't trigger when the user selects Tablet/Mobile.
+  const mobileClass = cn(
+    mobileBehavior === 'hide' && 'max-md:hidden @max-3xl/preview:hidden',
+    mobileBehavior === 'stack' &&
+      isMultiColumn &&
+      'max-md:!flex max-md:!flex-col max-md:![grid-template-columns:1fr] @max-3xl/preview:!flex @max-3xl/preview:!flex-col @max-3xl/preview:![grid-template-columns:1fr]',
+  );
+
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} className={mobileClass || undefined}>
       {children.map((child) => {
         const registryEntry = BLOCKS_REGISTRY[child.type];
         if (!registryEntry) return null;

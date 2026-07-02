@@ -31,7 +31,7 @@ export default function EntriesPage({ params }: { params: Promise<{ id: string }
              try {
                  const [colRes, entriesRes] = await Promise.all([
                      fetch(`/api/collections/${id}`),
-                     fetch(`/api/entries?collectionId=${id}`),
+                     fetch(`/api/entries?collectionId=${id}&includeUnpublished=true`),
                  ]);
                  const colData = await colRes.json();
                  const entriesData = await entriesRes.json();

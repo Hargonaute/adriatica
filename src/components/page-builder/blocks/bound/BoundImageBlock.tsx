@@ -5,11 +5,32 @@ import { useCollectionItem } from '@/contexts/CollectionItemContext';
 import { useRepeaterEntry } from '@/contexts/RepeaterEntryContext';
 import { useMockCollectionEntry } from '@/contexts/MockCollectionEntryContext';
 import { type BoundImageBlockData } from '@/types';
+import { cn } from '@/lib/utils';
 
-const ASPECT_CLASSES: Record<string, string> = {
-  square: 'aspect-square',
-  video: 'aspect-video',
-  portrait: 'aspect-[3/4]',
+const ASPECT_MAP: Record<string, string> = {
+  '1:1': '1 / 1',
+  '4:3': '4 / 3',
+  '16:9': '16 / 9',
+  '3:4': '3 / 4',
+  // Back-compat with the earlier square/video/portrait keys
+  square: '1 / 1',
+  video: '16 / 9',
+  portrait: '3 / 4',
+};
+
+const WIDTH_MAP: Record<string, string> = {
+  full: '100%',
+  half: '50%',
+  third: '33.3333%',
+  auto: 'auto',
+};
+
+const BORDER_RADIUS_MAP: Record<string, string> = {
+  none: '0',
+  sm: '4px',
+  md: '8px',
+  lg: '16px',
+  full: '9999px',
 };
 
 function Placeholder({ fieldKey }: { fieldKey: string | null }) {
@@ -25,16 +46,42 @@ function Placeholder({ fieldKey }: { fieldKey: string | null }) {
   );
 }
 
-function ImageWithAspect({ src, aspect }: { src: string; aspect: string | null }) {
-  const aspectClass = aspect ? (ASPECT_CLASSES[aspect] ?? '') : '';
+function BoundImageRender({
+  src,
+  block,
+}: {
+  src: string;
+  block: BoundImageBlockData;
+}) {
+  const aspect = block.aspectRatio && block.aspectRatio !== 'auto'
+    ? (ASPECT_MAP[block.aspectRatio] ?? undefined)
+    : undefined;
+  const objectFit = block.objectFit ?? 'cover';
+  const width = WIDTH_MAP[block.width ?? 'full'];
+  const borderRadius = BORDER_RADIUS_MAP[block.borderRadius ?? 'none'];
+  const hideMobile = block.hideOnMobile;
+
+  const wrapperStyle: React.CSSProperties = {
+    width,
+    aspectRatio: aspect,
+    borderRadius,
+    overflow: 'hidden',
+  };
+
+  const imgStyle: React.CSSProperties = {
+    width: '100%',
+    height: aspect ? '100%' : 'auto',
+    objectFit,
+    display: 'block',
+  };
+
   return (
-    <div className={aspectClass || undefined}>
+    <div
+      style={wrapperStyle}
+      className={cn(hideMobile && 'max-md:hidden @max-3xl/preview:hidden')}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt=""
-        className={`w-full rounded-xl object-cover ${aspectClass ? 'h-full' : ''}`}
-      />
+      <img src={src} alt="" style={imgStyle} />
     </div>
   );
 }
@@ -79,14 +126,14 @@ export function BoundImagePreview({ block }: { block: BoundImageBlockData }) {
   if (repeaterCtx) {
     const src = repeaterCtx.entryData[block.fieldKey];
     if (!src) return null;
-    return <ImageWithAspect src={String(src)} aspect={block.aspectRatio ?? null} />;
+    return <BoundImageRender src={String(src)} block={block} />;
   }
 
   // Template editor mock: render sample image
   if (mockCtx) {
     const src = mockCtx.entryData[block.fieldKey];
     if (!src) return <Placeholder fieldKey={block.fieldKey} />;
-    return <ImageWithAspect src={String(src)} aspect={block.aspectRatio ?? null} />;
+    return <BoundImageRender src={String(src)} block={block} />;
   }
 
   // Detail-page path: no context — show placeholder
@@ -95,5 +142,5 @@ export function BoundImagePreview({ block }: { block: BoundImageBlockData }) {
   }
 
   if (!fetchedSrc) return null;
-  return <ImageWithAspect src={fetchedSrc} aspect={block.aspectRatio ?? null} />;
+  return <BoundImageRender src={fetchedSrc} block={block} />;
 }

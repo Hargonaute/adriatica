@@ -7,6 +7,25 @@ import { useMockCollectionEntry } from '@/contexts/MockCollectionEntryContext';
 import { type BoundRichTextBlockData } from '@/types';
 import { PROSE_CLASSES } from '../proseClasses';
 
+const FONT_SIZE_MAP: Record<string, string> = {
+  xs: '12px', sm: '14px', base: '16px', lg: '18px',
+  xl: '20px', '2xl': '24px', '3xl': '30px', '4xl': '36px',
+};
+
+const FONT_WEIGHT_MAP: Record<string, string> = {
+  normal: '400', medium: '500', semibold: '600', bold: '700',
+};
+
+function richTextStyle(block: BoundRichTextBlockData): React.CSSProperties {
+  const style: React.CSSProperties = {};
+  if (block.fontSize && FONT_SIZE_MAP[block.fontSize]) style.fontSize = FONT_SIZE_MAP[block.fontSize];
+  if (block.fontWeight && FONT_WEIGHT_MAP[block.fontWeight]) style.fontWeight = FONT_WEIGHT_MAP[block.fontWeight];
+  const color = (block.textColor ?? '').trim();
+  if (color) style.color = color;
+  if (block.textTransform && block.textTransform !== 'none') style.textTransform = block.textTransform;
+  return style;
+}
+
 function Placeholder({ fieldKey }: { fieldKey: string | null }) {
   return (
     <div className="border-2 border-dashed border-emerald-300 rounded-lg p-6 text-center bg-emerald-50/50 relative">
@@ -56,18 +75,20 @@ export function BoundRichTextPreview({ block }: { block: BoundRichTextBlockData 
     return <Placeholder fieldKey={null} />;
   }
 
+  const style = richTextStyle(block);
+
   // Inside a repeater: read value directly from context
   if (repeaterCtx) {
     const html = repeaterCtx.entryData[block.fieldKey];
     if (!html) return null;
-    return <div className={PROSE_CLASSES} dangerouslySetInnerHTML={{ __html: String(html) }} />;
+    return <div className={PROSE_CLASSES} style={style} dangerouslySetInnerHTML={{ __html: String(html) }} />;
   }
 
   // Template editor mock: render sample rich-text
   if (mockCtx) {
     const html = mockCtx.entryData[block.fieldKey];
     if (!html) return <Placeholder fieldKey={block.fieldKey} />;
-    return <div className={PROSE_CLASSES} dangerouslySetInnerHTML={{ __html: String(html) }} />;
+    return <div className={PROSE_CLASSES} style={style} dangerouslySetInnerHTML={{ __html: String(html) }} />;
   }
 
   // Detail-page path: no context — show placeholder
@@ -76,5 +97,5 @@ export function BoundRichTextPreview({ block }: { block: BoundRichTextBlockData 
   }
 
   if (!fetchedHtml) return null;
-  return <div className={PROSE_CLASSES} dangerouslySetInnerHTML={{ __html: fetchedHtml }} />;
+  return <div className={PROSE_CLASSES} style={style} dangerouslySetInnerHTML={{ __html: fetchedHtml }} />;
 }

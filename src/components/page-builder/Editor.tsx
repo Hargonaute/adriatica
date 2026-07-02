@@ -21,17 +21,21 @@ import { BlockSelector } from './BlockSelector';
 import { Inspector } from './Inspector';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Code, Layout, Save, Globe, ExternalLink, ArrowLeft, Plus } from 'lucide-react';
+import { Eye, Code, Layout, Save, Globe, ExternalLink, ArrowLeft, Plus, Monitor, Tablet, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTemplateBuilderStore } from '@/lib/store/templateBuilderStore';
 import { MockCollectionEntryContext } from '@/contexts/MockCollectionEntryContext';
 import { buildMockEntryData } from '@/lib/mockEntryData';
+import { Navbar } from '@/components/home/Navbar';
+import { SiteFooter } from '@/components/home/SiteFooter';
 
 interface PageBuilderEditorProps {
   initialData: PageData;
   mode?: 'static' | 'template';
+  /** Kind of template being edited. Only meaningful when mode === 'template'. */
+  templateKind?: 'index' | 'detail' | null;
   onSave?: (data: PageData) => Promise<void>;
   onPublish?: (data: PageData) => Promise<void>;
   onUnpublish?: (data: PageData) => Promise<void>;
@@ -73,14 +77,20 @@ function findParentRepeater(blocks: Block[], id: string): RepeaterBlockData | nu
   return null;
 }
 
-export default function PageBuilderEditor({ initialData, mode = 'static', onSave, onPublish, onUnpublish }: PageBuilderEditorProps) {
+export default function PageBuilderEditor({ initialData, mode = 'static', templateKind = null, onSave, onPublish, onUnpublish }: PageBuilderEditorProps) {
   const [data, setData] = useState<PageData>(initialData);
   const [language, setLanguage] = useState<'en' | 'ar'>('en');
   const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'json'>('edit');
+  const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Reset viewport when leaving Preview mode
+  useEffect(() => {
+    if (activeTab !== 'preview') setViewport('desktop');
+  }, [activeTab]);
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestData = useRef(data);
@@ -526,10 +536,12 @@ export default function PageBuilderEditor({ initialData, mode = 'static', onSave
   // instead of blank boxes.
   const templateCollectionId = useTemplateBuilderStore((s) => s.collectionId);
   const [mockEntry, setMockEntry] = useState<{ entryData: Record<string, any> } | null>(null);
+  const [templateCollectionName, setTemplateCollectionName] = useState<string | null>(null);
 
   useEffect(() => {
     if (mode !== 'template' || !templateCollectionId) {
       setMockEntry(null);
+      setTemplateCollectionName(null);
       return;
     }
     let cancelled = false;
@@ -539,8 +551,14 @@ export default function PageBuilderEditor({ initialData, mode = 'static', onSave
         if (cancelled) return;
         const fields = Array.isArray(col?.fields) ? col.fields : [];
         setMockEntry({ entryData: buildMockEntryData(fields) });
+        setTemplateCollectionName(typeof col?.name === 'string' ? col.name : null);
       })
-      .catch(() => { if (!cancelled) setMockEntry(null); });
+      .catch(() => {
+        if (!cancelled) {
+          setMockEntry(null);
+          setTemplateCollectionName(null);
+        }
+      });
     return () => { cancelled = true; };
   }, [mode, templateCollectionId]);
 
@@ -599,8 +617,39 @@ export default function PageBuilderEditor({ initialData, mode = 'static', onSave
           </TabsList>
         </Tabs>
 
-        {/* Right: language toggle + actions */}
+        {/* Right: viewport toggle (preview only) + language toggle + actions */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Viewport toggle — only in Preview mode */}
+          {activeTab === 'preview' && (
+            <>
+              <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
+                {([
+                  { key: 'desktop', label: 'Desktop', Icon: Monitor },
+                  { key: 'tablet',  label: 'Tablet',  Icon: Tablet },
+                  { key: 'mobile',  label: 'Mobile',  Icon: Smartphone },
+                ] as const).map(({ key, label, Icon }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setViewport(key)}
+                    title={label}
+                    aria-label={label}
+                    aria-pressed={viewport === key}
+                    className={cn(
+                      'p-1.5 rounded-md transition-all',
+                      viewport === key
+                        ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                  </button>
+                ))}
+              </div>
+              <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
+            </>
+          )}
+
           {/* Language toggle */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
             <button
@@ -695,6 +744,21 @@ export default function PageBuilderEditor({ initialData, mode = 'static', onSave
               onClick={() => setSelectedBlockId(null)}
             >
               <div className="max-w-4xl mx-auto space-y-3 pb-24">
+                {mode === 'template' && templateKind === 'detail' && templateCollectionId && (
+                  <div
+                    className="rounded-lg border border-[#BC0D2A]/20 bg-[#BC0D2A]/5 px-4 py-2.5 flex items-center gap-2 text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Layout className="h-4 w-4 text-[#BC0D2A] shrink-0" />
+                    <span className="text-slate-700 dark:text-slate-200">
+                      Template for:{' '}
+                      <span className="font-semibold">
+                        {templateCollectionName ?? '…'}
+                      </span>{' '}
+                      collection
+                    </span>
+                  </div>
+                )}
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -812,18 +876,44 @@ export default function PageBuilderEditor({ initialData, mode = 'static', onSave
         )}
 
         {activeTab === 'preview' && (
-          <main
-            className="flex-1 overflow-y-auto bg-white"
+          <div
+            className={cn(
+              'flex-1 overflow-y-auto',
+              viewport === 'desktop'
+                ? 'bg-white'
+                : 'bg-slate-100 dark:bg-slate-950 py-8'
+            )}
             dir={language === 'ar' ? 'rtl' : 'ltr'}
           >
-            {blocks.length === 0 ? (
-              <div className="text-center py-32 text-slate-400 text-sm">
-                No blocks to preview. Switch to Edit tab to add blocks.
-              </div>
-            ) : (
-              blocks.map((block) => <RenderPreview key={block.id} block={block} />)
-            )}
-          </main>
+            {/*
+              @container/preview scopes container queries so that block
+              styles (mobileBehavior, hideOnMobile) can respond to this
+              wrapper's width rather than the browser viewport width —
+              which is what makes the Tablet/Mobile toggle actually
+              change layout instead of just cropping the content.
+            */}
+            <div
+              className={cn(
+                '@container/preview mx-auto bg-white transition-[max-width] duration-200',
+                viewport === 'tablet' &&
+                  'max-w-[768px] shadow-xl ring-1 ring-slate-200 dark:ring-slate-800',
+                viewport === 'mobile' &&
+                  'max-w-[390px] shadow-xl rounded-3xl overflow-hidden border border-slate-300 dark:border-slate-700'
+              )}
+            >
+              <Navbar />
+              <main>
+                {blocks.length === 0 ? (
+                  <div className="text-center py-32 text-slate-400 text-sm">
+                    No blocks to preview. Switch to Edit tab to add blocks.
+                  </div>
+                ) : (
+                  blocks.map((block) => <RenderPreview key={block.id} block={block} />)
+                )}
+              </main>
+              <SiteFooter />
+            </div>
+          </div>
         )}
 
         {activeTab === 'json' && (

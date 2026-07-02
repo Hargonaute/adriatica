@@ -1,5 +1,5 @@
 import { type BlockData } from '@/types';
-import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library, Mail, PhoneCall, Type, CalendarDays, AlignLeft, ListTree } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library, Mail, PhoneCall, Type, CalendarDays, AlignLeft, ListTree, Table as TableIcon } from 'lucide-react';
 import React from 'react';
 
 import { RichTextEditor, RichTextPreview } from './rich-text/RichTextBlock';
@@ -18,6 +18,7 @@ import { BoundImageEditor, BoundImagePreview } from './bound/BoundImageBlock';
 import { BoundRichTextEditor, BoundRichTextPreview } from './bound/BoundRichTextBlock';
 import { BoundDateEditor, BoundDatePreview } from './bound/BoundDateBlock';
 import { CollectionItemFieldsEditor, CollectionItemFieldsPreview } from './collection-item-fields/CollectionItemFieldsBlock';
+import { TableEditor, TablePreview } from './table/TableBlock';
 
 export type BlockConfig<T extends BlockData = BlockData> = {
   type: T['type'];
@@ -115,6 +116,25 @@ export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
     Editor: ColumnsEditor,
     Preview: ColumnsPreview,
   },
+  'table': {
+    type: 'table',
+    label: 'Table',
+    description: 'Data table with rows and columns',
+    icon: TableIcon,
+    createDefault: () => ({
+      caption: '',
+      headers: ['Caractéristique', 'Valeur', 'Unité'],
+      rows: [
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', ''],
+      ],
+      striped: true,
+      bordered: true,
+    }),
+    Editor: TableEditor,
+    Preview: TablePreview,
+  },
   'cta': {
     type: 'cta',
     label: 'Call to Action',
@@ -147,10 +167,13 @@ export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
   'spacer': {
     type: 'spacer',
     label: 'Spacer',
-    description: 'Explicit vertical whitespace between blocks',
+    description: 'Explicit vertical whitespace, optionally with a divider line',
     icon: Minus,
     createDefault: () => ({
-      height: 'md',
+      size: 'md',
+      showDivider: false,
+      dividerStyle: 'solid',
+      dividerColor: '',
     }),
     Editor: SpacerEditor,
     Preview: SpacerPreview,

@@ -28,14 +28,15 @@ export interface BaseBlockSettings {
   hideOnMobile?: boolean;
   customClassName?: string;
   // Template-mode styling extensions
-  fontSize?: 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+  fontSize?: 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
   fontWeight?: 'normal' | 'medium' | 'semibold' | 'bold';
   textColor?: string;
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   borderWidth?: '0' | '1' | '2' | '4';
   borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
   gap?: 'none' | 'sm' | 'md' | 'lg';
   gridColumns?: '1' | '2' | '3' | '4';
-  aspectRatio?: 'auto' | 'square' | 'video' | 'portrait';
+  aspectRatio?: 'auto' | 'square' | 'video' | 'portrait' | '1:1' | '4:3' | '16:9' | '3:4';
 }
 
 // --- Specific Block Data Interfaces ---
@@ -51,11 +52,12 @@ export interface ImageBlockData extends BaseBlockSettings {
   assetId?: string;
   url?: string;
   alt: string;
-  width?: number;
   height?: number;
   caption?: string;
-  objectFit?: 'cover' | 'contain';
+  objectFit?: 'cover' | 'contain' | 'fill';
   linkUrl?: string;
+  /** Sizing preset — 'full' | 'half' | 'third' | 'auto'. Defaults to 'full'. */
+  width?: 'full' | 'half' | 'third' | 'auto';
 }
 
 export interface VideoBlockData extends BaseBlockSettings {
@@ -103,7 +105,27 @@ export interface ColumnsBlockData extends BaseBlockSettings {
 
 export interface SpacerBlockData extends BaseBlockSettings {
   type: 'spacer';
-  height: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Vertical whitespace size — xs 8px, sm 16px, md 32px, lg 64px, xl 96px. */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** @deprecated Legacy field from the pre-divider Spacer. Read as a fallback for `size`. */
+  height?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  showDivider?: boolean;
+  /** Any CSS color. Defaults to currentColor at 20% opacity. */
+  dividerColor?: string;
+  dividerStyle?: 'solid' | 'dashed' | 'dotted';
+}
+
+export interface TableBlockData extends BaseBlockSettings {
+  type: 'table';
+  /** Optional heading shown above the table. */
+  caption?: string;
+  headers: string[];
+  /** Each row's length is kept in sync with headers by the editor. */
+  rows: string[][];
+  /** Alternating row backgrounds. Defaults to true. */
+  striped?: boolean;
+  /** Visible cell borders. Defaults to true. */
+  bordered?: boolean;
 }
 
 export interface CtaBlockData extends BaseBlockSettings {
@@ -161,6 +183,10 @@ export interface CollectionItemFieldsBlockData extends BaseBlockSettings {
 export interface ContainerBlockData extends BaseBlockSettings {
   type: 'container';
   direction: 'row' | 'column';
+  /** Preset layout — overrides direction for multi-column variants. Defaults to 'stack'. */
+  layout?: 'stack' | 'two-col-text-image' | 'two-col-image-text' | 'three-col';
+  /** How the container collapses below 768px. Defaults to 'stack'. */
+  mobileBehavior?: 'stack' | 'same' | 'hide';
   containerGap?: 'none' | 'sm' | 'md' | 'lg';
   containerPadding?: 'none' | 'sm' | 'md' | 'lg';
   backgroundColor?: string;
@@ -190,10 +216,15 @@ export interface BoundBlockData extends BaseBlockSettings {
 
 export interface BoundTextBlockData extends BoundBlockData {
   type: 'bound-text';
+  /** HTML tag to render the value into. Defaults to 'p'. */
+  as?: 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'span';
 }
 
 export interface BoundImageBlockData extends BoundBlockData {
   type: 'bound-image';
+  objectFit?: 'cover' | 'contain' | 'fill';
+  /** Sizing preset — 'full' | 'half' | 'third' | 'auto'. Defaults to 'full'. */
+  width?: 'full' | 'half' | 'third' | 'auto';
 }
 
 export interface BoundRichTextBlockData extends BoundBlockData {
@@ -213,6 +244,7 @@ export type BlockData =
   | HeroBlockData
   | ColumnsBlockData
   | SpacerBlockData
+  | TableBlockData
   | CtaBlockData
   | CollectionListBlockData
   | NewsletterBlockData

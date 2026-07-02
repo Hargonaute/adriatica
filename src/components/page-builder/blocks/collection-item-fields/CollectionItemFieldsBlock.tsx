@@ -112,49 +112,58 @@ export function CollectionItemFieldsPreview({
     }
   }, [ctx?.itemId, mockCtx, templateCollectionId]);
 
-  // Template editor with mock data + schema — render sample field values
+  // Template editor with mock data + schema — render sample field values.
+  // In this mock/preview context we surface hidden fields with a badge so the
+  // designer can confirm the filter is doing what they expect; on the real
+  // detail-page render path (the `ctx` branch below) hidden fields are dropped.
   if (!ctx && mockCtx && colData) {
     const hidden = new Set(block.hiddenFields ?? []);
     const itemData = mockCtx.entryData;
     return (
       <div className="max-w-[860px] mx-auto space-y-8">
         {colData.fields.map(field => {
-          if (hidden.has(field.key)) return null;
           const val = itemData[field.key];
-          if (val === undefined || val === null || val === '') return null;
+          const isHidden = hidden.has(field.key);
+          const isEmpty = val === undefined || val === null || val === '';
+          if (!isHidden && isEmpty) return null;
 
           return (
-            <div key={field.id}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+            <div key={field.id} className={isHidden ? 'opacity-40' : undefined}>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-2">
                 {field.label}
+                {isHidden && (
+                  <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal">
+                    hidden
+                  </span>
+                )}
               </p>
 
-              {field.type === 'image' && (
+              {field.type === 'image' && !isEmpty && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={String(val)} alt={field.label} className="w-full max-h-[480px] object-cover rounded-2xl" />
               )}
 
-              {field.type === 'rich-text' && (
+              {field.type === 'rich-text' && !isEmpty && (
                 <div className={PROSE_CLASSES} dangerouslySetInnerHTML={{ __html: String(val) }} />
               )}
 
-              {field.type === 'textarea' && (
+              {field.type === 'textarea' && !isEmpty && (
                 <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">{String(val)}</p>
               )}
 
-              {field.type === 'checkbox' && (
+              {field.type === 'checkbox' && !isEmpty && (
                 <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${val ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {val ? '✓ Yes' : '✗ No'}
                 </span>
               )}
 
-              {field.type === 'email' && (
+              {field.type === 'email' && !isEmpty && (
                 <a href={`mailto:${String(val)}`} className="text-[#BC0D2A] font-medium hover:underline">
                   {String(val)}
                 </a>
               )}
 
-              {(field.type === 'text' || field.type === 'number' || field.type === 'date') && (
+              {(field.type === 'text' || field.type === 'number' || field.type === 'date') && !isEmpty && (
                 <p className="text-base text-foreground">{String(val)}</p>
               )}
             </div>

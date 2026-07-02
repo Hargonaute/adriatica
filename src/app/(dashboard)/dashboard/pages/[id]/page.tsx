@@ -1,36 +1,18 @@
 import { db } from '@/lib/db';
 import { pages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { notFound, redirect } from 'next/navigation';
-import PageBuilderEditor from '@/components/page-builder/Editor';
+import { notFound } from 'next/navigation';
 import { type PageData } from '@/types';
 import { migratePageData } from '@/lib/page-builder/json/migrate';
 import PageEditorWrapper from './PageEditorWrapper';
 
 export default async function PageEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
-  // Handle "new" creation separately or check ID
-  if (id === 'new') {
-      // Create a default page and redirect to it
-      const [newPage] = await db.insert(pages).values({
-          title: 'Untitled Page',
-          slug: `page-${Date.now()}`,
-          draft_blocks: { en: [], ar: [] },
-      }).returning();
-      
-      redirect(`/dashboard/pages/${newPage.id}`);
-  }
-  
-  console.log('[Debug] PageEditorPage params.id:', id);
 
   const result = await db.select().from(pages).where(eq(pages.id, id));
   const page = result[0];
-  
-  console.log('[Debug] Page found?', !!page);
 
   if (!page) {
-      console.log('[Debug] Page not found, returning 404');
       notFound();
   }
 
@@ -54,5 +36,12 @@ export default async function PageEditorPage({ params }: { params: Promise<{ id:
   // But Editor expects `onSave` etc.
   // We'll wrap the Editor with a Client Component that allows using fetch
   
-  return <PageEditorWrapper initialData={initialData} isTemplate={page.isTemplate} templateCollectionId={page.templateCollectionId ?? null} />;
+  return (
+    <PageEditorWrapper
+      initialData={initialData}
+      isTemplate={page.isTemplate}
+      templateKind={page.templateKind ?? null}
+      templateCollectionId={page.templateCollectionId ?? null}
+    />
+  );
 }

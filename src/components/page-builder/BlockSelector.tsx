@@ -29,7 +29,7 @@ const EXTRA_BLOCK_META: Record<string, { type: string; label: string; descriptio
 
 // Group blocks into logical categories
 const CATEGORIES: { label: string; types: string[] }[] = [
-  { label: 'Content', types: ['hero', 'rich-text', 'cta', 'columns'] },
+  { label: 'Content', types: ['hero', 'rich-text', 'cta', 'columns', 'table'] },
   { label: 'Media', types: ['image', 'video'] },
   { label: 'Interactive', types: ['form', 'newsletter', 'contact-form', 'collection-list'] },
   { label: 'Layout', types: ['container', 'spacer'] },

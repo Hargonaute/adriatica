@@ -6,6 +6,42 @@ import { useRepeaterEntry } from '@/contexts/RepeaterEntryContext';
 import { useMockCollectionEntry } from '@/contexts/MockCollectionEntryContext';
 import { type BoundTextBlockData } from '@/types';
 
+const FONT_SIZE_MAP: Record<string, string> = {
+  xs: '12px', sm: '14px', base: '16px', lg: '18px',
+  xl: '20px', '2xl': '24px', '3xl': '30px', '4xl': '36px',
+};
+
+const FONT_WEIGHT_MAP: Record<string, string> = {
+  normal: '400', medium: '500', semibold: '600', bold: '700',
+};
+
+function boundTextStyle(block: BoundTextBlockData): React.CSSProperties {
+  const style: React.CSSProperties = {};
+  if (block.fontSize && FONT_SIZE_MAP[block.fontSize]) style.fontSize = FONT_SIZE_MAP[block.fontSize];
+  if (block.fontWeight && FONT_WEIGHT_MAP[block.fontWeight]) style.fontWeight = FONT_WEIGHT_MAP[block.fontWeight];
+  const color = (block.textColor ?? '').trim();
+  if (color) style.color = color;
+  if (block.textTransform && block.textTransform !== 'none') style.textTransform = block.textTransform;
+  return style;
+}
+
+function RenderedBoundText({
+  block,
+  value,
+}: {
+  block: BoundTextBlockData;
+  value: string;
+}) {
+  const Tag = (block.as ?? 'p') as keyof React.JSX.IntrinsicElements;
+  const style = boundTextStyle(block);
+  // Only apply the default typography class when the user hasn't overridden
+  // font size / weight / colour — otherwise inline styles win but the class
+  // still adds unwanted line-height defaults on headings.
+  const hasCustomTypography = !!(block.fontSize || block.fontWeight || block.textColor || block.textTransform);
+  const className = hasCustomTypography ? undefined : 'text-base text-foreground leading-relaxed';
+  return React.createElement(Tag, { className, style }, value);
+}
+
 function Placeholder({ fieldKey }: { fieldKey: string | null }) {
   return (
     <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center bg-blue-50/50 relative">
@@ -59,14 +95,14 @@ export function BoundTextPreview({ block }: { block: BoundTextBlockData }) {
   if (repeaterCtx) {
     const value = repeaterCtx.entryData[block.fieldKey];
     if (value == null) return null;
-    return <p className="text-base text-foreground leading-relaxed">{String(value)}</p>;
+    return <RenderedBoundText block={block} value={String(value)} />;
   }
 
   // Template editor mock: render sample content so designers see realistic output
   if (mockCtx) {
     const value = mockCtx.entryData[block.fieldKey];
     if (value == null) return <Placeholder fieldKey={block.fieldKey} />;
-    return <p className="text-base text-foreground leading-relaxed">{String(value)}</p>;
+    return <RenderedBoundText block={block} value={String(value)} />;
   }
 
   // Detail-page path: no context — show placeholder
@@ -75,5 +111,5 @@ export function BoundTextPreview({ block }: { block: BoundTextBlockData }) {
   }
 
   if (fetchedValue === null) return null;
-  return <p className="text-base text-foreground leading-relaxed">{fetchedValue}</p>;
+  return <RenderedBoundText block={block} value={fetchedValue} />;
 }
