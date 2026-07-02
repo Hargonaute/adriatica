@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown, Search } from "lucide-react";
-import type { NavLink } from "./Navbar";
+import type { NavLink } from "./nav-types";
 
 export interface MobileNavProps {
   links: NavLink[];

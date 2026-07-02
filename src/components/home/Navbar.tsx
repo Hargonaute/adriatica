@@ -5,8 +5,9 @@ import { NavActions } from "./NavActions";
 import { MobileNav } from "./MobileNav";
 import { db, pages } from "@/lib/db";
 import { and, eq, desc } from "drizzle-orm";
+import type { NavLink } from "./nav-types";
 
-export type NavLink = { label: string; href: string };
+export type { NavLink };
 
 const HARDCODED_LINKS: NavLink[] = [
   { label: "Recherche et Développement", href: "/recherche-et-developpement" },
