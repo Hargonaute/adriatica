@@ -121,7 +121,7 @@ Fix: add `where(eq(entries.status, 'published'))` filter to both queries.
 
 ### T18 · /api/entries/create — no shape validation
 **What:** Public form endpoint accepts arbitrary JSON keys — malicious client can inject extra fields into the entry JSONB.
-**Fix:** On POST, fetch the target collection's field definitions, whitelist only those keys from the request body, reject any extra keys with 400.
+**Fix:** On POST, fetch the target collection's field definitions, whitelist only those keys from the request body, reject any extra keys with 400.rrrr
 
 ---
 
