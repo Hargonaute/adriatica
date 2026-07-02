@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 import { useTemplateBuilderStore } from '@/lib/store/templateBuilderStore';
 import { MockCollectionEntryContext } from '@/contexts/MockCollectionEntryContext';
 import { buildMockEntryData } from '@/lib/mockEntryData';
-import { Navbar } from '@/components/home/Navbar';
+import { NavbarShell, PREVIEW_NAV_LINKS } from '@/components/home/NavbarShell';
 import { SiteFooter } from '@/components/home/SiteFooter';
 
 interface PageBuilderEditorProps {
@@ -901,7 +901,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                   'max-w-[390px] shadow-xl rounded-3xl overflow-hidden border border-slate-300 dark:border-slate-700'
               )}
             >
-              <Navbar />
+              <NavbarShell links={PREVIEW_NAV_LINKS} />
               <main>
                 {blocks.length === 0 ? (
                   <div className="text-center py-32 text-slate-400 text-sm">

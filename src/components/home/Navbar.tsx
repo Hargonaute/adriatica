@@ -1,10 +1,7 @@
 import { cache } from "react";
-import { NavLogo } from "./NavLogo";
-import { NavLinks } from "./NavLinks";
-import { NavActions } from "./NavActions";
-import { MobileNav } from "./MobileNav";
 import { db, pages } from "@/lib/db";
 import { and, eq, desc } from "drizzle-orm";
+import { NavbarShell } from "./NavbarShell";
 import type { NavLink } from "./nav-types";
 
 export type { NavLink };
@@ -41,16 +38,5 @@ const getNavLinks = cache(async (): Promise<NavLink[]> => {
 
 export async function Navbar() {
   const links = await getNavLinks();
-  return (
-    <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-100">
-      <div className="max-w-[1400px] mx-auto flex h-20 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-        <NavLogo />
-        <NavLinks links={links} />
-        <div className="flex items-center gap-2 sm:gap-4">
-          <NavActions />
-          <MobileNav links={links} />
-        </div>
-      </div>
-    </nav>
-  );
+  return <NavbarShell links={links} />;
 }
