@@ -1,7 +1,35 @@
 import { db } from './drizzle';
 import { collections, entries } from './schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import { slugify } from '@/lib/slugify';
+
+/**
+ * Given a desired slug string, return a slugified variant that is unique
+ * within the collection. Appends -2, -3, … as needed. Pass `excludeEntryId`
+ * when updating an existing entry so its current slug is not treated as a
+ * collision against itself.
+ */
+export async function ensureUniqueEntrySlug(
+  collectionId: string,
+  desired: string,
+  excludeEntryId?: string,
+): Promise<string> {
+  const base = slugify(desired) || 'entry';
+  let slug = base;
+  let n = 2;
+  while (true) {
+    const conditions = [
+      eq(entries.collectionId, collectionId),
+      eq(entries.slug, slug),
+    ];
+    if (excludeEntryId) conditions.push(ne(entries.id, excludeEntryId));
+    const existing = await db.query.entries.findFirst({
+      where: and(...conditions),
+    });
+    if (!existing) return slug;
+    slug = `${base}-${n++}`;
+  }
+}
 
 /**
  * Generate a unique slug for an entry within a collection.

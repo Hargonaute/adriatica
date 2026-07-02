@@ -28,6 +28,7 @@ async function getData(slug: string, itemId: string) {
     db.select().from(entries).where(
       and(
         eq(entries.collectionId, col.id),
+        eq(entries.status, 'published'),
         or(eq(entries.slug, itemId), eq(entries.id, itemId))
       )
     ).limit(1),

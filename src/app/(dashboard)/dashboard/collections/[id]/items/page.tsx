@@ -11,6 +11,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, X, Check, Upload, Download, FileUp } f
 import Link from 'next/link';
 import { BulkImportDialog } from '@/components/dashboard/BulkImportDialog';
 import { buildTemplateCSV, downloadCSV } from '@/lib/csv';
+import { slugify } from '@/lib/slugify';
 
 interface Field {
   id: string;
@@ -25,12 +26,14 @@ interface Collection {
   id: string;
   name: string;
   slug: string;
+  itemSlugField: string | null;
   fields: Field[];
 }
 
 interface Entry {
   id: string;
   collectionId: string;
+  slug: string | null;
   data: Record<string, any>;
   createdAt: string;
 }
@@ -205,28 +208,69 @@ function FieldInput({
 
 function ItemForm({
   fields,
+  collectionSlug,
+  slugSourceKey,
+  initialSlug = '',
   initial,
   onSubmit,
   onCancel,
   submitting,
 }: {
   fields: Field[];
+  collectionSlug: string;
+  slugSourceKey: string | null;
+  initialSlug?: string;
   initial?: Record<string, any>;
-  onSubmit: (data: Record<string, any>) => Promise<void>;
+  onSubmit: (slug: string, data: Record<string, any>) => Promise<void>;
   onCancel: () => void;
   submitting: boolean;
 }) {
   const [values, setValues] = useState<Record<string, any>>(initial ?? {});
+  const [slug, setSlug] = useState(initialSlug);
+  // Assume any pre-existing slug is user-owned; don't clobber it on field edits.
+  const [slugTouched, setSlugTouched] = useState(!!initialSlug);
 
-  const set = (key: string, val: any) => setValues(prev => ({ ...prev, [key]: val }));
+  const set = (key: string, val: any) => {
+    setValues(prev => ({ ...prev, [key]: val }));
+    if (!slugTouched && slugSourceKey && key === slugSourceKey && typeof val === 'string') {
+      setSlug(slugify(val));
+    }
+  };
+
+  const trimmedSlug = slug.trim();
+  const slugEmpty = trimmedSlug === '';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await onSubmit(values);
+    if (slugEmpty) return;
+    await onSubmit(trimmedSlug, values);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* URL slug — required, powers the item detail page */}
+      <div className="space-y-1.5">
+        <Label className="text-sm">
+          URL Slug <span className="text-destructive ml-0.5">*</span>
+        </Label>
+        <Input
+          value={slug}
+          onChange={e => { setSlugTouched(true); setSlug(slugify(e.target.value)); }}
+          placeholder="e.g. kamab-26"
+          className={`font-mono ${slugEmpty ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+        />
+        {slugEmpty ? (
+          <p className="text-xs text-destructive">
+            Required — the detail page URL cannot resolve without a slug.
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Page will be at:{' '}
+            <code className="font-mono">/collections/{collectionSlug}/{trimmedSlug}</code>
+          </p>
+        )}
+      </div>
+
       {fields.map(field => (
         <div key={field.id} className="space-y-1.5">
           {field.type !== 'checkbox' && (
@@ -240,7 +284,7 @@ function ItemForm({
       ))}
 
       <div className="flex gap-2 pt-2">
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" disabled={submitting || slugEmpty}>
           <Check className="h-4 w-4 mr-1.5" />
           {submitting ? 'Saving…' : 'Save Item'}
         </Button>
@@ -285,13 +329,13 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleCreate = async (data: Record<string, any>) => {
+  const handleCreate = async (slug: string, data: Record<string, any>) => {
     setSubmitting(true);
     try {
       const res = await fetch('/api/entries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ collectionId: id, data }),
+        body: JSON.stringify({ collectionId: id, data, slug }),
       });
       if (!res.ok) throw new Error('Failed to create');
       const newItem = await res.json();
@@ -305,13 +349,13 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
     }
   };
 
-  const handleUpdate = async (itemId: string, data: Record<string, any>) => {
+  const handleUpdate = async (itemId: string, slug: string, data: Record<string, any>) => {
     setSubmitting(true);
     try {
       const res = await fetch(`/api/entries/${itemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data }),
+        body: JSON.stringify({ data, slug }),
       });
       if (!res.ok) throw new Error('Failed to update');
       const updated = await res.json();
@@ -341,6 +385,13 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
   if (!collection) return <div className="p-10 text-center text-muted-foreground">Collection not found</div>;
 
   const fields = collection.fields;
+  // Field to watch for slug auto-generation: explicit itemSlugField wins,
+  // otherwise the first text field (mirrors generateEntrySlug on the server).
+  const slugSourceKey =
+    collection.itemSlugField ??
+    fields.find(f => f.type === 'text')?.key ??
+    null;
+  const missingSlugCount = items.filter(i => !i.slug || !i.slug.trim()).length;
 
   return (
     <div className="space-y-6 max-w-5xl pb-20">
@@ -383,6 +434,16 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
         </div>
       </div>
 
+      {/* Missing-slug warning banner */}
+      {missingSlugCount > 0 && (
+        <div className="rounded-md border border-amber-500/50 bg-amber-50 dark:bg-amber-950/20 text-amber-900 dark:text-amber-200 px-4 py-3 text-sm">
+          <span className="font-medium">
+            {missingSlugCount} {missingSlugCount === 1 ? 'entry is' : 'entries are'} missing slugs
+          </span>
+          {' '}— detail page URLs won't work until slugs are added. Open each entry and save it with a slug.
+        </div>
+      )}
+
       <BulkImportDialog
         open={showBulkImport}
         onOpenChange={setShowBulkImport}
@@ -410,6 +471,8 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
           <CardContent>
             <ItemForm
               fields={fields}
+              collectionSlug={collection.slug}
+              slugSourceKey={slugSourceKey}
               onSubmit={handleCreate}
               onCancel={() => setShowCreateForm(false)}
               submitting={submitting}
@@ -436,8 +499,11 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
                   <CardContent>
                     <ItemForm
                       fields={fields}
+                      collectionSlug={collection.slug}
+                      slugSourceKey={slugSourceKey}
+                      initialSlug={item.slug ?? ''}
                       initial={item.data}
-                      onSubmit={data => handleUpdate(item.id, data)}
+                      onSubmit={(slug, data) => handleUpdate(item.id, slug, data)}
                       onCancel={() => setEditingId(null)}
                       submitting={submitting}
                     />
@@ -445,6 +511,15 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
                 </>
               ) : (
                 <CardContent className="flex items-start justify-between gap-4 py-4">
+                  {/* Missing slug indicator */}
+                  {(!item.slug || !item.slug.trim()) && (
+                    <span
+                      className="shrink-0 inline-flex items-center rounded-full bg-destructive/10 text-destructive text-xs font-semibold px-2 py-0.5 mt-0.5"
+                      title="This entry has no slug — its detail page won't resolve. Edit it to add one."
+                    >
+                      No slug
+                    </span>
+                  )}
                   {/* Field preview */}
                   <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
                     {fields.slice(0, 4).map(field => {

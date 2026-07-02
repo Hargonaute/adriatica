@@ -1,34 +1,36 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { NavLink } from "./Navbar";
 
-export interface NavLinksProps {}
+export interface NavLinksProps {
+  links: NavLink[];
+}
 
-export function NavLinks(_props: NavLinksProps) {
+export function NavLinks({ links }: NavLinksProps) {
+  const pathname = usePathname();
   return (
     <div className="hidden lg:flex items-center gap-8">
-      <Link
-        href="#rd"
-        className="text-[15px] font-semibold text-slate-700 hover:text-[#BC0D2A] transition-colors"
-      >
-        Recherche et Développement
-      </Link>
-      <Link
-        href="#produits"
-        className="text-[15px] font-semibold text-slate-700 hover:text-[#BC0D2A] transition-colors"
-      >
-        Produits
-      </Link>
-      <Link
-        href="#contact"
-        className="text-[15px] font-semibold text-slate-700 hover:text-[#BC0D2A] transition-colors"
-      >
-        Contact
-      </Link>
-      <Link
-        href="#solutions"
-        className="text-[15px] font-semibold text-slate-700 hover:text-[#BC0D2A] transition-colors"
-      >
-        Trouver une solution
-      </Link>
+      {links.map((link) => {
+        const active =
+          pathname === link.href ||
+          (link.href !== "/" && pathname.startsWith(link.href + "/"));
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            aria-current={active ? "page" : undefined}
+            className={`text-[15px] font-semibold transition-colors ${
+              active
+                ? "text-[#BC0D2A]"
+                : "text-slate-700 hover:text-[#BC0D2A]"
+            }`}
+          >
+            {link.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }

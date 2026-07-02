@@ -36,16 +36,16 @@ export function HeroSection({
   imageAlt = DEFAULT_IMAGE_ALT,
 }: HeroSectionProps = {}) {
   return (
-    <section className="pt-24 pb-16 px-6 lg:px-8 max-w-[1400px] mx-auto text-center">
+    <section className="pt-14 pb-12 sm:pt-20 sm:pb-16 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto text-center">
       {/* Title & Subtitle */}
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-5 sm:space-y-6">
         {headline && (
-          <h1 className="font-[family-name:var(--font-inter)] font-semibold text-[60px] leading-[72px] tracking-[-0.02em] text-center text-slate-900">
+          <h1 className="font-[family-name:var(--font-inter)] font-semibold text-[34px] leading-[1.1] sm:text-5xl sm:leading-tight md:text-[60px] md:leading-[72px] tracking-[-0.02em] text-center text-slate-900">
             {headline}
           </h1>
         )}
         {subheadline && (
-          <p className="text-lg sm:text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed">
             {subheadline}
           </p>
         )}
@@ -76,7 +76,7 @@ export function HeroSection({
 
       {/* Hero Image */}
       {imageUrl && (
-        <div className="mt-16 w-full max-w-[1200px] mx-auto aspect-[16/9] md:aspect-[21/9] rounded-[2rem] overflow-hidden bg-slate-100 shadow-2xl relative">
+        <div className="mt-10 sm:mt-16 w-full max-w-[1200px] mx-auto aspect-[16/9] md:aspect-[21/9] rounded-2xl sm:rounded-[2rem] overflow-hidden bg-slate-100 shadow-2xl relative">
           <Image
             src={imageUrl}
             alt={imageAlt}

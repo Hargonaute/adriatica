@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Trash2, ArrowLeft, Code, Database, ExternalLink, Layout } from 'lucide-react';
+import { Trash2, ArrowLeft, Code, Database, ExternalLink, Layout, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -167,16 +167,23 @@ export default function CollectionDetailsPage({ params }: { params: Promise<{ id
     const [loading, setLoading] = useState(true);
     const [pages, setPages] = useState<PageListItem[]>([]);
     const [savingTemplate, setSavingTemplate] = useState(false);
+    const [missingSlugCount, setMissingSlugCount] = useState(0);
 
     useEffect(() => {
         Promise.all([
             fetch(`/api/collections/${id}`).then(r => r.json()),
             fetch('/api/pages').then(r => r.json()),
+            fetch(`/api/entries?collectionId=${id}&includeUnpublished=true`).then(r => r.json()),
         ])
-            .then(([col, pageList]) => {
+            .then(([col, pageList, entriesList]) => {
                 if (col.error) throw new Error(col.error);
                 setData(col);
                 setPages(Array.isArray(pageList) ? pageList : []);
+                if (Array.isArray(entriesList)) {
+                    setMissingSlugCount(
+                        entriesList.filter((e: { slug: string | null }) => !e.slug || !String(e.slug).trim()).length,
+                    );
+                }
                 setLoading(false);
             })
             .catch(() => {
@@ -249,6 +256,20 @@ export default function CollectionDetailsPage({ params }: { params: Promise<{ id
                     <Trash2 className="h-4 w-4 mr-2" /> Delete Collection
                 </Button>
             </div>
+
+            {missingSlugCount > 0 && (
+                <div className="rounded-md border border-amber-500/50 bg-amber-50 dark:bg-amber-950/20 px-4 py-3 flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                        <p className="font-medium text-amber-900 dark:text-amber-200">
+                            {missingSlugCount} {missingSlugCount === 1 ? 'entry is' : 'entries are'} missing slugs — detail page URLs won&rsquo;t work until slugs are added.
+                        </p>
+                        <p className="text-amber-800 dark:text-amber-300/80 mt-1">
+                            <Link href={`/dashboard/collections/${id}/items`} className="underline">Open the items list</Link> to fix each entry.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             <div className="grid md:grid-cols-3 gap-8">
                 {/* Fields Management */}

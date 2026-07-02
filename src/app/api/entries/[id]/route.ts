@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { entries } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { ensureUniqueEntrySlug } from '@/lib/db/generateEntrySlug';
 
 export async function GET(
   _request: Request,
@@ -36,7 +37,17 @@ export async function PATCH(
       updates.data = body.data;
     }
 
-    if ('slug' in body) updates.slug = body.slug ?? null;
+    if ('slug' in body) {
+      if (typeof body.slug === 'string' && body.slug.trim()) {
+        const [existing] = await db.select().from(entries).where(eq(entries.id, id)).limit(1);
+        if (!existing) {
+          return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
+        }
+        updates.slug = await ensureUniqueEntrySlug(existing.collectionId, body.slug, id);
+      } else {
+        updates.slug = null;
+      }
+    }
 
     if ('status' in body) {
       if (!['draft', 'published'].includes(body.status)) {
