@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, Search } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import type { NavLink } from "./nav-types";
 
 export interface MobileNavProps {
@@ -12,7 +14,12 @@ export interface MobileNavProps {
 
 export function MobileNav({ links }: MobileNavProps) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setOpen(false);
@@ -32,6 +39,92 @@ export function MobileNav({ links }: MobileNavProps) {
     };
   }, [open]);
 
+  const drawer = (
+    <div
+      className={`lg:hidden fixed inset-0 z-[100] bg-white flex flex-col transition-transform duration-300 ease-out ${
+        open ? "translate-x-0" : "translate-x-full pointer-events-none"
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-hidden={!open}
+    >
+      {/* Header: logo + close */}
+      <div className="flex items-center justify-between h-20 px-5 border-b border-slate-100 shrink-0">
+        <Link
+          href="/"
+          onClick={() => setOpen(false)}
+          className="flex items-center"
+          aria-label="Accueil"
+        >
+          <Image
+            src="/images Adriatica/logo.png"
+            alt="Maghreb Adriatica"
+            width={222}
+            height={32}
+            className="h-7 w-auto"
+          />
+        </Link>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label="Fermer le menu"
+          className="inline-flex items-center justify-center h-11 w-11 rounded-md text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          <X size={22} />
+        </button>
+      </div>
+
+      {/* Nav links */}
+      <nav className="flex-1 overflow-y-auto">
+        {links.map((link) => {
+          const active =
+            pathname === link.href ||
+            (link.href !== "/" && pathname.startsWith(link.href + "/"));
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              aria-current={active ? "page" : undefined}
+              className={`flex items-center min-h-[56px] px-5 border-b border-slate-100 text-[16px] font-semibold transition-colors ${
+                active
+                  ? "text-[#BC0D2A] bg-[#BC0D2A]/5"
+                  : "text-slate-800 hover:bg-slate-50"
+              }`}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Footer: language + CTA */}
+      <div className="shrink-0 border-t border-slate-100 px-5 pt-5 pb-6 flex flex-col gap-3 bg-white">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="flex-1 inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 text-sm font-semibold text-slate-700 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+          >
+            FR <ChevronDown size={14} className="text-slate-400" />
+          </button>
+          <button
+            type="button"
+            className="flex-1 inline-flex items-center justify-center min-h-[44px] px-3 text-sm font-semibold text-slate-500 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
+          >
+            AR
+          </button>
+        </div>
+        <Link
+          href="/contact"
+          onClick={() => setOpen(false)}
+          className="w-full inline-flex items-center justify-center min-h-[52px] px-5 rounded-md bg-[#BC0D2A] text-white font-semibold hover:bg-[#9A0B22] transition-colors shadow-sm shadow-red-500/20"
+        >
+          Contact
+        </Link>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <button
@@ -44,75 +137,7 @@ export function MobileNav({ links }: MobileNavProps) {
         <Menu size={22} />
       </button>
 
-      {open && (
-        <div className="lg:hidden fixed inset-0 z-[60]" role="dialog" aria-modal="true">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
-          <div className="absolute right-0 top-0 bottom-0 w-[86%] max-w-sm bg-white shadow-2xl flex flex-col overflow-y-auto">
-            <div className="flex items-center justify-between px-5 h-20 border-b border-slate-100">
-              <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-                Menu
-              </span>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Fermer le menu"
-                className="inline-flex items-center justify-center h-11 w-11 rounded-md text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                <X size={22} />
-              </button>
-            </div>
-
-            <nav className="flex-1 flex flex-col px-4 py-4 gap-1">
-              {links.map((link) => {
-                const active =
-                  pathname === link.href ||
-                  (link.href !== "/" && pathname.startsWith(link.href + "/"));
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    aria-current={active ? "page" : undefined}
-                    className={`flex items-center min-h-[48px] px-3 rounded-md text-[16px] font-semibold transition-colors ${
-                      active
-                        ? "bg-[#BC0D2A]/10 text-[#BC0D2A]"
-                        : "text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div className="px-5 pb-6 pt-4 border-t border-slate-100 flex flex-col gap-3">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-1.5 h-11 px-3 text-sm font-semibold text-slate-700 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors"
-              >
-                FR <ChevronDown size={14} className="text-slate-400" />
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 h-11 px-4 rounded-md border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                <Search size={16} strokeWidth={2.5} />
-                Rechercher
-              </button>
-              <Link
-                href="/contact"
-                onClick={() => setOpen(false)}
-                className="inline-flex items-center justify-center h-11 px-5 rounded-md bg-[#BC0D2A] text-white font-semibold hover:bg-[#9A0B22] transition-colors shadow-sm shadow-red-500/20"
-              >
-                Contact
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+      {mounted && createPortal(drawer, document.body)}
     </>
   );
 }
