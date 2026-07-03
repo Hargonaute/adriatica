@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { Plus, Database, Settings2, List } from 'lucide-react';
 import { toast } from 'sonner';
@@ -25,6 +26,7 @@ export default function CollectionsPage() {
   const [newName, setNewName] = useState('');
   const [newSlug, setNewSlug] = useState('');
   const [slugEdited, setSlugEdited] = useState(false);
+  const [detailStarter, setDetailStarter] = useState<'default' | 'product'>('default');
 
   const slugify = (value: string) =>
     value
@@ -55,7 +57,7 @@ export default function CollectionsPage() {
       const res = await fetch('/api/collections', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName, slug: newSlug }),
+        body: JSON.stringify({ name: newName, slug: newSlug, detailStarter }),
       });
 
       if (!res.ok) throw new Error('Failed to create');
@@ -65,6 +67,7 @@ export default function CollectionsPage() {
       setNewName('');
       setNewSlug('');
       setSlugEdited(false);
+      setDetailStarter('default');
       toast.success('Collection created');
     } catch {
       toast.error('Failed to create collection');
@@ -117,6 +120,21 @@ export default function CollectionsPage() {
                   required
                 />
                 <p className="text-xs text-muted-foreground">Public URL: /collections/{newSlug || '…'}/…</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Detail Template Starter</label>
+                <Select value={detailStarter} onValueChange={(v) => setDetailStarter(v as 'default' | 'product')}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Blank (auto-fields)</SelectItem>
+                    <SelectItem value="product">Product Detail — hero, table, composition, download</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Only affects the auto-generated detail template. You can still start with a blank template later.
+                </p>
               </div>
               <Button type="submit" className="w-full" disabled={isCreating}>
                 {isCreating ? 'Creating...' : (

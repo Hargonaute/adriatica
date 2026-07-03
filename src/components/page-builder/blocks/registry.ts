@@ -1,5 +1,5 @@
 import { type BlockData } from '@/types';
-import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library, Mail, PhoneCall, Type, CalendarDays, AlignLeft, ListTree, Table as TableIcon } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library, Mail, PhoneCall, Type, CalendarDays, AlignLeft, ListTree, Table as TableIcon, PackageOpen, Heading, ListChecks, FileDown } from 'lucide-react';
 import React from 'react';
 
 import { RichTextEditor, RichTextPreview } from './rich-text/RichTextBlock';
@@ -19,6 +19,10 @@ import { BoundRichTextEditor, BoundRichTextPreview } from './bound/BoundRichText
 import { BoundDateEditor, BoundDatePreview } from './bound/BoundDateBlock';
 import { CollectionItemFieldsEditor, CollectionItemFieldsPreview } from './collection-item-fields/CollectionItemFieldsBlock';
 import { TableEditor, TablePreview } from './table/TableBlock';
+import { ProductHeroEditor, ProductHeroPreview } from './product-hero/ProductHeroBlock';
+import { SectionHeadingEditor, SectionHeadingPreview } from './section-heading/SectionHeadingBlock';
+import { KeyValueListEditor, KeyValueListPreview } from './key-value-list/KeyValueListBlock';
+import { DownloadButtonEditor, DownloadButtonPreview } from './download-button/DownloadButtonBlock';
 
 export type BlockConfig<T extends BlockData = BlockData> = {
   type: T['type'];
@@ -270,6 +274,88 @@ export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
     createDefault: () => ({ hiddenFields: [] }),
     Editor: CollectionItemFieldsEditor,
     Preview: CollectionItemFieldsPreview,
+  },
+  'product-hero': {
+    type: 'product-hero',
+    label: 'Product Hero',
+    description: 'Two-column product showcase with image and CTA',
+    icon: PackageOpen,
+    createDefault: () => ({
+      title: '',
+      subtitle1: '',
+      subtitle2: '',
+      body: '',
+      ctaLabel: '',
+      ctaUrl: '',
+      image: '',
+      imagePosition: 'right',
+      backgroundColor: '',
+      titleFieldKey: null,
+      subtitle1FieldKey: null,
+      subtitle2FieldKey: null,
+      bodyFieldKey: null,
+      imageFieldKey: null,
+      paddingTop: 'lg',
+      paddingBottom: 'lg',
+    }),
+    Editor: ProductHeroEditor,
+    Preview: ProductHeroPreview,
+  },
+  'section-heading': {
+    type: 'section-heading',
+    label: 'Section Heading',
+    description: 'Heading with optional subheading and divider',
+    icon: Heading,
+    createDefault: () => ({
+      heading: '',
+      subheading: '',
+      align: 'left',
+      size: 'md',
+      showDivider: false,
+      dividerColor: '',
+      headingFieldKey: null,
+      subheadingFieldKey: null,
+      paddingTop: 'sm',
+      paddingBottom: 'sm',
+    }),
+    Editor: SectionHeadingEditor,
+    Preview: SectionHeadingPreview,
+  },
+  'key-value-list': {
+    type: 'key-value-list',
+    label: 'Key-Value List',
+    description: 'Label · value rows for specs, composition, or details',
+    icon: ListChecks,
+    createDefault: () => ({
+      heading: '',
+      items: [
+        { id: crypto.randomUUID(), label: '', value: '' },
+        { id: crypto.randomUUID(), label: '', value: '' },
+        { id: crypto.randomUUID(), label: '', value: '' },
+      ],
+      striped: true,
+      showDividers: true,
+      layout: 'two-col',
+    }),
+    Editor: KeyValueListEditor,
+    Preview: KeyValueListPreview,
+  },
+  'download-button': {
+    type: 'download-button',
+    label: 'Download Button',
+    description: 'CTA linked to a file — PDFs, spec sheets, downloads',
+    icon: FileDown,
+    createDefault: () => ({
+      label: 'Download',
+      url: '',
+      icon: 'download',
+      variant: 'primary',
+      align: 'left',
+      openInNewTab: true,
+      urlFieldKey: null,
+    }),
+    Editor: DownloadButtonEditor,
+    Preview: DownloadButtonPreview,
   },
 };
 

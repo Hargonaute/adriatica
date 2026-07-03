@@ -86,7 +86,7 @@ export function migratePageData(payload: any): PageData {
     title: payload.title || 'Untitled Page',
     blocks: {
       en: [],
-      ar: [], // Initialize empty if missing
+      fr: [], // Initialize empty if missing
     },
     meta: {
       // Spread all stored meta fields so nothing is lost across editor round-trips.
@@ -105,14 +105,14 @@ export function migratePageData(payload: any): PageData {
     // It's the old format with single blocks array
     result.blocks.en = payload.blocks.map((b: LegacyBlock, i: number) => migrateBlock(b, i));
   } else if (payload.blocks && typeof payload.blocks === 'object') {
-    // It's likely the new format { en: [], ar: [] }
+    // It's likely the new format { en: [], fr: [] }
     // Ensure en exists
     if (Array.isArray(payload.blocks.en)) {
       result.blocks.en = payload.blocks.en.map((b: LegacyBlock, i: number) => migrateBlock(b, i));
     }
-    // Ensure ar exists
-    if (Array.isArray(payload.blocks.ar)) {
-      result.blocks.ar = payload.blocks.ar.map((b: LegacyBlock, i: number) => migrateBlock(b, i));
+    // Ensure fr exists
+    if (Array.isArray(payload.blocks.fr)) {
+      result.blocks.fr = payload.blocks.fr.map((b: LegacyBlock, i: number) => migrateBlock(b, i));
     }
   }
 

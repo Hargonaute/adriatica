@@ -87,7 +87,7 @@ const PageDataSchema = z.object({
   title: z.string(),
   blocks: z.object({
     en: z.array(BlockSchema),
-    ar: z.array(BlockSchema).optional(),
+    fr: z.array(BlockSchema).optional(),
   }),
   meta: PageMetaSchema,
   status: z.enum(['draft', 'published']),
@@ -107,7 +107,7 @@ export function validatePageData(data: unknown): { success: boolean; error?: str
   // Deep validation using registry (optional)
   // We can iterate over blocks and call registry[type].validate if it exists
   const typedData = result.data as PageData;
-  const allBlocks = [...typedData.blocks.en, ...(typedData.blocks.ar || [])];
+  const allBlocks = [...typedData.blocks.en, ...(typedData.blocks.fr || [])];
 
   for (const block of allBlocks) {
     const registryEntry = BLOCKS_REGISTRY[block.type];

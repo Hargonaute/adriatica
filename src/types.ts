@@ -184,6 +184,65 @@ export interface CollectionItemFieldsBlockData extends BaseBlockSettings {
   hiddenFields?: string[];
 }
 
+// --- Composite / Content Blocks ---
+
+export interface ProductHeroBlockData extends BaseBlockSettings {
+  type: 'product-hero';
+  title?: string;
+  subtitle1?: string;
+  subtitle2?: string;
+  /** Rich-text HTML body paragraph. */
+  body?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  image?: string;
+  imagePosition?: 'left' | 'right';
+  backgroundColor?: string;
+  // Per-prop field bindings (detail templates only). Field keys resolve
+  // against the current collection entry / repeater context.
+  titleFieldKey?: string | null;
+  subtitle1FieldKey?: string | null;
+  subtitle2FieldKey?: string | null;
+  bodyFieldKey?: string | null;
+  imageFieldKey?: string | null;
+}
+
+export interface SectionHeadingBlockData extends BaseBlockSettings {
+  type: 'section-heading';
+  heading?: string;
+  subheading?: string;
+  /** Overrides BaseBlockSettings.align for this block's own text-align. */
+  align?: 'left' | 'center' | 'right';
+  /** Maps to h4/16 | h3/20 | h2/28. */
+  size?: 'sm' | 'md' | 'lg';
+  showDivider?: boolean;
+  dividerColor?: string;
+  headingFieldKey?: string | null;
+  subheadingFieldKey?: string | null;
+}
+
+export interface KeyValueListBlockData extends BaseBlockSettings {
+  type: 'key-value-list';
+  heading?: string;
+  items: Array<{ id: string; label: string; value: string }>;
+  striped?: boolean;
+  showDividers?: boolean;
+  layout?: 'two-col' | 'stacked';
+}
+
+export interface DownloadButtonBlockData extends BaseBlockSettings {
+  type: 'download-button';
+  label?: string;
+  /** File URL (usually an asset from the AssetPicker). */
+  url?: string;
+  icon?: 'download' | 'external' | 'none';
+  variant?: 'primary' | 'outline' | 'ghost';
+  /** Overrides BaseBlockSettings.align for the button's flex alignment. */
+  align?: 'left' | 'center' | 'right';
+  openInNewTab?: boolean;
+  urlFieldKey?: string | null;
+}
+
 export interface ContainerBlockData extends BaseBlockSettings {
   type: 'container';
   direction: 'row' | 'column';
@@ -254,6 +313,10 @@ export type BlockData =
   | NewsletterBlockData
   | ContactFormBlockData
   | CollectionItemFieldsBlockData
+  | ProductHeroBlockData
+  | SectionHeadingBlockData
+  | KeyValueListBlockData
+  | DownloadButtonBlockData
   | ContainerBlockData
   | RepeaterBlockData
   | BoundTextBlockData
@@ -287,7 +350,7 @@ export interface PageData {
   title: string;
   blocks: {
     en: Block[];
-    ar?: Block[]; // Optional, fallback to en or empty
+    fr?: Block[]; // Optional, fallback to en or empty
   };
   meta: PageMeta;
   status: 'draft' | 'published';

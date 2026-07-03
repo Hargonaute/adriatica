@@ -62,6 +62,32 @@ const BOUND_FIELD_TYPES: Record<string, FieldType[]> = {
   'bound-date':      ['date'],
 };
 
+// Composite blocks expose multiple bindable props. Each entry maps a data key
+// (e.g. `titleFieldKey`) to a human label and the set of field types the picker
+// should allow. Rendered by CompositeBindingSection in template mode.
+type CompositeBinding = {
+  key: string;
+  label: string;
+  allowed: FieldType[];
+};
+
+const COMPOSITE_BINDINGS: Record<string, CompositeBinding[]> = {
+  'product-hero': [
+    { key: 'titleFieldKey',     label: 'Title',     allowed: ['text'] },
+    { key: 'subtitle1FieldKey', label: 'Subtitle (small)', allowed: ['text'] },
+    { key: 'subtitle2FieldKey', label: 'Subtitle 2', allowed: ['text'] },
+    { key: 'bodyFieldKey',      label: 'Body',      allowed: ['textarea', 'rich-text'] },
+    { key: 'imageFieldKey',     label: 'Image',     allowed: ['image'] },
+  ],
+  'section-heading': [
+    { key: 'headingFieldKey',    label: 'Heading',    allowed: ['text'] },
+    { key: 'subheadingFieldKey', label: 'Subheading', allowed: ['text', 'textarea'] },
+  ],
+  'download-button': [
+    { key: 'urlFieldKey', label: 'File URL', allowed: ['text', 'image'] },
+  ],
+};
+
 interface InspectorProps {
   selectedBlock: { id: string; type: string; data: BlockData } | null;
   onChange: (id: string, data: Partial<BlockData>) => void;
@@ -882,6 +908,80 @@ function FieldBindingSection({
   );
 }
 
+// Per-prop field bindings for composite blocks (Product Hero, Section Heading,
+// Download Button). Loads the collection's fields and lets the user pick which
+// field feeds each bindable prop. Only shown in template mode / repeater context.
+function CompositeBindingSection({
+  blockId,
+  blockType,
+  data,
+  onChange,
+  collectionIdOverride,
+}: {
+  blockId: string;
+  blockType: string;
+  data: Record<string, any>;
+  onChange: (id: string, updates: Partial<BlockData>) => void;
+  collectionIdOverride?: string | null;
+}) {
+  const storeCollectionId = useTemplateBuilderStore((s) => s.collectionId);
+  const collectionId = collectionIdOverride ?? storeCollectionId;
+
+  const [fields, setFields] = useState<CollectionField[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!collectionId) { setFields([]); return; }
+    setLoading(true);
+    fetch(`/api/collections/${collectionId}`)
+      .then((r) => r.json())
+      .then((col) => setFields(col.fields ?? []))
+      .catch(() => setFields([]))
+      .finally(() => setLoading(false));
+  }, [collectionId]);
+
+  const bindings = COMPOSITE_BINDINGS[blockType] ?? [];
+  if (bindings.length === 0) return null;
+
+  return (
+    <div className="space-y-4">
+      <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Field Bindings</h4>
+
+      {!collectionId ? (
+        <p className="text-xs text-muted-foreground">No collection set for this template.</p>
+      ) : loading ? (
+        <p className="text-xs text-muted-foreground">Loading fields…</p>
+      ) : (
+        <div className="space-y-3">
+          {bindings.map((b) => {
+            const allowed = fields.filter((f) => b.allowed.includes(f.type as FieldType));
+            const value = (data[b.key] ?? null) as string | null;
+            return (
+              <div key={b.key} className="space-y-1.5">
+                <Label className="text-xs">{b.label}</Label>
+                <Select
+                  value={value ?? '__none__'}
+                  onValueChange={(v) => onChange(blockId, { [b.key]: v === '__none__' ? null : v } as Partial<BlockData>)}
+                >
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— None (use literal) —</SelectItem>
+                    {allowed.map((f) => (
+                      <SelectItem key={f.id} value={f.key}>
+                        {f.label} <span className="text-muted-foreground ml-1">({f.type})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BlockInspectorPanel({
   selectedBlock,
   onChange,
@@ -926,6 +1026,7 @@ function BlockInspectorPanel({
   const isImage = selectedBlock.type === 'image' || selectedBlock.type === 'bound-image';
   const isBoundText = selectedBlock.type === 'bound-text';
   const isBoundRichText = selectedBlock.type === 'bound-rich-text';
+  const isComposite = selectedBlock.type in COMPOSITE_BINDINGS;
 
   return (
     <div className="p-4 space-y-6">
@@ -985,6 +1086,20 @@ function BlockInspectorPanel({
             blockId={selectedBlock.id}
             blockType={selectedBlock.type}
             fieldKey={(data as { fieldKey?: string | null }).fieldKey ?? null}
+            onChange={onChange}
+            collectionIdOverride={repeaterContext?.collectionId ?? null}
+          />
+          <Separator />
+        </>
+      )}
+
+      {/* Field bindings — composite blocks in template mode */}
+      {effectiveMode === 'template' && isComposite && (
+        <>
+          <CompositeBindingSection
+            blockId={selectedBlock.id}
+            blockType={selectedBlock.type}
+            data={data}
             onChange={onChange}
             collectionIdOverride={repeaterContext?.collectionId ?? null}
           />
@@ -1255,7 +1370,7 @@ function BlockInspectorPanel({
 
 export function Inspector({ selectedBlock, onChange, pageData, onPageChange, mode = 'static', repeaterContext }: InspectorProps) {
   return (
-    <div className="h-full border-l bg-background w-[300px] flex flex-col overflow-y-auto">
+    <div className="h-full flex flex-col">
       {selectedBlock ? (
         // key on selectedBlock.id forces the panel (and every shadcn/Radix Select
         // it contains) to remount on block switches, guaranteeing each control

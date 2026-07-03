@@ -17,11 +17,12 @@ import { RepeaterEditorCard, createRepeaterBlock } from './blocks/repeater/Repea
 import { EditorContext } from './EditorContext';
 import { RenderEditor } from './renderEditor';
 import { RenderPreview } from './renderPreview';
-import { BlockSelector } from './BlockSelector';
+import { BlockSelector, EXTRA_BLOCK_META } from './BlockSelector';
+import { BLOCKS_REGISTRY } from './blocks/registry';
 import { Inspector } from './Inspector';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Code, Layout, Save, Globe, ExternalLink, ArrowLeft, Plus, Monitor, Tablet, Smartphone, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Eye, Code, Layout, Save, Globe, ExternalLink, ArrowLeft, Plus, Monitor, Tablet, Smartphone, Loader2, Check, AlertCircle, Settings, X, Columns2 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -77,22 +78,147 @@ function findParentRepeater(blocks: Block[], id: string): RepeaterBlockData | nu
   return null;
 }
 
+// Lookup a block's icon + label for the drawer header. Handles ContainerBlock
+// and RepeaterBlock (defined outside the registry) as special cases.
+function getBlockMeta(type: string): { icon: React.ElementType; label: string } {
+  const extra = EXTRA_BLOCK_META[type];
+  if (extra) return { icon: extra.icon, label: extra.label };
+  const reg = BLOCKS_REGISTRY[type];
+  if (reg) return { icon: reg.icon, label: reg.label };
+  return { icon: Layout, label: type };
+}
+
 export default function PageBuilderEditor({ initialData, mode = 'static', templateKind = null, onSave, onPublish, onUnpublish }: PageBuilderEditorProps) {
   const [data, setData] = useState<PageData>(initialData);
-  const [language, setLanguage] = useState<'en' | 'ar'>('en');
+  const [language, setLanguage] = useState<'en' | 'fr'>('en');
   const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'json'>('edit');
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [pageSettingsOpen, setPageSettingsOpen] = useState(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const savedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Split-view state ─────────────────────────────────────────────────────
+  const [splitMode, setSplitMode] = useState(false);
+  const [splitRatio, setSplitRatio] = useState(50);
+  const [previewViewport, setPreviewViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [previewData, setPreviewData] = useState<PageData>(initialData);
+  const [previewUpdating, setPreviewUpdating] = useState(false);
+  const [wideScreen, setWideScreen] = useState(false);
+  const [isResizingDivider, setIsResizingDivider] = useState(false);
+  const [previewPanelWidth, setPreviewPanelWidth] = useState(0);
+  const splitContainerRef = useRef<HTMLDivElement | null>(null);
+  const previewPanelRef = useRef<HTMLDivElement | null>(null);
+  const previewUpdatingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Drawer is open when a block is selected OR the user opened Page Settings.
+  const drawerOpen = !!selectedBlockId || pageSettingsOpen;
+
+  const closeDrawer = useCallback(() => {
+    setSelectedBlockId(null);
+    setPageSettingsOpen(false);
+  }, []);
+
+  // Escape closes the drawer (unless a Radix Popover / Dialog is open — those
+  // handle Escape themselves and stop propagation).
+  useEffect(() => {
+    if (!drawerOpen) return;
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') closeDrawer();
+    }
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [drawerOpen, closeDrawer]);
+
   // Reset viewport when leaving Preview mode
   useEffect(() => {
     if (activeTab !== 'preview') setViewport('desktop');
   }, [activeTab]);
+
+  // ── Split view: wide-screen detection ────────────────────────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(min-width: 1280px)');
+    const update = () => setWideScreen(mql.matches);
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
+
+  // ── Split view: load persisted preferences ───────────────────────────────
+  useEffect(() => {
+    try {
+      const savedMode = localStorage.getItem('pb.splitMode');
+      if (savedMode !== null) setSplitMode(savedMode === 'true');
+      const savedRatio = localStorage.getItem('pb.splitRatio');
+      if (savedRatio !== null) {
+        const n = parseFloat(savedRatio);
+        if (!isNaN(n) && n >= 30 && n <= 70) setSplitRatio(n);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem('pb.splitMode', String(splitMode)); } catch {}
+  }, [splitMode]);
+  useEffect(() => {
+    try { localStorage.setItem('pb.splitRatio', String(splitRatio)); } catch {}
+  }, [splitRatio]);
+
+  // ── Split view: commit preview on deselect / drawer close ────────────────
+  useEffect(() => {
+    if (!splitMode || !wideScreen) return;
+    if (selectedBlockId || pageSettingsOpen) return;
+    if (previewData === data) return;
+    setPreviewUpdating(true);
+    setPreviewData(data);
+    if (previewUpdatingTimeout.current) clearTimeout(previewUpdatingTimeout.current);
+    previewUpdatingTimeout.current = setTimeout(() => setPreviewUpdating(false), 400);
+  }, [data, selectedBlockId, pageSettingsOpen, splitMode, wideScreen, previewData]);
+
+  useEffect(() => {
+    return () => { if (previewUpdatingTimeout.current) clearTimeout(previewUpdatingTimeout.current); };
+  }, []);
+
+  // ── Split view: divider drag ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!isResizingDivider) return;
+    const handleMove = (e: PointerEvent) => {
+      const container = splitContainerRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pct = (x / rect.width) * 100;
+      setSplitRatio(Math.max(30, Math.min(70, pct)));
+    };
+    const handleUp = () => setIsResizingDivider(false);
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+    const prevCursor = document.body.style.cursor;
+    const prevSelect = document.body.style.userSelect;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      document.body.style.cursor = prevCursor;
+      document.body.style.userSelect = prevSelect;
+    };
+  }, [isResizingDivider]);
+
+  // ── Split view: track preview panel width for scroll hint ────────────────
+  useEffect(() => {
+    const el = previewPanelRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setPreviewPanelWidth(entry.contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [splitMode, wideScreen, activeTab]);
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestData = useRef(data);
@@ -633,6 +759,30 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
 
         {/* Right: viewport toggle (preview only) + language toggle + actions */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Split-view toggle — only in Edit tab; disabled on narrow screens */}
+          {activeTab === 'edit' && (
+            <>
+              <button
+                type="button"
+                onClick={() => { if (wideScreen) setSplitMode((v) => !v); }}
+                disabled={!wideScreen}
+                aria-pressed={splitMode && wideScreen}
+                title={wideScreen ? 'Toggle live preview' : 'Split view requires a wider screen'}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors',
+                  !wideScreen
+                    ? 'opacity-40 cursor-not-allowed border-slate-200 dark:border-slate-700 text-slate-400'
+                    : splitMode
+                      ? 'bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100'
+                      : 'text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                )}
+              >
+                <Columns2 className="h-3.5 w-3.5" />
+              </button>
+              <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
+            </>
+          )}
+
           {/* Viewport toggle — only in Preview mode */}
           {activeTab === 'preview' && (
             <>
@@ -664,6 +814,28 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
             </>
           )}
 
+          {/* Page Settings — opens the bottom drawer with SEO / metadata */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedBlockId(null);
+              setPageSettingsOpen((v) => !v);
+            }}
+            aria-pressed={pageSettingsOpen && !selectedBlockId}
+            title="Page settings"
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors',
+              pageSettingsOpen && !selectedBlockId
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100'
+                : 'text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+            )}
+          >
+            <Settings className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">Settings</span>
+          </button>
+
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
+
           {/* Language toggle */}
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
             <button
@@ -678,15 +850,15 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
               EN
             </button>
             <button
-              onClick={() => setLanguage('ar')}
+              onClick={() => setLanguage('fr')}
               className={cn(
                 'px-2.5 py-1 text-xs font-semibold rounded-md transition-all',
-                language === 'ar'
+                language === 'fr'
                   ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               )}
             >
-              AR
+              FR
             </button>
           </div>
 
@@ -778,19 +950,29 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
       {/* ── Main area ────────────────────────────────────────────────────── */}
       <div className="flex-1 flex overflow-hidden">
 
-        {activeTab === 'edit' && (
-          <>
-            {/* Left: Block Selector */}
-            <aside className="w-[220px] border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden md:flex flex-col shrink-0 overflow-y-auto">
-              <BlockSelector onAdd={addBlock} />
-            </aside>
-
-            {/* Center: Canvas */}
+        {activeTab === 'edit' && (() => {
+          const showSplit = splitMode && wideScreen;
+          const previewBlocks = previewData.blocks[language] || [];
+          const previewViewportPx =
+            previewViewport === 'desktop' ? 0 : previewViewport === 'tablet' ? 768 : 390;
+          const showScrollHint =
+            previewViewportPx > 0 && previewPanelWidth > 0 && previewPanelWidth < previewViewportPx + 16;
+          return (
+          <div ref={splitContainerRef} className="flex-1 relative flex overflow-hidden">
+          {/* Left canvas panel (full width when split is off) */}
+          <div
+            className="relative flex flex-col overflow-hidden min-w-0"
+            style={showSplit ? { width: `${splitRatio}%` } : { flex: 1 }}
+          >
+            {/* Canvas — full width, no sidebars */}
             <main
               className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-950"
-              onClick={() => setSelectedBlockId(null)}
+              onClick={() => closeDrawer()}
             >
-              <div className="max-w-4xl mx-auto space-y-3 pb-24">
+              <div
+                className="max-w-4xl mx-auto space-y-3"
+                style={{ paddingBottom: drawerOpen ? 'calc(45vh + 4rem)' : '6rem' }}
+              >
                 {mode === 'template' && templateKind === 'detail' && templateCollectionId && (
                   <div
                     className="rounded-lg border border-[#BC0D2A]/20 bg-[#BC0D2A]/5 px-4 py-2.5 flex items-center gap-2 text-sm"
@@ -806,6 +988,30 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                     </span>
                   </div>
                 )}
+
+                {/* Empty state — Add Block trigger sits at the top */}
+                {blocks.length === 0 && (
+                  <div
+                    className="text-center py-24 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 space-y-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit mx-auto">
+                      <Plus className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-slate-600 dark:text-slate-300">
+                        No blocks yet
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Add your first block to get started.
+                      </p>
+                    </div>
+                    <div className="flex justify-center pt-1">
+                      <BlockSelector onAdd={addBlock} side="bottom" />
+                    </div>
+                  </div>
+                )}
+
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -816,7 +1022,11 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                     {blocks.map((block) => (
                       <div
                         key={block.id}
-                        onClick={(e) => { e.stopPropagation(); setSelectedBlockId(block.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPageSettingsOpen(false);
+                          setSelectedBlockId(block.id);
+                        }}
                         className={cn(
                           'ring-2 ring-transparent rounded-lg transition-shadow',
                           selectedBlockId === block.id && 'ring-[#BC0D2A]'
@@ -847,22 +1057,6 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                       </div>
                     ))}
                   </SortableContext>
-
-                  {blocks.length === 0 && (
-                    <div className="text-center py-32 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 space-y-3">
-                      <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit mx-auto">
-                        <Plus className="h-6 w-6 text-slate-400" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm text-slate-600 dark:text-slate-300">
-                          No blocks yet
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          Select a block from the left panel to get started.
-                        </p>
-                      </div>
-                    </div>
-                  )}
 
                   <DragOverlay>
                     {activeDragId && (() => {
@@ -902,25 +1096,184 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                     })()}
                   </DragOverlay>
                 </DndContext>
+
+                {/* Bottom Add Block trigger — always visible below the block list */}
+                {blocks.length > 0 && (
+                  <div
+                    className="flex justify-center pt-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <BlockSelector onAdd={addBlock} side="top" />
+                  </div>
+                )}
               </div>
             </main>
 
-            {/* Right: Inspector */}
-            <aside className="w-[280px] border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden lg:flex flex-col shrink-0">
-              <Inspector
-                selectedBlock={selectedBlock}
-                onChange={updateBlock}
-                pageData={data}
-                mode={mode}
-                repeaterContext={repeaterContext}
-                onPageChange={(updates) => {
-                  setData((prev) => ({ ...prev, ...updates }));
-                  markDirty();
-                }}
-              />
-            </aside>
-          </>
-        )}
+            {/* Bottom drawer — Inspector / Page Settings */}
+            <div
+              className={cn(
+                'absolute inset-x-0 bottom-0 h-[45%] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-200 ease-out flex flex-col z-20',
+                drawerOpen ? 'translate-y-0' : 'translate-y-full pointer-events-none'
+              )}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-hidden={!drawerOpen}
+              aria-label={selectedBlock ? 'Block inspector' : 'Page settings'}
+            >
+              {(() => {
+                const meta = selectedBlock
+                  ? getBlockMeta(selectedBlock.type)
+                  : { icon: Settings, label: 'Page Settings' };
+                const HeaderIcon = meta.icon;
+                return (
+                  <div className="flex items-center justify-between px-4 h-11 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-950/40">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="p-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shrink-0">
+                        <HeaderIcon className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
+                      </div>
+                      <span className="text-sm font-semibold text-slate-800 dark:text-white truncate">
+                        {meta.label}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={closeDrawer}
+                      aria-label="Close"
+                      className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                );
+              })()}
+              <div className="flex-1 overflow-y-auto">
+                {drawerOpen && (
+                  <Inspector
+                    selectedBlock={selectedBlock}
+                    onChange={updateBlock}
+                    pageData={data}
+                    mode={mode}
+                    repeaterContext={repeaterContext}
+                    onPageChange={(updates) => {
+                      setData((prev) => ({ ...prev, ...updates }));
+                      markDirty();
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Resizable divider */}
+          {showSplit && (
+            <div
+              onPointerDown={(e) => { e.preventDefault(); setIsResizingDivider(true); }}
+              onDoubleClick={() => setSplitRatio(50)}
+              role="separator"
+              aria-label="Resize split view"
+              aria-orientation="vertical"
+              title="Drag to resize · double-click to reset"
+              className={cn(
+                'w-1 shrink-0 cursor-col-resize transition-colors z-30',
+                isResizingDivider
+                  ? 'bg-[#BC0D2A]/70'
+                  : 'bg-slate-200 dark:bg-slate-800 hover:bg-[#BC0D2A]/50'
+              )}
+            />
+          )}
+
+          {/* Right preview panel */}
+          {showSplit && (
+            <div
+              ref={previewPanelRef}
+              className="relative flex flex-col overflow-hidden min-w-0 bg-slate-100 dark:bg-slate-950"
+              style={{ width: `${100 - splitRatio}%` }}
+            >
+              {/* Mini-toolbar */}
+              <div className="flex items-center justify-between px-3 h-10 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  Live Preview
+                </span>
+                <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
+                  {([
+                    { key: 'desktop', label: 'Desktop', Icon: Monitor },
+                    { key: 'tablet',  label: 'Tablet',  Icon: Tablet },
+                    { key: 'mobile',  label: 'Mobile',  Icon: Smartphone },
+                  ] as const).map(({ key, label, Icon }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setPreviewViewport(key)}
+                      title={label}
+                      aria-label={label}
+                      aria-pressed={previewViewport === key}
+                      className={cn(
+                        'p-1.5 rounded-md transition-all',
+                        previewViewport === key
+                          ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Updating indicator */}
+              <div
+                className={cn(
+                  'h-0.5 shrink-0 overflow-hidden transition-opacity duration-200',
+                  previewUpdating ? 'opacity-100' : 'opacity-0'
+                )}
+                aria-hidden={!previewUpdating}
+              >
+                <div className="h-full bg-[#BC0D2A] animate-pulse" />
+              </div>
+
+              {/* Scroll hint when panel is narrower than the selected viewport */}
+              {showScrollHint && (
+                <div className="px-3 py-1 text-[10px] text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-100 dark:border-amber-900/30 shrink-0">
+                  Preview is wider than the panel — scroll horizontally to see more.
+                </div>
+              )}
+
+              {/* Preview content */}
+              <div
+                className={cn(
+                  'flex-1 overflow-auto',
+                  previewViewport === 'desktop' ? 'bg-white' : 'bg-slate-100 dark:bg-slate-950 py-6'
+                )}
+                dir="ltr"
+              >
+                <div
+                  className={cn(
+                    '@container/preview mx-auto bg-white transition-[max-width] duration-200',
+                    previewViewport === 'desktop' && 'w-full',
+                    previewViewport === 'tablet' &&
+                      'w-[768px] max-w-[768px] shadow-xl ring-1 ring-slate-200 dark:ring-slate-800',
+                    previewViewport === 'mobile' &&
+                      'w-[390px] max-w-[390px] shadow-xl rounded-3xl overflow-hidden border border-slate-300 dark:border-slate-700'
+                  )}
+                >
+                  <NavbarShell links={PREVIEW_NAV_LINKS} />
+                  <main>
+                    {previewBlocks.length === 0 ? (
+                      <div className="text-center py-32 text-slate-400 text-sm">
+                        No blocks to preview.
+                      </div>
+                    ) : (
+                      previewBlocks.map((block) => <RenderPreview key={block.id} block={block} />)
+                    )}
+                  </main>
+                  <SiteFooter />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        );
+        })()}
 
         {activeTab === 'preview' && (
           <div
@@ -930,7 +1283,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                 ? 'bg-white'
                 : 'bg-slate-100 dark:bg-slate-950 py-8'
             )}
-            dir={language === 'ar' ? 'rtl' : 'ltr'}
+            dir="ltr"
           >
             {/*
               @container/preview scopes container queries so that block
@@ -990,4 +1343,8 @@ const BLOCK_LABEL: Record<string, string> = {
   'collection-list': 'Collection List',
   'container': 'Container',
   'repeater': 'Repeater',
+  'product-hero': 'Product Hero',
+  'section-heading': 'Section Heading',
+  'key-value-list': 'Key-Value List',
+  'download-button': 'Download Button',
 };
