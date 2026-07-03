@@ -85,8 +85,15 @@ export function CollectionItemFieldsPreview({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // If the site-side TemplateRenderer already provided the entry + collection
+  // payload, we can render synchronously — no fetch, no loading state.
+  const hasCtxPayload = !!(ctx?.entry && ctx?.collection);
+
   useEffect(() => {
-    // Real detail page — fetch the actual entry
+    // Ctx already carries the entry + collection payload (site detail page).
+    if (hasCtxPayload) return;
+
+    // Legacy detail-page fallback — id-only ctx: fetch entry + collection.
     if (ctx) {
       setLoading(true);
       fetch(`/api/entries/${ctx.itemId}`)
@@ -110,7 +117,7 @@ export function CollectionItemFieldsPreview({
         .catch(() => setError('Failed to load collection'))
         .finally(() => setLoading(false));
     }
-  }, [ctx?.itemId, mockCtx, templateCollectionId]);
+  }, [ctx, hasCtxPayload, mockCtx, templateCollectionId]);
 
   // Template editor with mock data + schema — render sample field values.
   // In this mock/preview context we surface hidden fields with a badge so the
@@ -188,6 +195,72 @@ export function CollectionItemFieldsPreview({
             Hidden: {block.hiddenFields!.join(', ')}
           </p>
         )}
+      </div>
+    );
+  }
+
+  // Site detail page: entry + collection payload was provided via ctx —
+  // render synchronously without touching the network.
+  if (hasCtxPayload) {
+    const hidden = new Set(block.hiddenFields ?? []);
+    const itemData = ctx!.entry!.data as Record<string, unknown>;
+    const ctxFields = ctx!.collection!.fields;
+    return (
+      <div className="max-w-[860px] mx-auto space-y-8">
+        {ctxFields.map(field => {
+          if (hidden.has(field.key)) return null;
+          const val = itemData[field.key];
+          if (val === undefined || val === null || val === '') return null;
+
+          return (
+            <div key={field.id}>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                {field.label}
+              </p>
+
+              {field.type === 'image' && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={String(val)}
+                  alt={field.label}
+                  className="w-full max-h-[480px] object-cover rounded-2xl"
+                />
+              )}
+
+              {field.type === 'rich-text' && (
+                <div
+                  className={PROSE_CLASSES}
+                  dangerouslySetInnerHTML={{ __html: String(val) }}
+                />
+              )}
+
+              {field.type === 'textarea' && (
+                <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
+                  {String(val)}
+                </p>
+              )}
+
+              {field.type === 'checkbox' && (
+                <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${val ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {val ? '✓ Yes' : '✗ No'}
+                </span>
+              )}
+
+              {field.type === 'email' && (
+                <a
+                  href={`mailto:${String(val)}`}
+                  className="text-[#BC0D2A] font-medium hover:underline"
+                >
+                  {String(val)}
+                </a>
+              )}
+
+              {(field.type === 'text' || field.type === 'number' || field.type === 'date') && (
+                <p className="text-base text-foreground">{String(val)}</p>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   }

@@ -17,6 +17,7 @@ interface Collection {
 
 interface Entry {
   id: string;
+  slug: string | null;
   data: Record<string, any>;
   createdAt: string;
 }
@@ -183,7 +184,7 @@ export function CollectionListEditor({
             <div>
               <Label className="text-xs">Link cards to item pages</Label>
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                Each card links to /collections/{(block.collectionSlug as string) || selectedCollection.slug}/&#123;id&#125;
+                Each card links to /collections/{(block.collectionSlug as string) || selectedCollection.slug}/&#123;slug&#125;
               </p>
             </div>
             <Switch
@@ -277,7 +278,7 @@ export function CollectionListPreview({
       {items.map(item => {
         const imgUrl = imageField ? item.data[imageField] : null;
         const title = titleField ? item.data[titleField] : null;
-        const href = linkToItems && collectionSlug ? `/collections/${collectionSlug}/${item.id}` : null;
+        const href = linkToItems && collectionSlug ? `/collections/${collectionSlug}/${item.slug ?? item.id}` : null;
 
         const cardContent = (
           <>

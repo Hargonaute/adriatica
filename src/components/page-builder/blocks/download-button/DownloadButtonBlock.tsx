@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { type DownloadButtonBlockData } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -134,20 +134,6 @@ function useBoundValue(
   const repeaterCtx = useRepeaterEntry();
   const mockCtx = useMockCollectionEntry();
   const collectionCtx = useCollectionItem();
-  const [fetched, setFetched] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!fieldKey) return;
-    if (repeaterCtx || mockCtx) return;
-    if (!collectionCtx) return;
-    fetch(`/api/entries/${collectionCtx.itemId}`)
-      .then((r) => r.json())
-      .then((entry) => {
-        const v = entry?.data?.[fieldKey];
-        setFetched(v != null ? String(v) : null);
-      })
-      .catch(() => {});
-  }, [fieldKey, repeaterCtx, mockCtx, collectionCtx?.itemId]);
 
   if (fieldKey) {
     if (repeaterCtx) {
@@ -158,7 +144,10 @@ function useBoundValue(
       const v = mockCtx.entryData[fieldKey];
       if (v != null) return String(v);
     }
-    if (fetched) return fetched;
+    if (collectionCtx?.entry) {
+      const v = collectionCtx.entry.data[fieldKey];
+      if (v != null) return String(v);
+    }
   }
   return literal;
 }

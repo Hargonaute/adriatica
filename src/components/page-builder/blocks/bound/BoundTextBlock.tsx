@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useCollectionItem } from '@/contexts/CollectionItemContext';
 import { useRepeaterEntry } from '@/contexts/RepeaterEntryContext';
 import { useMockCollectionEntry } from '@/contexts/MockCollectionEntryContext';
@@ -72,20 +72,6 @@ export function BoundTextPreview({ block }: { block: BoundTextBlockData }) {
   const repeaterCtx = useRepeaterEntry();
   const mockCtx = useMockCollectionEntry();
   const collectionCtx = useCollectionItem();
-  const [fetchedValue, setFetchedValue] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Skip fetch when inside a repeater or when we have mock data — data comes from context
-    if (repeaterCtx !== null || mockCtx !== null) return;
-    if (!collectionCtx || !block.fieldKey) return;
-    fetch(`/api/entries/${collectionCtx.itemId}`)
-      .then((r) => r.json())
-      .then((entry) => {
-        const v = entry?.data?.[block.fieldKey!];
-        setFetchedValue(v != null ? String(v) : null);
-      })
-      .catch(() => {});
-  }, [repeaterCtx, mockCtx, collectionCtx?.itemId, block.fieldKey]);
 
   if (!block.fieldKey) {
     return <Placeholder fieldKey={null} />;
@@ -105,11 +91,13 @@ export function BoundTextPreview({ block }: { block: BoundTextBlockData }) {
     return <RenderedBoundText block={block} value={String(value)} />;
   }
 
-  // Detail-page path: no context — show placeholder
-  if (!collectionCtx) {
-    return <Placeholder fieldKey={block.fieldKey} />;
+  // Detail-page path: entry payload is populated server-side.
+  if (collectionCtx?.entry) {
+    const value = collectionCtx.entry.data[block.fieldKey];
+    if (value == null) return null;
+    return <RenderedBoundText block={block} value={String(value)} />;
   }
 
-  if (fetchedValue === null) return null;
-  return <RenderedBoundText block={block} value={fetchedValue} />;
+  // No context (e.g. static builder canvas) — show placeholder
+  return <Placeholder fieldKey={block.fieldKey} />;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useCollectionItem } from '@/contexts/CollectionItemContext';
 import { useRepeaterEntry } from '@/contexts/RepeaterEntryContext';
 import { useMockCollectionEntry } from '@/contexts/MockCollectionEntryContext';
@@ -103,20 +103,6 @@ export function BoundImagePreview({ block }: { block: BoundImageBlockData }) {
   const repeaterCtx = useRepeaterEntry();
   const mockCtx = useMockCollectionEntry();
   const collectionCtx = useCollectionItem();
-  const [fetchedSrc, setFetchedSrc] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Skip fetch when inside a repeater or when we have mock data — data comes from context
-    if (repeaterCtx !== null || mockCtx !== null) return;
-    if (!collectionCtx || !block.fieldKey) return;
-    fetch(`/api/entries/${collectionCtx.itemId}`)
-      .then((r) => r.json())
-      .then((entry) => {
-        const v = entry?.data?.[block.fieldKey!];
-        setFetchedSrc(v ? String(v) : null);
-      })
-      .catch(() => {});
-  }, [repeaterCtx, mockCtx, collectionCtx?.itemId, block.fieldKey]);
 
   if (!block.fieldKey) {
     return <Placeholder fieldKey={null} />;
@@ -136,11 +122,12 @@ export function BoundImagePreview({ block }: { block: BoundImageBlockData }) {
     return <BoundImageRender src={String(src)} block={block} />;
   }
 
-  // Detail-page path: no context — show placeholder
-  if (!collectionCtx) {
-    return <Placeholder fieldKey={block.fieldKey} />;
+  // Detail-page path: entry payload is populated server-side.
+  if (collectionCtx?.entry) {
+    const src = collectionCtx.entry.data[block.fieldKey];
+    if (!src) return null;
+    return <BoundImageRender src={String(src)} block={block} />;
   }
 
-  if (!fetchedSrc) return null;
-  return <BoundImageRender src={fetchedSrc} block={block} />;
+  return <Placeholder fieldKey={block.fieldKey} />;
 }

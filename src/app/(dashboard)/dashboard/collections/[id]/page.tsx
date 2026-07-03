@@ -360,9 +360,9 @@ export default function CollectionDetailsPage({ params }: { params: Promise<{ id
                             <div>
                                 <span className="font-semibold block text-xs uppercase text-muted-foreground mb-1">Index URL</span>
                                 <div className="flex items-center gap-2">
-                                    <code className="bg-background px-2 py-1 rounded text-xs block flex-1">/{data.basePath ?? data.slug}</code>
+                                    <code className="bg-background px-2 py-1 rounded text-xs block flex-1">/collections/{data.basePath ?? data.slug}</code>
                                     <a
-                                        href={`/${data.basePath ?? data.slug}`}
+                                        href={`/collections/${data.basePath ?? data.slug}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-muted-foreground hover:text-foreground"
@@ -374,7 +374,7 @@ export default function CollectionDetailsPage({ params }: { params: Promise<{ id
                             </div>
                             <div>
                                 <span className="font-semibold block text-xs uppercase text-muted-foreground mb-1">Item URL pattern</span>
-                                <code className="bg-background px-2 py-1 rounded text-xs block">/{data.basePath ?? data.slug}/&#123;item-slug&#125;</code>
+                                <code className="bg-background px-2 py-1 rounded text-xs block">/collections/{data.basePath ?? data.slug}/&#123;item-slug&#125;</code>
                             </div>
                             <div>
                                 <span className="font-semibold block text-xs uppercase text-muted-foreground mb-1">Submit Endpoint</span>

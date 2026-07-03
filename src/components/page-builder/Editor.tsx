@@ -17,7 +17,8 @@ import { RepeaterEditorCard, createRepeaterBlock } from './blocks/repeater/Repea
 import { EditorContext } from './EditorContext';
 import { RenderEditor } from './renderEditor';
 import { RenderPreview } from './renderPreview';
-import { BlockSelector, EXTRA_BLOCK_META } from './BlockSelector';
+import { EXTRA_BLOCK_META } from './BlockSelector';
+import { BlockSidebar } from './BlockSidebar';
 import { BLOCKS_REGISTRY } from './blocks/registry';
 import { Inspector } from './Inspector';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,21 @@ interface PageBuilderEditorProps {
 }
 
 const AUTO_SAVE_DELAY = 30_000; // 30 seconds
+
+// Props whose changes should reflect in the split-view preview in real time
+// (150ms debounce). Text/content props are not listed here — those keep the
+// blur-only sync path via the drawer-close effect, so we don't rerender the
+// preview on every keystroke.
+const STYLE_PROPS = new Set<string>([
+  'backgroundColor', 'color', 'fontSize', 'fontWeight', 'textTransform',
+  'aspectRatio', 'objectFit', 'width', 'borderRadius', 'layout', 'mobileBehavior',
+  'showDivider', 'dividerColor', 'dividerStyle', 'imagePosition', 'variant',
+  'align', 'size', 'striped', 'showDividers',
+]);
+
+const INSPECTOR_MIN = 200;
+const INSPECTOR_MAX = 500;
+const INSPECTOR_DEFAULT = 320;
 
 // Recursive block lookup — searches top-level, container children, repeater card templates
 function findBlock(blocks: Block[], id: string): Block | null {
@@ -89,6 +105,7 @@ function getBlockMeta(type: string): { icon: React.ElementType; label: string } 
 }
 
 export default function PageBuilderEditor({ initialData, mode = 'static', templateKind = null, onSave, onPublish, onUnpublish }: PageBuilderEditorProps) {
+  const isTemplateMode = mode === 'template' && (templateKind === 'detail' || templateKind === 'index');
   const [data, setData] = useState<PageData>(initialData);
   const [language, setLanguage] = useState<'en' | 'fr'>('en');
   const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'json'>('edit');
@@ -113,6 +130,12 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
   const splitContainerRef = useRef<HTMLDivElement | null>(null);
   const previewPanelRef = useRef<HTMLDivElement | null>(null);
   const previewUpdatingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stylePreviewTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Inspector panel state ────────────────────────────────────────────────
+  const [inspectorHeight, setInspectorHeight] = useState(INSPECTOR_DEFAULT);
+  const [isResizingInspector, setIsResizingInspector] = useState(false);
+  const leftPanelRef = useRef<HTMLDivElement | null>(null);
 
   // Drawer is open when a block is selected OR the user opened Page Settings.
   const drawerOpen = !!selectedBlockId || pageSettingsOpen;
@@ -209,6 +232,48 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
     };
   }, [isResizingDivider]);
 
+  // ── Inspector panel: load persisted height ───────────────────────────────
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('pb.inspectorHeight');
+      if (saved !== null) {
+        const n = parseFloat(saved);
+        if (!isNaN(n)) {
+          setInspectorHeight(Math.max(INSPECTOR_MIN, Math.min(INSPECTOR_MAX, n)));
+        }
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem('pb.inspectorHeight', String(inspectorHeight)); } catch {}
+  }, [inspectorHeight]);
+
+  // ── Inspector panel: resize drag ─────────────────────────────────────────
+  useEffect(() => {
+    if (!isResizingInspector) return;
+    const handleMove = (e: PointerEvent) => {
+      const panel = leftPanelRef.current;
+      if (!panel) return;
+      const rect = panel.getBoundingClientRect();
+      const h = rect.bottom - e.clientY;
+      setInspectorHeight(Math.max(INSPECTOR_MIN, Math.min(INSPECTOR_MAX, h)));
+    };
+    const handleUp = () => setIsResizingInspector(false);
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+    const prevCursor = document.body.style.cursor;
+    const prevSelect = document.body.style.userSelect;
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      document.body.style.cursor = prevCursor;
+      document.body.style.userSelect = prevSelect;
+    };
+  }, [isResizingInspector]);
+
   // ── Split view: track preview panel width for scroll hint ────────────────
   useEffect(() => {
     const el = previewPanelRef.current;
@@ -223,6 +288,24 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestData = useRef(data);
   latestData.current = data;
+
+  // Debounced sync for style/appearance changes — fires 150ms after the last
+  // style-prop update so the split-view preview reflects the change while the
+  // Inspector is still open. Text/content edits use the blur-only path.
+  const scheduleStylePreviewSync = useCallback(() => {
+    if (!splitMode || !wideScreen) return;
+    if (stylePreviewTimeout.current) clearTimeout(stylePreviewTimeout.current);
+    stylePreviewTimeout.current = setTimeout(() => {
+      setPreviewData(latestData.current);
+      setPreviewUpdating(true);
+      if (previewUpdatingTimeout.current) clearTimeout(previewUpdatingTimeout.current);
+      previewUpdatingTimeout.current = setTimeout(() => setPreviewUpdating(false), 400);
+    }, 150);
+  }, [splitMode, wideScreen]);
+
+  useEffect(() => {
+    return () => { if (stylePreviewTimeout.current) clearTimeout(stylePreviewTimeout.current); };
+  }, []);
 
   const blocks = data.blocks[language] || [];
 
@@ -468,6 +551,11 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
       return { ...prevData, blocks: { ...prevData.blocks, [language]: nextBlocks } };
     });
     markDirty();
+    // Real-time preview sync for style/appearance props only — content edits
+    // still rely on the deselect-driven sync effect.
+    if (Object.keys(updates).some((k) => STYLE_PROPS.has(k))) {
+      scheduleStylePreviewSync();
+    }
   };
 
   const removeBlock = (id: string) => {
@@ -677,30 +765,67 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
   const templateCollectionId = useTemplateBuilderStore((s) => s.collectionId);
   const [mockEntry, setMockEntry] = useState<{ entryData: Record<string, any> } | null>(null);
   const [templateCollectionName, setTemplateCollectionName] = useState<string | null>(null);
+  const [templateBasePath, setTemplateBasePath] = useState<string | null>(null);
+  const [firstEntrySlug, setFirstEntrySlug] = useState<string | null>(null);
 
   useEffect(() => {
     if (mode !== 'template' || !templateCollectionId) {
       setMockEntry(null);
       setTemplateCollectionName(null);
+      setTemplateBasePath(null);
+      setFirstEntrySlug(null);
       return;
     }
     let cancelled = false;
-    fetch(`/api/collections/${templateCollectionId}`)
-      .then((r) => r.json())
-      .then((col) => {
+    // Fetch collection metadata (fields + basePath) alongside published entries
+    // so the header View button can point at a real live URL.
+    Promise.all([
+      fetch(`/api/collections/${templateCollectionId}`).then((r) => r.json()),
+      fetch(`/api/entries?collectionId=${templateCollectionId}`).then((r) => r.json()).catch(() => []),
+    ])
+      .then(([col, entriesList]) => {
         if (cancelled) return;
         const fields = Array.isArray(col?.fields) ? col.fields : [];
         setMockEntry({ entryData: buildMockEntryData(fields) });
         setTemplateCollectionName(typeof col?.name === 'string' ? col.name : null);
+        setTemplateBasePath(typeof col?.basePath === 'string' && col.basePath
+          ? col.basePath
+          : typeof col?.slug === 'string' ? col.slug : null);
+        const firstPublished = Array.isArray(entriesList)
+          ? entriesList.find((e: { status?: string; slug?: string | null }) =>
+              e.status === 'published' && !!e.slug)
+          : null;
+        setFirstEntrySlug(firstPublished?.slug ?? null);
       })
       .catch(() => {
         if (!cancelled) {
           setMockEntry(null);
           setTemplateCollectionName(null);
+          setTemplateBasePath(null);
+          setFirstEntrySlug(null);
         }
       });
     return () => { cancelled = true; };
   }, [mode, templateCollectionId]);
+
+  // Resolve the URL for the header "View" button:
+  // - detail template  → /collections/<basePath>/<first-published-entry-slug>
+  // - index template   → /collections/<basePath>
+  // - anything else    → /<page.slug>
+  const liveHref: string | null = (() => {
+    if (isTemplateMode && templateBasePath) {
+      if (templateKind === 'detail') {
+        return firstEntrySlug
+          ? `/collections/${templateBasePath}/${firstEntrySlug}`
+          : `/collections/${templateBasePath}`;
+      }
+      if (templateKind === 'index') {
+        return `/collections/${templateBasePath}`;
+      }
+    }
+    if (data.status === 'published') return `/${data.slug}`;
+    return null;
+  })();
 
   return (
     <MockCollectionEntryContext.Provider value={mockEntry}>
@@ -865,9 +990,9 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
 
           {/* View live */}
-          {data.status === 'published' && (
+          {liveHref && (
             <Link
-              href={`/${data.slug}`}
+              href={liveHref}
               target="_blank"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
@@ -909,40 +1034,62 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
             </span>
           )}
 
-          {/* Save draft */}
+          {/* Save draft — template pages auto-publish on save, so their button
+              says "Save & Publish" and no separate Publish button is shown. */}
           <Button
-            variant="outline"
+            variant={isTemplateMode ? 'default' : 'outline'}
             size="sm"
-            className="h-8 text-xs px-3"
+            className={cn(
+              'h-8 text-xs px-3',
+              isTemplateMode && 'bg-[#BC0D2A] hover:bg-[#9A0B22] text-white border-0'
+            )}
             onClick={handleSave}
             disabled={isSaving || !isDirty}
           >
             <Save className="h-3.5 w-3.5 mr-1.5" />
-            Save
+            {isTemplateMode ? 'Save & Publish' : 'Save'}
           </Button>
 
-          {/* Publish / Unpublish */}
-          {data.status === 'published' ? (
+          {/* Manual republish escape hatch for template pages whose
+              published_blocks drifted from draft_blocks (e.g. saved before
+              auto-publish landed). Bypasses the isDirty gate. */}
+          {isTemplateMode && onPublish && (
             <Button
               size="sm"
-              variant="destructive"
+              variant="outline"
               className="h-8 text-xs px-3"
-              onClick={handleUnpublish}
-              disabled={isSaving}
-            >
-              <Globe className="h-3.5 w-3.5 mr-1.5" />
-              Unpublish
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              className="h-8 text-xs px-3 bg-[#BC0D2A] hover:bg-[#9A0B22] text-white border-0"
               onClick={handlePublish}
               disabled={isSaving}
             >
               <Globe className="h-3.5 w-3.5 mr-1.5" />
-              Publish
+              Update Live Template
             </Button>
+          )}
+
+          {/* Publish / Unpublish — hidden in template mode (auto-published) */}
+          {!isTemplateMode && (
+            data.status === 'published' ? (
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-8 text-xs px-3"
+                onClick={handleUnpublish}
+                disabled={isSaving}
+              >
+                <Globe className="h-3.5 w-3.5 mr-1.5" />
+                Unpublish
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="h-8 text-xs px-3 bg-[#BC0D2A] hover:bg-[#9A0B22] text-white border-0"
+                onClick={handlePublish}
+                disabled={isSaving}
+              >
+                <Globe className="h-3.5 w-3.5 mr-1.5" />
+                Publish
+              </Button>
+            )
           )}
         </div>
       </header>
@@ -958,21 +1105,22 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
           const showScrollHint =
             previewViewportPx > 0 && previewPanelWidth > 0 && previewPanelWidth < previewViewportPx + 16;
           return (
-          <div ref={splitContainerRef} className="flex-1 relative flex overflow-hidden">
-          {/* Left canvas panel (full width when split is off) */}
+          <div className="flex-1 flex overflow-hidden">
+          {/* Left block sidebar — collapsible, always visible */}
+          <BlockSidebar onAdd={addBlock} />
+          <div ref={splitContainerRef} className="flex-1 flex overflow-hidden">
+          {/* Middle canvas + inspector panel (full width when split is off) */}
           <div
-            className="relative flex flex-col overflow-hidden min-w-0"
+            ref={leftPanelRef}
+            className="flex flex-col overflow-hidden min-w-0"
             style={showSplit ? { width: `${splitRatio}%` } : { flex: 1 }}
           >
-            {/* Canvas — full width, no sidebars */}
+            {/* Canvas — grows to fill remaining space above the inspector */}
             <main
               className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-950"
               onClick={() => closeDrawer()}
             >
-              <div
-                className="max-w-4xl mx-auto space-y-3"
-                style={{ paddingBottom: drawerOpen ? 'calc(45vh + 4rem)' : '6rem' }}
-              >
+              <div className="max-w-4xl mx-auto space-y-3 pb-16">
                 {mode === 'template' && templateKind === 'detail' && templateCollectionId && (
                   <div
                     className="rounded-lg border border-[#BC0D2A]/20 bg-[#BC0D2A]/5 px-4 py-2.5 flex items-center gap-2 text-sm"
@@ -989,7 +1137,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                   </div>
                 )}
 
-                {/* Empty state — Add Block trigger sits at the top */}
+                {/* Empty state — sidebar is where users add blocks now */}
                 {blocks.length === 0 && (
                   <div
                     className="text-center py-24 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 space-y-4"
@@ -1003,11 +1151,8 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                         No blocks yet
                       </p>
                       <p className="text-xs text-slate-400 mt-1">
-                        Add your first block to get started.
+                        Pick a block from the sidebar to get started.
                       </p>
-                    </div>
-                    <div className="flex justify-center pt-1">
-                      <BlockSelector onAdd={addBlock} side="bottom" />
                     </div>
                   </div>
                 )}
@@ -1097,57 +1242,63 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                   </DragOverlay>
                 </DndContext>
 
-                {/* Bottom Add Block trigger — always visible below the block list */}
-                {blocks.length > 0 && (
-                  <div
-                    className="flex justify-center pt-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <BlockSelector onAdd={addBlock} side="top" />
-                  </div>
-                )}
               </div>
             </main>
 
-            {/* Bottom drawer — Inspector / Page Settings */}
-            <div
-              className={cn(
-                'absolute inset-x-0 bottom-0 h-[45%] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-200 ease-out flex flex-col z-20',
-                drawerOpen ? 'translate-y-0' : 'translate-y-full pointer-events-none'
-              )}
-              onClick={(e) => e.stopPropagation()}
-              role="dialog"
-              aria-hidden={!drawerOpen}
-              aria-label={selectedBlock ? 'Block inspector' : 'Page settings'}
-            >
-              {(() => {
-                const meta = selectedBlock
-                  ? getBlockMeta(selectedBlock.type)
-                  : { icon: Settings, label: 'Page Settings' };
-                const HeaderIcon = meta.icon;
-                return (
-                  <div className="flex items-center justify-between px-4 h-11 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-950/40">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="p-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shrink-0">
-                        <HeaderIcon className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
+            {/* Bottom Inspector panel — pushes the canvas up rather than
+                overlapping it. Only rendered when a block is selected or
+                Page Settings is open, so the canvas reclaims full height
+                the rest of the time. */}
+            {drawerOpen && (
+              <div
+                className="shrink-0 flex flex-col bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
+                style={{ height: `${inspectorHeight}px` }}
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-label={selectedBlock ? 'Block inspector' : 'Page settings'}
+              >
+                {/* Resize handle */}
+                <div
+                  onPointerDown={(e) => { e.preventDefault(); setIsResizingInspector(true); }}
+                  onDoubleClick={() => setInspectorHeight(INSPECTOR_DEFAULT)}
+                  role="separator"
+                  aria-orientation="horizontal"
+                  aria-label="Resize inspector"
+                  title="Drag to resize · double-click to reset"
+                  className={cn(
+                    'h-1 shrink-0 cursor-row-resize transition-colors',
+                    isResizingInspector
+                      ? 'bg-[#BC0D2A]/70'
+                      : 'bg-slate-200 dark:bg-slate-800 hover:bg-[#BC0D2A]/50'
+                  )}
+                />
+                {(() => {
+                  const meta = selectedBlock
+                    ? getBlockMeta(selectedBlock.type)
+                    : { icon: Settings, label: 'Page Settings' };
+                  const HeaderIcon = meta.icon;
+                  return (
+                    <div className="sticky top-0 z-10 flex items-center justify-between px-4 h-11 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-950/40">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="p-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shrink-0">
+                          <HeaderIcon className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
+                        </div>
+                        <span className="text-sm font-semibold text-slate-800 dark:text-white truncate">
+                          {meta.label}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-slate-800 dark:text-white truncate">
-                        {meta.label}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={closeDrawer}
+                        aria-label="Close"
+                        className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={closeDrawer}
-                      aria-label="Close"
-                      className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                );
-              })()}
-              <div className="flex-1 overflow-y-auto">
-                {drawerOpen && (
+                  );
+                })()}
+                <div className="flex-1 overflow-y-auto">
                   <Inspector
                     selectedBlock={selectedBlock}
                     onChange={updateBlock}
@@ -1159,9 +1310,9 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                       markDirty();
                     }}
                   />
-                )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Resizable divider */}
@@ -1271,6 +1422,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
               </div>
             </div>
           )}
+          </div>
         </div>
         );
         })()}

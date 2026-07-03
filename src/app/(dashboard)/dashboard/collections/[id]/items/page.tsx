@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RichTextInput } from '@/components/ui/rich-text-input';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Pencil, Trash2, X, Check, Upload, Download, FileUp } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, X, Check, Upload, Download, FileUp, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { BulkImportDialog } from '@/components/dashboard/BulkImportDialog';
 import { buildTemplateCSV, downloadCSV } from '@/lib/csv';
@@ -26,7 +26,9 @@ interface Collection {
   id: string;
   name: string;
   slug: string;
+  basePath: string | null;
   itemSlugField: string | null;
+  detailTemplatePageId: string | null;
   fields: Field[];
 }
 
@@ -34,6 +36,7 @@ interface Entry {
   id: string;
   collectionId: string;
   slug: string | null;
+  status: 'draft' | 'published';
   data: Record<string, any>;
   createdAt: string;
 }
@@ -559,6 +562,17 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
                   </div>
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
+                    {item.status === 'published' && item.slug && collection.detailTemplatePageId && (
+                      <a
+                        href={`/collections/${collection.basePath ?? collection.slug}/${item.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="View live"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"

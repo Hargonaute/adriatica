@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { db, collections, fields, entries, pages } from '@/lib/db';
-import { eq, and, or } from 'drizzle-orm';
+import { db, collections, entries, pages, fields } from '@/lib/db';
+import { and, eq, or, isNull } from 'drizzle-orm';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { type Block } from '@/types';
@@ -9,131 +9,169 @@ import { TemplateRenderer } from './TemplateRenderer';
 export const revalidate = 60;
 
 interface Props {
-  params: Promise<{ slug: string; itemId: string }>;
+  params: Promise<{ basePath: string; itemSlug: string }>;
 }
 
-async function getData(slug: string, itemId: string) {
-  // Fetch collection by slug
+async function resolveCollection(basePath: string) {
   const [col] = await db
     .select()
     .from(collections)
-    .where(eq(collections.slug, slug))
+    .where(
+      or(
+        eq(collections.basePath, basePath),
+        and(isNull(collections.basePath), eq(collections.slug, basePath))
+      )
+    )
     .limit(1);
+  return col ?? null;
+}
 
+// entries.id is a UUID column — comparing it against a non-UUID string throws
+// a Postgres type-cast error, so only include the id fallback when the segment
+// actually looks like a UUID (keeps legacy /collections/[slug]/[uuid] links
+// working without breaking slug lookups like "n-gooo-26").
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function getData(basePath: string, itemSlug: string) {
+  const col = await resolveCollection(basePath);
   if (!col) return null;
 
-  // Fetch fields + entry in parallel
-  const [colFields, [entry]] = await Promise.all([
-    db.select().from(fields).where(eq(fields.collectionId, col.id)).orderBy(fields.order),
-    db.select().from(entries).where(
+  const identityMatch = UUID_RE.test(itemSlug)
+    ? or(eq(entries.slug, itemSlug), eq(entries.id, itemSlug))
+    : eq(entries.slug, itemSlug);
+
+  const [entry] = await db
+    .select()
+    .from(entries)
+    .where(
       and(
         eq(entries.collectionId, col.id),
         eq(entries.status, 'published'),
-        or(eq(entries.slug, itemId), eq(entries.id, itemId))
+        identityMatch
       )
-    ).limit(1),
-  ]);
+    )
+    .limit(1);
 
   if (!entry) return null;
 
-  return { col, fields: colFields, entry };
+  const [templatePage, colFields] = await Promise.all([
+    col.detailTemplatePageId
+      ? db
+          .select()
+          .from(pages)
+          .where(and(eq(pages.id, col.detailTemplatePageId), eq(pages.status, 'published')))
+          .limit(1)
+          .then(rows => rows[0] ?? null)
+      : Promise.resolve(null),
+    db.select().from(fields).where(eq(fields.collectionId, col.id)).orderBy(fields.order),
+  ]);
+
+  return { col, entry, templatePage, colFields };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug, itemId } = await params;
-  const data = await getData(slug, itemId);
+  const { basePath, itemSlug } = await params;
+  const data = await getData(basePath, itemSlug);
   if (!data) return {};
 
-  // Use the first text field as a title hint
-  const titleField = data.fields.find(f => f.type === 'text');
-  const title = titleField ? String((data.entry.data as Record<string, any>)[titleField.key] ?? '') : '';
+  const entryData = data.entry.data as Record<string, unknown>;
+  const entryTitle =
+    typeof entryData.name === 'string' ? entryData.name :
+    typeof entryData.title === 'string' ? entryData.title : '';
+
+  const meta = (data.templatePage?.meta ?? {}) as Record<string, string>;
 
   return {
-    title: title || data.col.name,
+    title: entryTitle || meta.title || data.col.name,
+    description: meta.description,
   };
 }
 
-export default async function CollectionItemPage({ params }: Props) {
-  const { slug, itemId } = await params;
-  const data = await getData(slug, itemId);
+export default async function CollectionItemDetailPage({ params }: Props) {
+  const { basePath, itemSlug } = await params;
+  const data = await getData(basePath, itemSlug);
   if (!data) notFound();
 
-  const { col, fields: colFields, entry } = data;
-  const itemData = entry.data as Record<string, any>;
+  const { col, entry, templatePage, colFields } = data;
 
-  // --- Template routing ---
-  if (col.detailTemplatePageId) {
-    const [templatePage] = await db
-      .select()
-      .from(pages)
-      .where(and(eq(pages.id, col.detailTemplatePageId), eq(pages.status, 'published')))
-      .limit(1);
-
-    if (templatePage) {
-      const blocks = ((templatePage.published_blocks as any)?.en ?? []) as Block[];
-      return (
-        <TemplateRenderer
-          blocks={blocks}
-          ctx={{ itemId, collectionSlug: slug }}
-        />
-      );
-    }
+  // Prefer the published detail template. If one exists, render it wrapped in
+  // CollectionItemContext so bound blocks resolve field values synchronously.
+  if (templatePage) {
+    const blocks = ((templatePage.published_blocks as Record<string, Block[]> | null)?.en ?? []) as Block[];
+    return (
+      <TemplateRenderer
+        blocks={blocks}
+        ctx={{
+          itemId: entry.id,
+          collectionSlug: col.basePath ?? col.slug,
+          entry: {
+            id: entry.id,
+            slug: entry.slug,
+            collectionId: entry.collectionId,
+            data: (entry.data ?? {}) as Record<string, unknown>,
+          },
+          collection: {
+            id: col.id,
+            name: col.name,
+            slug: col.slug,
+            fields: colFields.map(f => ({
+              id: f.id,
+              key: f.key,
+              label: f.label,
+              type: f.type,
+              required: f.required ?? false,
+              order: f.order ?? 0,
+            })),
+          },
+        }}
+      />
+    );
   }
 
-  // --- Auto-template (default behaviour) ---
+  // Fallback: no published detail template — render a bare-bones field dump.
+  const itemData = entry.data as Record<string, unknown>;
   const titleField = colFields.find(f => f.type === 'text');
   const pageTitle = titleField ? String(itemData[titleField.key] ?? '') : col.name;
   const heroImageField = colFields.find(f => f.type === 'image');
   const heroImage = heroImageField ? String(itemData[heroImageField.key] ?? '') : null;
+  const indexHref = `/collections/${col.basePath ?? col.slug}`;
 
   return (
     <main className="min-h-screen bg-white">
-      {/* Hero image */}
       {heroImage && (
         <div className="w-full h-[50vh] max-h-[520px] relative overflow-hidden bg-slate-100">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={heroImage}
-            alt={pageTitle}
-            className="w-full h-full object-cover"
-          />
+          <img src={heroImage} alt={pageTitle} className="w-full h-full object-cover" />
         </div>
       )}
 
       <div className="max-w-[860px] mx-auto px-6 lg:px-8 py-16">
-        {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
           <Link href="/" className="hover:text-[#BC0D2A] transition-colors">Home</Link>
           <span>/</span>
-          <Link href={`/collections/${slug}`} className="hover:text-[#BC0D2A] transition-colors capitalize">
+          <Link href={indexHref} className="hover:text-[#BC0D2A] transition-colors capitalize">
             {col.name}
           </Link>
           <span>/</span>
           <span className="text-slate-900 truncate max-w-[200px]">{pageTitle}</span>
         </nav>
 
-        {/* Title */}
         <h1 className="font-[family-name:var(--font-inter)] text-4xl sm:text-5xl font-bold text-slate-900 leading-[1.1] tracking-tight mb-10">
           {pageTitle}
         </h1>
 
-        {/* Fields */}
         <div className="space-y-8">
           {colFields.map(field => {
             const val = itemData[field.key];
-
-            // Skip empty values and the title field (already shown as heading)
             if (val === undefined || val === null || val === '') return null;
             if (field.id === titleField?.id) return null;
 
             return (
               <div key={field.id}>
-                {/* Label */}
                 <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
                   {field.label}
                 </p>
 
-                {/* Value — type-specific rendering */}
                 {field.type === 'image' && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -168,7 +206,7 @@ export default async function CollectionItemPage({ params }: Props) {
                   </span>
                 )}
 
-                {(field.type === 'email') && (
+                {field.type === 'email' && (
                   <a
                     href={`mailto:${String(val)}`}
                     className="text-[#BC0D2A] font-medium hover:underline"
@@ -185,10 +223,9 @@ export default async function CollectionItemPage({ params }: Props) {
           })}
         </div>
 
-        {/* Back link */}
         <div className="mt-16 pt-8 border-t">
           <Link
-            href={`/collections/${slug}`}
+            href={indexHref}
             className="inline-flex items-center gap-2 text-sm font-semibold text-[#BC0D2A] hover:underline"
           >
             ← Back to {col.name}

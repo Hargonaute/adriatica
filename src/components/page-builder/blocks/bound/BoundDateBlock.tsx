@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useCollectionItem } from '@/contexts/CollectionItemContext';
 import { useRepeaterEntry } from '@/contexts/RepeaterEntryContext';
 import { useMockCollectionEntry } from '@/contexts/MockCollectionEntryContext';
@@ -38,24 +38,18 @@ export function BoundDateEditor({
 
 // ── Preview ───────────────────────────────────────────────────────────────────
 
+function renderDate(str: string) {
+  return (
+    <time className="text-sm text-muted-foreground font-medium" dateTime={str}>
+      {formatDate(str)}
+    </time>
+  );
+}
+
 export function BoundDatePreview({ block }: { block: BoundDateBlockData }) {
   const repeaterCtx = useRepeaterEntry();
   const mockCtx = useMockCollectionEntry();
   const collectionCtx = useCollectionItem();
-  const [fetchedValue, setFetchedValue] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Skip fetch when inside a repeater or when we have mock data — data comes from context
-    if (repeaterCtx !== null || mockCtx !== null) return;
-    if (!collectionCtx || !block.fieldKey) return;
-    fetch(`/api/entries/${collectionCtx.itemId}`)
-      .then((r) => r.json())
-      .then((entry) => {
-        const v = entry?.data?.[block.fieldKey!];
-        setFetchedValue(v != null ? String(v) : null);
-      })
-      .catch(() => {});
-  }, [repeaterCtx, mockCtx, collectionCtx?.itemId, block.fieldKey]);
 
   if (!block.fieldKey) {
     return <Placeholder fieldKey={null} />;
@@ -65,35 +59,22 @@ export function BoundDatePreview({ block }: { block: BoundDateBlockData }) {
   if (repeaterCtx) {
     const value = repeaterCtx.entryData[block.fieldKey];
     if (value == null) return null;
-    const str = String(value);
-    return (
-      <time className="text-sm text-muted-foreground font-medium" dateTime={str}>
-        {formatDate(str)}
-      </time>
-    );
+    return renderDate(String(value));
   }
 
   // Template editor mock: render sample formatted date
   if (mockCtx) {
     const value = mockCtx.entryData[block.fieldKey];
     if (value == null) return <Placeholder fieldKey={block.fieldKey} />;
-    const str = String(value);
-    return (
-      <time className="text-sm text-muted-foreground font-medium" dateTime={str}>
-        {formatDate(str)}
-      </time>
-    );
+    return renderDate(String(value));
   }
 
-  // Detail-page path: no context — show placeholder
-  if (!collectionCtx) {
-    return <Placeholder fieldKey={block.fieldKey} />;
+  // Detail-page path: entry payload is populated server-side.
+  if (collectionCtx?.entry) {
+    const value = collectionCtx.entry.data[block.fieldKey];
+    if (value == null) return null;
+    return renderDate(String(value));
   }
 
-  if (!fetchedValue) return null;
-  return (
-    <time className="text-sm text-muted-foreground font-medium" dateTime={fetchedValue}>
-      {formatDate(fetchedValue)}
-    </time>
-  );
+  return <Placeholder fieldKey={block.fieldKey} />;
 }
