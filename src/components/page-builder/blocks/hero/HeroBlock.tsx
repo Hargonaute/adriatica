@@ -6,6 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { HeroSection } from '@/components/home/HeroSection';
+import { AssetPicker } from '../../AssetPicker';
+import { Button } from '@/components/ui/button';
+import { X, Image as ImageIcon } from 'lucide-react';
 
 // ── Editor ────────────────────────────────────────────────────────────────
 
@@ -75,12 +78,36 @@ export function HeroEditor({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs">Background Image URL</Label>
-        <Input
-          value={block.backgroundImage ?? ''}
-          onChange={(e) => onChange({ backgroundImage: e.target.value })}
-          placeholder="https://example.com/hero.jpg"
-        />
+        <Label className="text-xs">Background Image</Label>
+        {block.backgroundImage ? (
+          <div className="relative aspect-video w-full rounded-md overflow-hidden border bg-muted group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={block.backgroundImage} alt="Background preview" className="w-full h-full object-cover" />
+            <div className="absolute top-2 right-2 flex gap-2">
+              <AssetPicker
+                onSelect={(url) => onChange({ backgroundImage: url })}
+                trigger={
+                  <Button size="sm" variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    Change
+                  </Button>
+                }
+              />
+              <Button
+                size="icon"
+                variant="destructive"
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => onChange({ backgroundImage: '' })}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="h-24 border-2 border-dashed rounded-md flex flex-col items-center justify-center gap-2 text-muted-foreground bg-muted/20">
+            <ImageIcon className="h-6 w-6 opacity-50" />
+            <AssetPicker onSelect={(url) => onChange({ backgroundImage: url })} />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">

@@ -21,7 +21,7 @@ import { BlockSelector } from './BlockSelector';
 import { Inspector } from './Inspector';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Code, Layout, Save, Globe, ExternalLink, ArrowLeft, Plus, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { Eye, Code, Layout, Save, Globe, ExternalLink, ArrowLeft, Plus, Monitor, Tablet, Smartphone, Loader2, Check, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -86,6 +86,8 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const savedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Reset viewport when leaving Preview mode
   useEffect(() => {
@@ -114,16 +116,28 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
   const triggerSave = useCallback(async (silent = false) => {
     if (!onSave) return;
     setIsSaving(true);
+    setSaveStatus('saving');
+    if (savedTimeout.current) {
+      clearTimeout(savedTimeout.current);
+      savedTimeout.current = null;
+    }
     try {
       await onSave(latestData.current);
       setIsDirty(false);
+      setSaveStatus('saved');
+      savedTimeout.current = setTimeout(() => setSaveStatus('idle'), 3000);
       if (!silent) toast.success('Draft saved');
     } catch {
+      setSaveStatus('error');
       if (!silent) toast.error('Failed to save');
     } finally {
       setIsSaving(false);
     }
   }, [onSave]);
+
+  useEffect(() => {
+    return () => { if (savedTimeout.current) clearTimeout(savedTimeout.current); };
+  }, []);
 
   // Reset auto-save timer whenever data changes
   useEffect(() => {
@@ -688,6 +702,39 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
               <ExternalLink className="h-3.5 w-3.5" />
               View
             </Link>
+          )}
+
+          {/* Save status indicator */}
+          {saveStatus !== 'idle' && (
+            <span
+              className={cn(
+                'flex items-center gap-1 text-xs',
+                saveStatus === 'error'
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-slate-500 dark:text-slate-400'
+              )}
+              role="status"
+              aria-live="polite"
+            >
+              {saveStatus === 'saving' && (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Saving…
+                </>
+              )}
+              {saveStatus === 'saved' && (
+                <>
+                  <Check className="h-3 w-3 text-green-600" />
+                  Saved
+                </>
+              )}
+              {saveStatus === 'error' && (
+                <>
+                  <AlertCircle className="h-3 w-3" />
+                  Save failed
+                </>
+              )}
+            </span>
           )}
 
           {/* Save draft */}

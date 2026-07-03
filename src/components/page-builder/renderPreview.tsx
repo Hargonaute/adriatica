@@ -5,55 +5,65 @@ import { type BlockData, type ContainerBlockData, type RepeaterBlockData } from 
 import { BLOCKS_REGISTRY } from './blocks/registry';
 import { ContainerPreview } from './blocks/container/ContainerBlock';
 import { RepeaterPreview } from './blocks/repeater/RepeaterBlock';
-import { cn } from '@/lib/utils';
 
-// Helper to map BaseBlockSettings to Tailwind classes
-function getBaseClasses(data: BlockData) {
-  const classes = [];
+// ── Style tables ──────────────────────────────────────────────────────────
+// Kept in sync with the previous Tailwind mapping so the rendered output is
+// visually identical — only the implementation switched from utility classes
+// to inline CSS.
 
-  // Padding Top — scale shifted so the default ('md') is py-16, the shared
-  // section rhythm. 'sm' still reads as small, 'lg'/'xl' as more generous.
-  const pt = {
-    'none': 'pt-0',
-    'sm': 'pt-8',
-    'md': 'pt-16',
-    'lg': 'pt-24',
-    'xl': 'pt-32',
-  }[data.paddingTop || 'md'];
-  classes.push(pt);
+const PADDING_MAP: Record<string, string> = {
+  none: '0',
+  sm: '2rem',   // matches pt-8 / pb-8
+  md: '4rem',   // matches pt-16 / pb-16
+  lg: '6rem',   // matches pt-24 / pb-24
+  xl: '8rem',   // matches pt-32 / pb-32
+};
 
-  // Padding Bottom
-  const pb = {
-    'none': 'pb-0',
-    'sm': 'pb-8',
-    'md': 'pb-16',
-    'lg': 'pb-24',
-    'xl': 'pb-32',
-  }[data.paddingBottom || 'md'];
-  classes.push(pb);
+const MAX_WIDTH_MAP: Record<string, string> = {
+  sm: '640px',   // max-w-screen-sm
+  md: '768px',   // max-w-screen-md
+  lg: '1024px',  // max-w-screen-lg
+  full: '100%',
+};
 
-  // Background
-  const bg = {
-    'none': 'bg-transparent',
-    'muted': 'bg-muted',
-    'dark': 'bg-foreground text-background',
-    'image': 'bg-cover bg-center',
-    'brand-red': 'bg-[#BC0D2A] text-white',
-    'brand-green': 'bg-[#328542] text-white',
-    'navy': 'bg-[#0b0f19] text-white',
-  }[data.background || 'none'] ?? 'bg-transparent';
-  classes.push(bg);
+const ALIGN_MAP: Record<string, React.CSSProperties['textAlign']> = {
+  left: 'left',
+  center: 'center',
+  right: 'right',
+};
 
-  // Mobile visibility. The base rule `hidden md:block` handles the live
-  // site (viewport-driven). Inside the editor's Preview viewport container
-  // the browser viewport can be wide while the wrapper is narrow, so we
-  // add a container-query override with `!` to force hiding when the
-  // `@container/preview` wrapper is under 768px.
-  if (data.hideOnMobile) {
-    classes.push('hidden md:block @max-3xl/preview:!hidden');
-  }
+const BACKGROUND_STYLE: Record<string, React.CSSProperties> = {
+  none: {},
+  muted: { backgroundColor: 'var(--muted)' },
+  dark: { backgroundColor: 'var(--foreground)', color: 'var(--background)' },
+  // Sizing/positioning only — image URL is supplied via customClassName or
+  // baseStyles.background as before.
+  image: { backgroundSize: 'cover', backgroundPosition: 'center' },
+  'brand-red': { backgroundColor: '#BC0D2A', color: '#ffffff' },
+  'brand-green': { backgroundColor: '#328542', color: '#ffffff' },
+  navy: { backgroundColor: '#0b0f19', color: '#ffffff' },
+};
 
-  return classes.join(' ');
+// Section-level base styles: padding + background. Text align lives on the
+// wrapper below because it targets inline-flow content, not the section box.
+function getSectionStyle(data: BlockData): React.CSSProperties {
+  return {
+    paddingTop: PADDING_MAP[data.paddingTop || 'md'],
+    paddingBottom: PADDING_MAP[data.paddingBottom || 'md'],
+    ...(BACKGROUND_STYLE[data.background || 'none'] ?? {}),
+  };
+}
+
+// Centred inner wrapper — replaces `mx-auto px-4 max-w-… text-…`.
+function getWrapperStyle(data: BlockData): React.CSSProperties {
+  return {
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    paddingLeft: '1rem',
+    paddingRight: '1rem',
+    maxWidth: MAX_WIDTH_MAP[data.maxWidth || 'full'],
+    textAlign: ALIGN_MAP[data.align || 'left'],
+  };
 }
 
 // Maps Task-6 typography / border / layout / media fields onto inline CSS.
@@ -88,8 +98,6 @@ function getBaseStyles(data: BlockData): React.CSSProperties {
     between: 'space-between', around: 'space-around', evenly: 'space-evenly',
   };
 
-  // Resolve a size: enum match → mapped, bare number → "Npx", string with
-  // a unit → pass through, empty / null → undefined.
   const size = (value: unknown, enumMap?: Record<string, string>): string | undefined => {
     if (value == null || value === '') return undefined;
     const str = String(value);
@@ -98,7 +106,6 @@ function getBaseStyles(data: BlockData): React.CSSProperties {
     return str;
   };
 
-  // Trim and reject empties; pass-through for arbitrary CSS strings (colors, etc.).
   const passthrough = (value: unknown): string | undefined => {
     if (value == null) return undefined;
     const str = String(value).trim();
@@ -163,32 +170,23 @@ function getBaseStyles(data: BlockData): React.CSSProperties {
   return styles;
 }
 
-// Helper for alignment and max-width wrapper
-function getWrapperClasses(data: BlockData) {
-    const classes = ['mx-auto', 'px-4']; // default container padding
-    
-    // Max Width
-    const mw = {
-        'sm': 'max-w-screen-sm',
-        'md': 'max-w-screen-md',
-        'lg': 'max-w-screen-lg',
-        'full': 'max-w-full',
-    }[data.maxWidth || 'full'];
-    classes.push(mw);
-
-    // Alignment (Text align mostly, but could handle flex alignment)
-    const align = {
-        'left': 'text-left',
-        'center': 'text-center',
-        'right': 'text-right',
-    }[data.align || 'left'];
-    classes.push(align);
-
-    if (data.customClassName) {
-        classes.push(data.customClassName);
+// Scoped CSS injected only when `hideOnMobile` is set. Two independent gates
+// mirror the previous Tailwind combo (`hidden md:block @max-3xl/preview:!hidden`):
+//   - viewport media query < 768px hides on the live site;
+//   - container query < 768px hides inside the editor's preview viewport
+//     wrapper (which declares `@container/preview`), so the mobile toggle in
+//     the editor still visually collapses the block.
+function HideOnMobileStyle({ id }: { id: string }) {
+  const safeId = id.replace(/"/g, '\\"');
+  const css = `
+    @media (max-width: 767.98px) {
+      section[data-block-id="${safeId}"] { display: none !important; }
     }
-    
-    return classes.join(' ');
+    @container preview (max-width: 767.98px) {
+      section[data-block-id="${safeId}"] { display: none !important; }
+    }
+  `;
+  return <style dangerouslySetInnerHTML={{ __html: css }} />;
 }
 
 interface RenderPreviewProps {
@@ -196,29 +194,47 @@ interface RenderPreviewProps {
 }
 
 export function RenderPreview({ block }: RenderPreviewProps) {
-  const sectionClasses = getBaseClasses(block.data);
-  const containerClasses = getWrapperClasses(block.data);
-  const baseStyles = getBaseStyles(block.data);
+  const data = block.data;
+  const sectionStyle: React.CSSProperties = {
+    ...getSectionStyle(data),
+    ...getBaseStyles(data),
+  };
+  const wrapperStyle = getWrapperStyle(data);
+
+  // customClassName is user-authored freeform — pass through untouched.
+  const customClass = data.customClassName || undefined;
+
+  const sectionProps = {
+    'data-block-id': block.id,
+    className: customClass,
+    style: sectionStyle,
+  } as const;
 
   // Container is handled outside the registry to avoid circular imports
   if (block.type === 'container') {
     return (
-      <section className={sectionClasses} style={baseStyles}>
-        <div className={containerClasses}>
-          <ContainerPreview block={block.data as ContainerBlockData} />
-        </div>
-      </section>
+      <>
+        {data.hideOnMobile && <HideOnMobileStyle id={block.id} />}
+        <section {...sectionProps}>
+          <div style={wrapperStyle}>
+            <ContainerPreview block={block.data as ContainerBlockData} />
+          </div>
+        </section>
+      </>
     );
   }
 
   // Repeater is handled outside the registry to avoid circular imports
   if (block.type === 'repeater') {
     return (
-      <section className={sectionClasses} style={baseStyles}>
-        <div className={containerClasses}>
-          <RepeaterPreview block={block.data as RepeaterBlockData} />
-        </div>
-      </section>
+      <>
+        {data.hideOnMobile && <HideOnMobileStyle id={block.id} />}
+        <section {...sectionProps}>
+          <div style={wrapperStyle}>
+            <RepeaterPreview block={block.data as RepeaterBlockData} />
+          </div>
+        </section>
+      </>
     );
   }
 
@@ -231,10 +247,13 @@ export function RenderPreview({ block }: RenderPreviewProps) {
   const { Preview } = registryEntry;
 
   return (
-    <section className={sectionClasses} style={baseStyles}>
-        <div className={containerClasses}>
-             <Preview block={block.data} />
+    <>
+      {data.hideOnMobile && <HideOnMobileStyle id={block.id} />}
+      <section {...sectionProps}>
+        <div style={wrapperStyle}>
+          <Preview block={block.data} />
         </div>
-    </section>
+      </section>
+    </>
   );
 }

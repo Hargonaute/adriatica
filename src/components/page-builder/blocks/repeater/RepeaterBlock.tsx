@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import {
   SortableContext,
@@ -392,15 +392,33 @@ export function RepeaterEditorCard({
 export function RepeaterPreview({ block }: { block: RepeaterBlockData }) {
   const [entries, setEntries] = useState<Array<{ id: string; slug: string | null; data: unknown }>>([]);
   const [loading, setLoading] = useState(false);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
 
   useEffect(() => {
     if (!block.collectionId) return;
+    const controller = new AbortController();
     setLoading(true);
-    fetch(`/api/entries?collectionId=${block.collectionId}`)
+    fetch(`/api/entries?collectionId=${block.collectionId}`, { signal: controller.signal })
       .then((r) => r.json())
-      .then((data) => setEntries(Array.isArray(data) ? data : []))
-      .catch(() => setEntries([]))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (!isMounted.current || controller.signal.aborted) return;
+        setEntries(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        if (err?.name === 'AbortError') return;
+        if (!isMounted.current) return;
+        setEntries([]);
+      })
+      .finally(() => {
+        if (!isMounted.current || controller.signal.aborted) return;
+        setLoading(false);
+      });
+    return () => controller.abort();
   }, [block.collectionId]);
 
   if (!block.collectionId) {

@@ -75,6 +75,10 @@ export interface FormBlockData extends BaseBlockSettings {
   collectionId: string;
   submitLabel?: string;
   successMessage?: string;
+  /** Per-field inclusion, order, and optional label override. Order in the
+   * array is the display order. Fields not listed default to included with
+   * the original collection label. */
+  fieldConfig?: Array<{ key: string; included: boolean; label?: string }>;
 }
 
 export interface HeroBlockData extends BaseBlockSettings {
