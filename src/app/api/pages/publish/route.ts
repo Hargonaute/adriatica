@@ -37,7 +37,8 @@ export async function POST(request: Request) {
         .where(eq(pages.id, data.id));
 
     // Immediately bust the ISR cache so the public page reflects the new content.
-    revalidatePath(`/${data.slug}`);
+    revalidatePath(`/fr/${data.slug}`);
+    revalidatePath(`/en/${data.slug}`);
 
     return NextResponse.json({ success: true, publishedAt: new Date() });
 

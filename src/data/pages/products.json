@@ -1,0 +1,68 @@
+{
+  "fr": {
+    "meta": {
+      "title": "Nos produits",
+      "description": "Découvrez la gamme de produits Adriatica : solutions agronomiques conçues pour améliorer la productivité agricole tout en préservant l'environnement."
+    },
+    "hero": {
+      "heading": "PRODUITS",
+      "paragraphs": [
+        "Les solutions nutritionnelles de Maghreb Adriatica ne sont pas des ingrédients individuels combinés, mais des formules basées sur des rapports spécifiques de composition et d'actions synergiques entre les composantes.",
+        "C'est ce qui nous permet d'obtenir de meilleurs résultats que ceux que l'on obtiendrait en unissant simplement des substances actives individuelles."
+      ],
+      "ctaLabel": "Voir notre Catalogue",
+      "ctaHref": "#catalogue",
+      "imageUrl": "/produit_page_img/Adriatica Web.jpg",
+      "imageAlt": "Scientifique pesant une poudre blanche sur une balance de laboratoire"
+    },
+    "productsSection": {
+      "heading": "Nos Produits",
+      "body": "Une gamme complète de solutions agronomiques, formulée pour améliorer la productivité de vos cultures tout en respectant l'environnement.",
+      "items": [
+        { "title": "Acide", "image": "/images Adriatica/Featured icon 1@2x.png" },
+        { "title": "Engrais azotés", "image": "/images Adriatica/Featured icon 2@2x.png" },
+        { "title": "Engrais granulés conventionnels", "image": "/images Adriatica/Featured icon 3@2x.png" },
+        { "title": "Engrais granulés tertiaires", "image": "/images Adriatica/Featured icon 4@2x.png" },
+        { "title": "Engrais hydrosolubles", "image": "/images Adriatica/Featured icon 5@2x.png" },
+        { "title": "NPK Hydrosolubles", "image": "/images Adriatica/Featured icon 6@2x.png" },
+        { "title": "NPK Gel", "image": "/images Adriatica/Featured icon 7@2x.png" },
+        { "title": "Biostimulants", "image": "/images Adriatica/Featured icon 8@2x.png" },
+        { "title": "Correcteur de carence", "image": "/images Adriatica/Featured icon 9@2x.png" },
+        { "title": "Céréales", "image": "/images Adriatica/Featured icon 10@2x.png" }
+      ]
+    }
+  },
+  "en": {
+    "meta": {
+      "title": "Our products",
+      "description": "Discover the Adriatica product range: agronomic solutions designed to improve agricultural productivity while preserving the environment."
+    },
+    "hero": {
+      "heading": "PRODUCTS",
+      "paragraphs": [
+        "Maghreb Adriatica's nutritional solutions are not individual ingredients combined together — they are formulas built on specific composition ratios and synergistic actions between components.",
+        "This is what lets us achieve better results than simply combining individual active substances."
+      ],
+      "ctaLabel": "View our Catalogue",
+      "ctaHref": "#catalogue",
+      "imageUrl": "/produit_page_img/Adriatica Web.jpg",
+      "imageAlt": "Scientist weighing white powder on a laboratory scale"
+    },
+    "productsSection": {
+      "heading": "Our Products",
+      "body": "A complete range of agronomic solutions, formulated to boost the productivity of your crops while respecting the environment.",
+      "items": [
+        { "title": "Acid", "image": "/images Adriatica/Featured icon 1@2x.png" },
+        { "title": "Nitrogen fertilizers", "image": "/images Adriatica/Featured icon 2@2x.png" },
+        { "title": "Conventional granulated fertilizers", "image": "/images Adriatica/Featured icon 3@2x.png" },
+        { "title": "Tertiary granulated fertilizers", "image": "/images Adriatica/Featured icon 4@2x.png" },
+        { "title": "Water-soluble fertilizers", "image": "/images Adriatica/Featured icon 5@2x.png" },
+        { "title": "Water-soluble NPK", "image": "/images Adriatica/Featured icon 6@2x.png" },
+        { "title": "NPK Gel", "image": "/images Adriatica/Featured icon 7@2x.png" },
+        { "title": "Biostimulants", "image": "/images Adriatica/Featured icon 8@2x.png" },
+        { "title": "Deficiency corrector", "image": "/images Adriatica/Featured icon 9@2x.png" },
+        { "title": "Cereals", "image": "/images Adriatica/Featured icon 10@2x.png" }
+      ]
+    }
+  }
+}

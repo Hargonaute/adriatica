@@ -1,42 +1,52 @@
-import { cache } from "react";
-import { db, pages } from "@/lib/db";
-import { and, eq, desc } from "drizzle-orm";
-import { NavbarShell } from "./NavbarShell";
-import type { NavLink } from "./nav-types";
+import { cache } from 'react';
+import { db, pages } from '@/lib/db';
+import { and, eq, desc } from 'drizzle-orm';
+import { NavbarShell } from './NavbarShell';
+import type { NavLink } from './nav-types';
+import { type Locale } from '@/lib/i18n/config';
+import { loadCommon } from '@/lib/i18n/loadPageData';
+import { pathForKey, STATIC_PAGE_SLUGS, type StaticPageKey } from '@/lib/i18n/pageSlugs';
 
 export type { NavLink };
 
-const HARDCODED_LINKS: NavLink[] = [
-  { label: "Recherche et Développement", href: "/recherche-et-developpement" },
-  { label: "Produits", href: "/produits" },
-  { label: "Trouver une solution", href: "/trouver-une-solution" },
-  { label: "Contact", href: "/contact" },
-];
+const NAV_KEY_TO_PAGE: Record<string, StaticPageKey> = {
+  rd: 'research-and-development',
+  products: 'products',
+  solution: 'solution',
+  contact: 'contact',
+};
 
-const getNavLinks = cache(async (): Promise<NavLink[]> => {
+const getCmsLinks = cache(async (locale: Locale): Promise<NavLink[]> => {
   try {
     const rows = await db
       .select({ slug: pages.slug, title: pages.title })
       .from(pages)
-      .where(and(eq(pages.status, "published"), eq(pages.isTemplate, false)))
+      .where(and(eq(pages.status, 'published'), eq(pages.isTemplate, false)))
       .orderBy(desc(pages.updatedAt));
 
-    const reservedSlugs = new Set(
-      HARDCODED_LINKS.map((l) => l.href.replace(/^\//, ""))
-    );
+    const reserved = new Set<string>();
+    for (const key of Object.keys(STATIC_PAGE_SLUGS) as StaticPageKey[]) {
+      reserved.add(STATIC_PAGE_SLUGS[key][locale]);
+    }
 
-    const cmsLinks = rows
-      .filter((p) => !reservedSlugs.has(p.slug))
-      .map((p) => ({ label: p.title, href: `/${p.slug}` }));
-
-    return [...HARDCODED_LINKS, ...cmsLinks];
+    return rows
+      .filter((p) => !reserved.has(p.slug))
+      .map((p) => ({ label: p.title, href: `/${locale}/${p.slug}` }));
   } catch (err) {
-    console.error("Navbar: failed to load CMS pages", err);
-    return HARDCODED_LINKS;
+    console.error('Navbar: failed to load CMS pages', err);
+    return [];
   }
 });
 
-export async function Navbar() {
-  const links = await getNavLinks();
-  return <NavbarShell links={links} />;
+export async function Navbar({ locale }: { locale: Locale }) {
+  const common = loadCommon(locale);
+  const staticLinks: NavLink[] = common.nav.links.map((l) => {
+    const pageKey = NAV_KEY_TO_PAGE[l.key];
+    return {
+      label: l.label,
+      href: pageKey ? pathForKey(pageKey, locale) : `/${locale}`,
+    };
+  });
+  const cmsLinks = await getCmsLinks(locale);
+  return <NavbarShell locale={locale} links={[...staticLinks, ...cmsLinks]} />;
 }

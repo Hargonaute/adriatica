@@ -160,13 +160,14 @@ export function HeroEditor({
 export function HeroPreview({ block }: { block: BlockData & { type: 'hero' } }) {
   return (
     <HeroSection
-      headline={block.headline || undefined}
-      subheadline={block.subheadline || undefined}
-      primaryCtaLabel={block.ctaLabel || undefined}
-      primaryCtaUrl={block.ctaUrl || undefined}
-      secondaryCtaLabel={block.ctaSecondaryLabel || undefined}
-      secondaryCtaUrl={block.ctaSecondaryUrl || undefined}
-      imageUrl={block.backgroundImage || undefined}
+      headline={block.headline || ''}
+      subheadline={block.subheadline || ''}
+      primaryCtaLabel={block.ctaLabel || ''}
+      primaryCtaUrl={block.ctaUrl || '#'}
+      secondaryCtaLabel={block.ctaSecondaryLabel || ''}
+      secondaryCtaUrl={block.ctaSecondaryUrl || '#'}
+      imageUrl={block.backgroundImage || ''}
+      imageAlt=""
     />
   );
 }

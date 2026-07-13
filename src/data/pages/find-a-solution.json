@@ -1,0 +1,62 @@
+{
+  "fr": {
+    "meta": {
+      "title": "Trouver une solution",
+      "description": "Trouvez la solution agronomique Adriatica adaptée à vos cultures et à vos besoins grâce à notre outil de recherche par filtres."
+    },
+    "hero": {
+      "heading": "Trouver une solution",
+      "subheading": "Sélectionnez vos critères pour trouver la meilleure solution."
+    },
+    "filter": {
+      "criteresHeading": "Critères",
+      "criteresSubtitle": "Sélectionnez vos critères pour trouver la meilleure solution.",
+      "searchPlaceholder": "Rechercher un produit...",
+      "cultureLabel": "Sélectionnez votre culture",
+      "culturePlaceholder": "Culture",
+      "problematiqueLabel": "Quelle est votre problématique ?",
+      "problematiquePlaceholder": "Problématique",
+      "stadeLabel": "Quel est votre mode d'utilisation / stade ?",
+      "stadePlaceholder": "Mode",
+      "resetLabel": "Réinitialiser",
+      "recommendationHeading": "Notre Recommandation",
+      "productSingular": "produit",
+      "productPlural": "produits",
+      "loadingText": "Chargement des produits…",
+      "emptyText": "Aucun produit ne correspond à ces critères.",
+      "allOption": "Tous",
+      "noOptions": "Aucune option",
+      "untitled": "Sans titre"
+    }
+  },
+  "en": {
+    "meta": {
+      "title": "Find a solution",
+      "description": "Find the Adriatica agronomic solution best suited to your crops and needs with our filter-based search tool."
+    },
+    "hero": {
+      "heading": "Find a solution",
+      "subheading": "Select your criteria to find the best solution."
+    },
+    "filter": {
+      "criteresHeading": "Criteria",
+      "criteresSubtitle": "Select your criteria to find the best solution.",
+      "searchPlaceholder": "Search for a product...",
+      "cultureLabel": "Select your crop",
+      "culturePlaceholder": "Crop",
+      "problematiqueLabel": "What is your challenge?",
+      "problematiquePlaceholder": "Challenge",
+      "stadeLabel": "What is your usage mode / stage?",
+      "stadePlaceholder": "Mode",
+      "resetLabel": "Reset",
+      "recommendationHeading": "Our Recommendation",
+      "productSingular": "product",
+      "productPlural": "products",
+      "loadingText": "Loading products…",
+      "emptyText": "No product matches these criteria.",
+      "allOption": "All",
+      "noOptions": "No options",
+      "untitled": "Untitled"
+    }
+  }
+}

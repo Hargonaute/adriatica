@@ -28,7 +28,8 @@ export async function POST(request: Request) {
         .where(eq(pages.id, id));
 
     // Bust the ISR cache so the public route returns 404 immediately
-    revalidatePath(`/${existing[0].slug}`);
+    revalidatePath(`/fr/${existing[0].slug}`);
+    revalidatePath(`/en/${existing[0].slug}`);
 
     return NextResponse.json({ success: true });
 

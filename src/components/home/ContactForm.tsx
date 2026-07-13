@@ -1,9 +1,32 @@
-"use client";
+'use client';
 
-import { ChevronDown } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { ChevronDown } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
+
+export interface ContactFormLabels {
+  firstNameLabel: string;
+  firstNamePlaceholder: string;
+  lastNameLabel: string;
+  lastNamePlaceholder: string;
+  emailLabel: string;
+  emailPlaceholder: string;
+  phoneLabel: string;
+  phonePlaceholder: string;
+  messageLabel: string;
+  messagePlaceholder: string;
+  consent: string;
+  submitLabel: string;
+  submittingLabel: string;
+  successTitle: string;
+  successBody: string;
+  errorConfig: string;
+  errorNoCollection: string;
+  errorSubmit: string;
+  errorGeneric: string;
+}
 
 export interface ContactFormProps {
+  labels: ContactFormLabels;
   /** Slug of the collection where submissions are stored. Default: "contact". */
   collectionSlug?: string;
 }
@@ -12,10 +35,8 @@ interface CollectionLite {
   id: string;
   slug: string;
 }
-//ddd
-export function ContactForm({
-  collectionSlug = "contact",
-}: ContactFormProps = {}) {
+
+export function ContactForm({ labels, collectionSlug = 'contact' }: ContactFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,36 +50,30 @@ export function ContactForm({
     try {
       const fd = new FormData(e.currentTarget);
       const data = {
-        firstName: fd.get("firstName") ?? "",
-        lastName: fd.get("lastName") ?? "",
-        email: fd.get("email") ?? "",
-        phoneCountry: fd.get("phoneCountry") ?? "",
-        phone: fd.get("phone") ?? "",
-        message: fd.get("message") ?? "",
+        firstName: fd.get('firstName') ?? '',
+        lastName: fd.get('lastName') ?? '',
+        email: fd.get('email') ?? '',
+        phoneCountry: fd.get('phoneCountry') ?? '',
+        phone: fd.get('phone') ?? '',
+        message: fd.get('message') ?? '',
       };
 
-      const collectionsRes = await fetch("/api/collections");
-      if (!collectionsRes.ok) throw new Error("Configuration introuvable.");
+      const collectionsRes = await fetch('/api/collections');
+      if (!collectionsRes.ok) throw new Error(labels.errorConfig);
       const collections: CollectionLite[] = await collectionsRes.json();
       const collection = collections.find((c) => c.slug === collectionSlug);
-      if (!collection) {
-        throw new Error(
-          `Aucune collection "${collectionSlug}" n'est configurée pour recevoir les messages.`
-        );
-      }
+      if (!collection) throw new Error(labels.errorNoCollection);
 
-      const res = await fetch("/api/entries/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/entries/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ collectionId: collection.id, data }),
       });
-      if (!res.ok) throw new Error("Échec de l'envoi. Réessayez plus tard.");
+      if (!res.ok) throw new Error(labels.errorSubmit);
 
       setSuccess(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Une erreur est survenue."
-      );
+      setError(err instanceof Error ? err.message : labels.errorGeneric);
     } finally {
       setSubmitting(false);
     }
@@ -67,64 +82,56 @@ export function ContactForm({
   if (success) {
     return (
       <div className="w-full max-w-[500px] rounded-lg border border-green-200 bg-green-50 p-6">
-        <p className="font-semibold text-green-900 mb-1">Merci !</p>
-        <p className="text-sm text-green-800">
-          Votre message a bien été envoyé. Nous reviendrons vers vous
-          rapidement.
-        </p>
+        <p className="font-semibold text-green-900 mb-1">{labels.successTitle}</p>
+        <p className="text-sm text-green-800">{labels.successBody}</p>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-[500px]">
-      {/* First & Last Name row */}
       <div className="flex flex-col sm:flex-row gap-6">
         <div className="flex-1 space-y-2">
           <label className="text-[14px] font-medium text-[#334155]">
-            Prénom <span className="text-red-500">*</span>
+            {labels.firstNameLabel} <span className="text-red-500">*</span>
           </label>
           <input
             name="firstName"
             type="text"
             required
-            placeholder="Prénom"
+            placeholder={labels.firstNamePlaceholder}
             className="w-full h-11 px-3 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#BC0D2A]/20 focus:border-[#BC0D2A] transition-colors text-sm placeholder:text-[#94a3b8]"
           />
         </div>
         <div className="flex-1 space-y-2">
           <label className="text-[14px] font-medium text-[#334155]">
-            Nom <span className="text-red-500">*</span>
+            {labels.lastNameLabel} <span className="text-red-500">*</span>
           </label>
           <input
             name="lastName"
             type="text"
             required
-            placeholder="Nom"
+            placeholder={labels.lastNamePlaceholder}
             className="w-full h-11 px-3 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#BC0D2A]/20 focus:border-[#BC0D2A] transition-colors text-sm placeholder:text-[#94a3b8]"
           />
         </div>
       </div>
 
-      {/* Email */}
       <div className="space-y-2">
         <label className="text-[14px] font-medium text-[#334155]">
-          Email <span className="text-red-500">*</span>
+          {labels.emailLabel} <span className="text-red-500">*</span>
         </label>
         <input
           name="email"
           type="email"
           required
-          placeholder="you@company.com"
+          placeholder={labels.emailPlaceholder}
           className="w-full h-11 px-3 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#BC0D2A]/20 focus:border-[#BC0D2A] transition-colors text-sm placeholder:text-[#94a3b8]"
         />
       </div>
 
-      {/* Phone */}
       <div className="space-y-2">
-        <label className="text-[14px] font-medium text-[#334155]">
-          Téléphone
-        </label>
+        <label className="text-[14px] font-medium text-[#334155]">{labels.phoneLabel}</label>
         <div className="flex relative">
           <select
             name="phoneCountry"
@@ -141,27 +148,25 @@ export function ContactForm({
           <input
             name="phone"
             type="tel"
-            placeholder="+33 99 99 99 99 99"
+            placeholder={labels.phonePlaceholder}
             className="w-full h-11 pl-[90px] pr-3 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#BC0D2A]/20 focus:border-[#BC0D2A] transition-colors text-sm placeholder:text-[#94a3b8]"
           />
         </div>
       </div>
 
-      {/* Message */}
       <div className="space-y-2">
         <label className="text-[14px] font-medium text-[#334155]">
-          Message <span className="text-red-500">*</span>
+          {labels.messageLabel} <span className="text-red-500">*</span>
         </label>
         <textarea
           name="message"
           required
           rows={5}
-          placeholder="Laissez nous votre message..."
+          placeholder={labels.messagePlaceholder}
           className="w-full p-3 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#BC0D2A]/20 focus:border-[#BC0D2A] transition-colors text-sm placeholder:text-[#94a3b8] resize-y"
         />
       </div>
 
-      {/* Privacy checkbox */}
       <div className="flex items-start gap-3 pt-2">
         <input
           type="checkbox"
@@ -173,8 +178,7 @@ export function ContactForm({
           htmlFor="privacy"
           className="text-sm text-[#64748b] leading-relaxed cursor-pointer select-none"
         >
-          J&apos;autorise le traitement de mes données personnelles aux termes
-          du décret législatif 196/2003.
+          {labels.consent}
         </label>
       </div>
 
@@ -184,13 +188,12 @@ export function ContactForm({
         </p>
       )}
 
-      {/* Submit */}
       <button
         type="submit"
         disabled={submitting}
         className="w-full py-3.5 rounded-lg bg-[#BC0D2A] text-white font-semibold hover:bg-[#9A0B22] transition-colors shadow-sm mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {submitting ? "Envoi…" : "Envoyer"}
+        {submitting ? labels.submittingLabel : labels.submitLabel}
       </button>
     </form>
   );

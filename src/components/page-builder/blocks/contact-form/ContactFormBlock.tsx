@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { type BlockData } from '@/types';
 import { ContactInfoSection } from '@/components/contact/ContactInfoSection';
 import { ContactSection } from '@/components/home/ContactSection';
+import contactData from '@/data/pages/contact.json';
+import homeData from '@/data/pages/home.json';
 
 // ── Editor ────────────────────────────────────────────────────────────────
 // Minimal: only heading/body/side-image are configurable; everything else is
@@ -58,13 +60,28 @@ export function ContactFormEditor({
 // /api/entries/create — same endpoint as the live site.
 
 export function ContactFormPreview({ block }: { block: BlockData & { type: 'contact-form' } }) {
+  const info = contactData.fr.info;
+  const home = homeData.fr.contact;
   return (
     <div className="bg-white w-full">
-      <ContactInfoSection />
+      <ContactInfoSection
+        heading={info.heading}
+        subheading={info.subheading}
+        cards={info.cards.map((c) => ({
+          icon: c.icon as 'message' | 'map' | 'phone',
+          heading: c.heading,
+          body: 'body' in c ? c.body : undefined,
+          contact: 'contact' in c ? c.contact : undefined,
+          contactHref: 'contactHref' in c ? c.contactHref : undefined,
+          address: 'address' in c ? c.address : undefined,
+        }))}
+      />
       <ContactSection
-        heading={block.heading || undefined}
-        body={block.body || undefined}
-        imageUrl={block.imageUrl || undefined}
+        heading={block.heading || home.heading}
+        body={block.body || home.body}
+        imageUrl={block.imageUrl || home.imageUrl}
+        imageAlt={home.imageAlt}
+        locale="fr"
       />
     </div>
   );

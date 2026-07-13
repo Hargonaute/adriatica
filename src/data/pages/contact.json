@@ -1,0 +1,72 @@
+{
+  "fr": {
+    "meta": {
+      "title": "Contact",
+      "description": "Contactez Adriatica pour toute question sur nos solutions agronomiques, nos produits ou nos services. Notre équipe est à votre écoute."
+    },
+    "info": {
+      "heading": "CONTACT",
+      "subheading": "Notre équipe sympathique est toujours disponible pour discuter.",
+      "cards": [
+        {
+          "icon": "message",
+          "heading": "Discuter avec les ventes",
+          "body": "Parlez à notre équipe sympathique.",
+          "contact": "maghreb@k-adriatica.ma",
+          "contactHref": "mailto:maghreb@k-adriatica.ma"
+        },
+        {
+          "icon": "map",
+          "heading": "Visitez notre siège.",
+          "address": [
+            "MAGHREB ADRIATICA F S.A.R.L.A.U.",
+            "LIè des Cactus n.18-3ème étage n.6 Sidi",
+            "Bernoussi- Casablanca"
+          ]
+        },
+        {
+          "icon": "phone",
+          "heading": "Appelez-nous",
+          "body": "Du lundi au vendredi de 8h à 17h.",
+          "contact": "+21 2522674723",
+          "contactHref": "tel:+212522674723"
+        }
+      ]
+    }
+  },
+  "en": {
+    "meta": {
+      "title": "Contact",
+      "description": "Contact Adriatica with any question about our agronomic solutions, products, or services. Our team is here to help."
+    },
+    "info": {
+      "heading": "CONTACT",
+      "subheading": "Our friendly team is always here to chat.",
+      "cards": [
+        {
+          "icon": "message",
+          "heading": "Chat with sales",
+          "body": "Talk to our friendly team.",
+          "contact": "maghreb@k-adriatica.ma",
+          "contactHref": "mailto:maghreb@k-adriatica.ma"
+        },
+        {
+          "icon": "map",
+          "heading": "Visit our office.",
+          "address": [
+            "MAGHREB ADRIATICA F S.A.R.L.A.U.",
+            "LIè des Cactus n.18 — 3rd floor n.6 Sidi",
+            "Bernoussi — Casablanca"
+          ]
+        },
+        {
+          "icon": "phone",
+          "heading": "Call us",
+          "body": "Monday to Friday, 8am to 5pm.",
+          "contact": "+21 2522674723",
+          "contactHref": "tel:+212522674723"
+        }
+      ]
+    }
+  }
+}

@@ -100,7 +100,7 @@ export default async function PagesDashboard() {
 
                           {page.status === 'published' && !page.isTemplate && (
                             <Link
-                              href={`/${page.slug}`}
+                              href={`/fr/${page.slug}`}
                               target="_blank"
                               className="p-1.5 text-slate-400 hover:text-[#BC0D2A] transition-colors rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                               title="View live page"

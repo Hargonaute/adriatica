@@ -5,11 +5,13 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { type Block } from '@/types';
 import { TemplateRenderer } from './TemplateRenderer';
+import { isLocale, type Locale } from '@/lib/i18n/config';
+import { loadCommon } from '@/lib/i18n/loadPageData';
 
 export const revalidate = 60;
 
 interface Props {
-  params: Promise<{ basePath: string; itemSlug: string }>;
+  params: Promise<{ locale: string; basePath: string; itemSlug: string }>;
 }
 
 async function resolveCollection(basePath: string) {
@@ -26,10 +28,6 @@ async function resolveCollection(basePath: string) {
   return col ?? null;
 }
 
-// entries.id is a UUID column — comparing it against a non-UUID string throws
-// a Postgres type-cast error, so only include the id fallback when the segment
-// actually looks like a UUID (keeps legacy /collections/[slug]/[uuid] links
-// working without breaking slug lookups like "n-gooo-26").
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function getData(basePath: string, itemSlug: string) {
@@ -43,13 +41,7 @@ async function getData(basePath: string, itemSlug: string) {
   const [entry] = await db
     .select()
     .from(entries)
-    .where(
-      and(
-        eq(entries.collectionId, col.id),
-        eq(entries.status, 'published'),
-        identityMatch
-      )
-    )
+    .where(and(eq(entries.collectionId, col.id), eq(entries.status, 'published'), identityMatch))
     .limit(1);
 
   if (!entry) return null;
@@ -61,7 +53,7 @@ async function getData(basePath: string, itemSlug: string) {
           .from(pages)
           .where(and(eq(pages.id, col.detailTemplatePageId), eq(pages.status, 'published')))
           .limit(1)
-          .then(rows => rows[0] ?? null)
+          .then((rows) => rows[0] ?? null)
       : Promise.resolve(null),
     db.select().from(fields).where(eq(fields.collectionId, col.id)).orderBy(fields.order),
   ]);
@@ -76,8 +68,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const entryData = data.entry.data as Record<string, unknown>;
   const entryTitle =
-    typeof entryData.name === 'string' ? entryData.name :
-    typeof entryData.title === 'string' ? entryData.title : '';
+    typeof entryData.name === 'string'
+      ? entryData.name
+      : typeof entryData.title === 'string'
+      ? entryData.title
+      : '';
 
   const meta = (data.templatePage?.meta ?? {}) as Record<string, string>;
 
@@ -88,16 +83,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CollectionItemDetailPage({ params }: Props) {
-  const { basePath, itemSlug } = await params;
+  const { locale, basePath, itemSlug } = await params;
+  if (!isLocale(locale)) notFound();
+  const L = locale as Locale;
+
   const data = await getData(basePath, itemSlug);
   if (!data) notFound();
 
+  const common = loadCommon(L);
   const { col, entry, templatePage, colFields } = data;
 
-  // Prefer the published detail template. If one exists, render it wrapped in
-  // CollectionItemContext so bound blocks resolve field values synchronously.
   if (templatePage) {
-    const blocks = ((templatePage.published_blocks as Record<string, Block[]> | null)?.en ?? []) as Block[];
+    const blocks = ((templatePage.published_blocks as Record<Locale, Block[]> | null)?.[L] ?? []) as Block[];
     return (
       <TemplateRenderer
         blocks={blocks}
@@ -114,7 +111,7 @@ export default async function CollectionItemDetailPage({ params }: Props) {
             id: col.id,
             name: col.name,
             slug: col.slug,
-            fields: colFields.map(f => ({
+            fields: colFields.map((f) => ({
               id: f.id,
               key: f.key,
               label: f.label,
@@ -128,13 +125,12 @@ export default async function CollectionItemDetailPage({ params }: Props) {
     );
   }
 
-  // Fallback: no published detail template — render a bare-bones field dump.
   const itemData = entry.data as Record<string, unknown>;
-  const titleField = colFields.find(f => f.type === 'text');
+  const titleField = colFields.find((f) => f.type === 'text');
   const pageTitle = titleField ? String(itemData[titleField.key] ?? '') : col.name;
-  const heroImageField = colFields.find(f => f.type === 'image');
+  const heroImageField = colFields.find((f) => f.type === 'image');
   const heroImage = heroImageField ? String(itemData[heroImageField.key] ?? '') : null;
-  const indexHref = `/collections/${col.basePath ?? col.slug}`;
+  const indexHref = `/${L}/collections/${col.basePath ?? col.slug}`;
 
   return (
     <main className="min-h-screen bg-white">
@@ -147,7 +143,9 @@ export default async function CollectionItemDetailPage({ params }: Props) {
 
       <div className="max-w-[860px] mx-auto px-6 lg:px-8 py-16">
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
-          <Link href="/" className="hover:text-[#BC0D2A] transition-colors">Home</Link>
+          <Link href={`/${L}`} className="hover:text-[#BC0D2A] transition-colors">
+            {common.site.homeCrumb}
+          </Link>
           <span>/</span>
           <Link href={indexHref} className="hover:text-[#BC0D2A] transition-colors capitalize">
             {col.name}
@@ -161,7 +159,7 @@ export default async function CollectionItemDetailPage({ params }: Props) {
         </h1>
 
         <div className="space-y-8">
-          {colFields.map(field => {
+          {colFields.map((field) => {
             const val = itemData[field.key];
             if (val === undefined || val === null || val === '') return null;
             if (field.id === titleField?.id) return null;
@@ -201,7 +199,11 @@ export default async function CollectionItemDetailPage({ params }: Props) {
                 )}
 
                 {field.type === 'checkbox' && (
-                  <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${val ? 'text-green-700' : 'text-slate-500'}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 text-sm font-medium ${
+                      val ? 'text-green-700' : 'text-slate-500'
+                    }`}
+                  >
                     {val ? '✓ Yes' : '✗ No'}
                   </span>
                 )}
@@ -228,7 +230,7 @@ export default async function CollectionItemDetailPage({ params }: Props) {
             href={indexHref}
             className="inline-flex items-center gap-2 text-sm font-semibold text-[#BC0D2A] hover:underline"
           >
-            ← Back to {col.name}
+            ← {common.site.backTo} {col.name}
           </Link>
         </div>
       </div>

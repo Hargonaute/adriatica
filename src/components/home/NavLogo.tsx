@@ -1,11 +1,10 @@
-import Image from "next/image";
-import Link from "next/link";
+import Image from 'next/image';
+import Link from 'next/link';
+import type { Locale } from '@/lib/i18n/config';
 
-export interface NavLogoProps {}
-
-export function NavLogo(_props: NavLogoProps) {
+export function NavLogo({ locale }: { locale: Locale }) {
   return (
-    <Link href="/" className="flex items-center group">
+    <Link href={`/${locale}`} className="flex items-center group">
       <Image
         src="/images Adriatica/logo.png"
         alt="Maghreb Adriatica"

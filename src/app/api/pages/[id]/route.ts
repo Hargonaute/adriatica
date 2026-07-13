@@ -56,7 +56,8 @@ export async function DELETE(
     }
 
     // Bust public cache for the deleted slug
-    revalidatePath(`/${result[0].slug}`);
+    revalidatePath(`/fr/${result[0].slug}`);
+    revalidatePath(`/en/${result[0].slug}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

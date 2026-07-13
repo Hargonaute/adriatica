@@ -14,7 +14,7 @@ export const pages = pgTable('pages', {
   id: uuid('id').defaultRandom().primaryKey(),
   slug: text('slug').notNull().unique(),
   title: text('title').notNull(),
-  draft_blocks: jsonb('draft_blocks').default({ en: [], ar: [] }),
+  draft_blocks: jsonb('draft_blocks').default({ en: [], fr: [] }),
   published_blocks: jsonb('published_blocks'),
   meta: jsonb('meta').default({}),
   status: text('status', { enum: ['draft', 'published'] }).default('draft'),

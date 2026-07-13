@@ -1,0 +1,110 @@
+{
+  "fr": {
+    "meta": {
+      "title": "Maghreb Adriatica",
+      "description": "Maghreb Adriatica propose des solutions agronomiques afin d'améliorer la productivité agricole tout en respectant l'environnement et la durabilité des écosystèmes."
+    },
+    "hero": {
+      "headline": "Bienvenue chez Maghreb Adriatica",
+      "subheadline": "ADRIATICA propose des solutions agronomiques afin d'améliorer la productivité agricole tout en respectant l'environnement et la durabilité des écosystèmes.",
+      "primaryCtaLabel": "Contactez-nous",
+      "primaryCtaKey": "contact",
+      "secondaryCtaLabel": "Rechercher un produit",
+      "secondaryCtaKey": "solution",
+      "imageUrl": "/home_page_img/Adriatica Web Mockup.png",
+      "imageAlt": "Champ agricole vu du dessus avec un tracteur en train de récolter"
+    },
+    "entreprise": {
+      "heading": "L'Entreprise",
+      "ctaLabel": "Découvrir",
+      "ctaHref": "#decouvrir",
+      "paragraphs": [
+        "Créée au Maroc en 2012, Maghreb Adriatica, filiale du Groupe ADRIATICA au Maroc, propose des solutions agronomiques issues d'une recherche scientifique approfondie afin d'améliorer la productivité agricole tout en respectant l'environnement et la durabilité des écosystèmes.",
+        "La société se donne comme objectif d'optimiser le développement des produits du Brand ADRIATICA au Maroc.",
+        "La société Maghreb Adriatica a pour mission de prospecter le marché et d'assurer la commercialisation auprès des Agri-Preneurs au Maroc.",
+        "Mener des actions de Développement et de Marketing adaptées avec ses partenaires locaux afin de les accompagner en appliquant une approche de proximité sont les principales priorités et engagements de la société.",
+        "Nous sommes un Groupe international qui combine sa propre expérience avec des défis toujours nouveaux, en misant avec confiance sur le développement constant de son identité d'excellence, sans jamais oublier ses racines."
+      ],
+      "imageUrl": "/home_page_img/Adriatica Web Photo.png",
+      "imageAlt": "Bâtiment Maghreb Adriatica"
+    },
+    "products": {
+      "heading": "Nos Produits",
+      "body": "Une gamme complète de solutions agronomiques, formulée pour améliorer la productivité de vos cultures tout en respectant l'environnement."
+    },
+    "rd": {
+      "heading": "Recherche et\nDéveloppement",
+      "body": "Maghreb Adriatica est aux côtés des agriculteurs depuis plus de 50 ans, dès lors elle a toujours cherché à satisfaire les demandes des clients et les besoins nutritionnels des différentes cultures dans le monde avec des propositions innovantes.",
+      "ctaLabel": "Découvrir",
+      "ctaHref": "#decouvrir-rd",
+      "imageUrl": "/home_page_img/Adriatica Web.jpg",
+      "imageAlt": "Scientifique travaillant avec une pipette"
+    },
+    "catalogue": {
+      "heading": "Notre Catalogue",
+      "ctaLabel": "Catalogue de produits 2024",
+      "imageUrl": "/images Adriatica/catalogue 1@2x.png",
+      "imageAlt": "Catalogue"
+    },
+    "contact": {
+      "heading": "Nous contacter",
+      "body": "Notre équipe sympathique serait ravie d'échanger avec vous.",
+      "imageUrl": "/home_page_img/Adriatica Web copy.jpg",
+      "imageAlt": "Personne plantant un oignon dans un sol brun"
+    }
+  },
+  "en": {
+    "meta": {
+      "title": "Maghreb Adriatica",
+      "description": "Maghreb Adriatica offers agronomic solutions to improve agricultural productivity while respecting the environment and the sustainability of ecosystems."
+    },
+    "hero": {
+      "headline": "Welcome to Maghreb Adriatica",
+      "subheadline": "ADRIATICA offers agronomic solutions to improve agricultural productivity while respecting the environment and the sustainability of ecosystems.",
+      "primaryCtaLabel": "Contact us",
+      "primaryCtaKey": "contact",
+      "secondaryCtaLabel": "Find a product",
+      "secondaryCtaKey": "solution",
+      "imageUrl": "/home_page_img/Adriatica Web Mockup.png",
+      "imageAlt": "Agricultural field viewed from above with a tractor harvesting"
+    },
+    "entreprise": {
+      "heading": "The Company",
+      "ctaLabel": "Discover",
+      "ctaHref": "#decouvrir",
+      "paragraphs": [
+        "Founded in Morocco in 2012, Maghreb Adriatica — a subsidiary of the ADRIATICA Group in Morocco — offers agronomic solutions grounded in deep scientific research to improve agricultural productivity while respecting the environment and the sustainability of ecosystems.",
+        "The company's goal is to optimize the development of ADRIATICA brand products in Morocco.",
+        "Maghreb Adriatica's mission is to explore the market and ensure distribution to agri-entrepreneurs in Morocco.",
+        "Running development and marketing initiatives tailored with local partners, and supporting them through a close, hands-on approach, are the company's core priorities and commitments.",
+        "We are an international group that combines its own experience with new challenges every day, confidently building on the continuous growth of its identity of excellence — without ever forgetting its roots."
+      ],
+      "imageUrl": "/home_page_img/Adriatica Web Photo.png",
+      "imageAlt": "Maghreb Adriatica building"
+    },
+    "products": {
+      "heading": "Our Products",
+      "body": "A complete range of agronomic solutions, formulated to boost the productivity of your crops while respecting the environment."
+    },
+    "rd": {
+      "heading": "Research &\nDevelopment",
+      "body": "Maghreb Adriatica has stood alongside farmers for more than 50 years. Ever since, it has worked to meet customer demands and the nutritional needs of crops around the world with innovative solutions.",
+      "ctaLabel": "Discover",
+      "ctaHref": "#decouvrir-rd",
+      "imageUrl": "/home_page_img/Adriatica Web.jpg",
+      "imageAlt": "Scientist working with a pipette"
+    },
+    "catalogue": {
+      "heading": "Our Catalogue",
+      "ctaLabel": "Product catalogue 2024",
+      "imageUrl": "/images Adriatica/catalogue 1@2x.png",
+      "imageAlt": "Catalogue"
+    },
+    "contact": {
+      "heading": "Contact us",
+      "body": "Our friendly team would love to hear from you.",
+      "imageUrl": "/home_page_img/Adriatica Web copy.jpg",
+      "imageAlt": "Person planting an onion sapling in rich brown soil"
+    }
+  }
+}

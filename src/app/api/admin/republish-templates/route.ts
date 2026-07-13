@@ -23,7 +23,8 @@ export async function POST(request: Request) {
 
     const updated = await republishAllTemplates();
 
-    revalidatePath('/collections', 'layout');
+    revalidatePath('/fr/collections', 'layout');
+    revalidatePath('/en/collections', 'layout');
 
     return NextResponse.json({
       success: true,

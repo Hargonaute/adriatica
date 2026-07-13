@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       .values({
         title: parsed.data.title,
         slug: parsed.data.slug,
-        draft_blocks: { en: [], ar: [] },
+        draft_blocks: { en: [], fr: [] },
         meta: { title: parsed.data.title },
         status: 'draft',
       })

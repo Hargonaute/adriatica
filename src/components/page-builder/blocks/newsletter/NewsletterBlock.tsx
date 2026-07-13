@@ -90,9 +90,12 @@ export function NewsletterEditor({
 export function NewsletterPreview({ block }: { block: BlockData & { type: 'newsletter' } }) {
   return (
     <NewsletterCTA
-      heading={block.heading || undefined}
-      body={block.body || undefined}
-      buttonLabel={block.buttonLabel || undefined}
+      locale="fr"
+      labels={{
+        heading: block.heading || undefined,
+        body: block.body || undefined,
+        buttonLabel: block.buttonLabel || undefined,
+      }}
       imageUrl={block.imageUrl || undefined}
       sectionBg={(block.sectionBg as NewsletterSectionBg) || undefined}
     />

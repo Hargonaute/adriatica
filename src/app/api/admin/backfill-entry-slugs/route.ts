@@ -23,7 +23,8 @@ export async function POST(request: Request) {
 
     const backfilled = await backfillMissingEntrySlugs();
 
-    revalidatePath('/collections', 'layout');
+    revalidatePath('/fr/collections', 'layout');
+    revalidatePath('/en/collections', 'layout');
 
     return NextResponse.json({
       success: true,

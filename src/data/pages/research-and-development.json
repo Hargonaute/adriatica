@@ -1,0 +1,116 @@
+{
+  "fr": {
+    "meta": {
+      "title": "Recherche et développement",
+      "description": "L'innovation au cœur d'Adriatica : recherche agronomique, synergies et engagement pour la durabilité des écosystèmes agricoles."
+    },
+    "hero": {
+      "heading": "RECHERCHE ET\nDÉVELOPPEMENT",
+      "subheading": "Efficacité nutritionnelle élevée et protection de l'environnement",
+      "ctaLabel": "Rechercher un produit",
+      "ctaHref": "#produits",
+      "imageUrl": "/recheche_et_developpement_page/Adriatica Web.png",
+      "imageAlt": "Scientifique pesant une poudre blanche sur une balance de laboratoire"
+    },
+    "synergie": {
+      "heading": "SYNERGIE",
+      "paragraphs": [
+        "Chaque jour, chacun d'entre nous partage ses propres connaissances et ses propres expériences avec le reste du Groupe : c'est grâce à cette approche holistique — dans laquelle nous intégrons les connaissances de physiologie de la plante, de biologie moléculaire, de biochimie des principaux processus métaboliques, de chimie des matières premières et des sols et de gestion agronomique des cultures — que nous pouvons avoir des idées toujours neuves et créer des solutions qui répondent de manière plus efficace aux défis que l'agriculture du monde entier nous lance.",
+        "C'est ainsi que nous avons également formulé les produits de notre catalogue : afin que chaque composante travaille en synergie.",
+        "Les solutions nutritionnelles de Maghreb Adriatica ne sont pas des ingrédients individuels combinés, mais des formules basées sur des rapports spécifiques de composition et d'actions synergiques entre les composantes. C'est ce qui nous permet d'obtenir de meilleurs résultats que ceux que l'on obtiendrait en unissant simplement des substances actives individuelles. Chaque jour, nous travaillons sur de nouvelles idées, mais ce n'est qu'après une longue et minutieuse procédure d'essais en laboratoire et sur le terrain, sur différentes cultures et dans différentes zones d'exploitation, qu'elles se transforment en solutions pour les agriculteurs.",
+        "C'est la seule façon : nos solutions, vos résultats !"
+      ],
+      "imageUrl": "/recheche_et_developpement_page/Adriatica Web copy 2.jpg",
+      "imageAlt": "Équipe discutant à un bureau blanc moderne dans un environnement de laboratoire",
+      "imageCaption": "Image courtesy of Moose Photos via Pexels"
+    },
+    "durabilite": {
+      "sections": [
+        {
+          "heading": "Durabilité",
+          "paragraphs": [
+            "La qualité de notre futur dépend de notre responsabilité dans le présent.",
+            "Le parcours de Maghreb Adriatica dans la durabilité a commencé par la récupération des Sels de Potassium des déchets de transformation de la betterave sucrière des campagnes vénitiennes. Dès lors, nous continuons à chercher des sources durables de substances actives à utiliser comme base pour nos solutions nutritionnelles.",
+            "Nous avons analysé et étudié les déchets de production (sous-produits) des plus grandes filières agroalimentaires pour identifier de nouvelles sources de molécules fonctionnelles qui, opportunément formulées, pourraient répondre à tous nos besoins.",
+            "Nous avons ainsi créé des formules uniques, comme celles à base d'hydrolysat de radicelles de malt où l'efficacité biologique — liée aux composantes actives présentes dans celui-ci (acides aminés, peptides, polysaccharides, etc.) — est combinée avec la durabilité et en particulier le concept d'économie circulaire : les déchets de la malterie d'Italmalt, en effet, sont transformés en ressources pour la production des solutions nutritionnelles."
+          ]
+        },
+        {
+          "heading": "Le protocole de contrôle MCFP®",
+          "intro": "Le processus de développement de chacun de nos nouveaux produits suit le protocole interne défini MCFP® qui établit les points clés pour assurer, toujours et partout, la qualité et la validité de nos solutions nutritionnelles :",
+          "items": [
+            { "term": "Matières premières", "detail": "nous utilisons uniquement des matières premières de qualité supérieure, sélectionnées scrupuleusement et fournies par les producteurs les plus qualifiés et fiables du secteur. Nous garantissons ainsi la haute qualité du produit final, en assurant un titrage approprié et une biodisponibilité maximale des composantes ;" },
+            { "term": "Composition", "detail": "nous étudions nos produits afin que la formule permette non seulement d'avoir les titres garantis mais nous sélectionnons aussi chaque composante pour en exploiter les synergies et optimiser les résultats ;" },
+            { "term": "Formule", "detail": "nous appliquons des processus de production uniques et dans des conditions où les paramètres chimio-physiques sont contrôlés en permanence, afin de toujours garantir un produit de haute qualité ;" },
+            { "term": "Positionnement", "detail": "nous testons, en interne ou en collaboration avec des installations d'essai ou des entreprises leader, chaque produit sur différentes cultures et dans différentes zones, pour pouvoir définir les meilleurs protocoles d'application. Ceci nous permet d'évaluer tous les effets que le produit a sur la culture et de définir les moments d'application les plus efficaces." }
+          ]
+        },
+        {
+          "heading": "Laboratoires et centre de recherche",
+          "paragraphs": [
+            "Maintenant, le site de production de Loreo est également devenu le cœur du service R&D de Maghreb Adriatica : depuis 2021, tous les laboratoires, auparavant répartis dans les succursales et sites périphériques, sont maintenant réunis dans le site vénitien.",
+            "Deux nouvelles sections, dédiées à la biologie moléculaire et à la physiologie végétale, ont été ajoutées au laboratoire chimique qualifié pour le contrôle des matières premières et des produits ; leurs locaux sont dotés de tous les instruments de pointe pour effectuer des études biochimiques, génomiques et protéomiques.",
+            "Nous nous servons en outre de phytotrons et rhizotrons de dernière génération, pour évaluer les effets de l'application des produits sur la partie aérienne et sur la partie radiculaire de la plante. Un large réseau de collaborations nationales et internationales, aussi bien dans le domaine universitaire qu'avec des Centres spécialisés, nous permet d'approfondir les aspects les plus fins des mécanismes d'action de nos produits ou de quantifier leur effet avec des technologies toujours à la pointe (génomique, phénomique, protéomique et métabolomique)."
+          ]
+        }
+      ]
+    }
+  },
+  "en": {
+    "meta": {
+      "title": "Research and development",
+      "description": "Innovation at the heart of Adriatica: agronomic research, synergies, and a commitment to the sustainability of agricultural ecosystems."
+    },
+    "hero": {
+      "heading": "RESEARCH AND\nDEVELOPMENT",
+      "subheading": "High nutritional efficiency and environmental protection",
+      "ctaLabel": "Find a product",
+      "ctaHref": "#produits",
+      "imageUrl": "/recheche_et_developpement_page/Adriatica Web.png",
+      "imageAlt": "Scientist weighing white powder on a laboratory scale"
+    },
+    "synergie": {
+      "heading": "SYNERGY",
+      "paragraphs": [
+        "Every day, each of us shares our own knowledge and experience with the rest of the Group. Thanks to this holistic approach — combining plant physiology, molecular biology, the biochemistry of core metabolic processes, the chemistry of raw materials and soils, and agronomic crop management — we can generate fresh ideas and build solutions that respond more effectively to the challenges agriculture faces around the world.",
+        "It is in this spirit that we have formulated the products in our catalogue: so that each component works in synergy with the others.",
+        "Maghreb Adriatica's nutritional solutions are not individual ingredients combined together, but formulas built on specific composition ratios and synergistic actions between components. This is what lets us achieve better results than by simply combining individual active substances. Every day we work on new ideas, but only after a long, careful process of trials in the lab and in the field — on different crops and in different growing regions — do they become real solutions for farmers.",
+        "This is the only way: our solutions, your results!"
+      ],
+      "imageUrl": "/recheche_et_developpement_page/Adriatica Web copy 2.jpg",
+      "imageAlt": "Team discussing at a modern white desk in a lab environment",
+      "imageCaption": "Image courtesy of Moose Photos via Pexels"
+    },
+    "durabilite": {
+      "sections": [
+        {
+          "heading": "Sustainability",
+          "paragraphs": [
+            "The quality of our future depends on our responsibility in the present.",
+            "Maghreb Adriatica's sustainability journey began with the recovery of Potassium Salts from sugar-beet processing waste in the Venetian countryside. Since then, we have continued to search for sustainable sources of active substances to serve as the base of our nutritional solutions.",
+            "We have analyzed and studied production waste (by-products) from the largest agri-food supply chains to identify new sources of functional molecules that, appropriately formulated, could meet all of our needs.",
+            "In doing so, we have created unique formulas — such as those based on malt-rootlet hydrolysate — where the biological effectiveness of the active components (amino acids, peptides, polysaccharides, and so on) is combined with sustainability, and in particular with the concept of a circular economy: waste from Italmalt's malting operation, in fact, becomes a resource for the production of nutritional solutions."
+          ]
+        },
+        {
+          "heading": "The MCFP® control protocol",
+          "intro": "The development process for each of our new products follows the internal MCFP® protocol, which sets out the key points to ensure — always and everywhere — the quality and validity of our nutritional solutions:",
+          "items": [
+            { "term": "Raw materials", "detail": "we use only top-quality raw materials, carefully selected and supplied by the most qualified and reliable producers in the sector. This guarantees the high quality of the final product, ensuring proper titration and maximum bioavailability of the components;" },
+            { "term": "Composition", "detail": "we design our products so that the formula not only delivers the guaranteed titres but also allows every component to be selected to exploit synergies and optimize results;" },
+            { "term": "Formula", "detail": "we apply unique production processes under conditions where chemo-physical parameters are continuously monitored, so that we always guarantee a high-quality product;" },
+            { "term": "Positioning", "detail": "we test each product — internally or in partnership with trial facilities and leading companies — on different crops and in different regions, so we can define the best application protocols. This lets us assess every effect a product has on the crop and identify the most effective moments to apply it." }
+          ]
+        },
+        {
+          "heading": "Laboratories and research center",
+          "paragraphs": [
+            "The Loreo production site has now also become the heart of Maghreb Adriatica's R&D service: since 2021, all of the laboratories that were previously spread across branches and peripheral sites have been brought together in the Venetian location.",
+            "Two new sections, dedicated to molecular biology and plant physiology, have been added to the chemistry lab qualified for the control of raw materials and products. Their facilities are equipped with state-of-the-art instruments for biochemical, genomic, and proteomic studies.",
+            "We also make use of the latest-generation phytotrons and rhizotrons to assess how our products affect both the aerial and root parts of the plant. A wide network of national and international collaborations — with universities and specialized centers alike — lets us dig deeper into the mechanisms of action of our products, or quantify their effects using cutting-edge technologies (genomics, phenomics, proteomics, and metabolomics)."
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -564,7 +564,7 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
                   <div className="flex items-center gap-1 shrink-0">
                     {item.status === 'published' && item.slug && collection.detailTemplatePageId && (
                       <a
-                        href={`/collections/${collection.basePath ?? collection.slug}/${item.slug}`}
+                        href={`/fr/collections/${collection.basePath ?? collection.slug}/${item.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         title="View live"

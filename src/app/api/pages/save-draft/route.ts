@@ -52,7 +52,8 @@ export async function POST(request: Request) {
 
     // Bust the collection routes so the newly published template is live.
     if (autoPublish) {
-      revalidatePath('/collections', 'layout');
+      revalidatePath('/fr/collections', 'layout');
+      revalidatePath('/en/collections', 'layout');
     }
 
     return NextResponse.json({ success: true, autoPublished: autoPublish });

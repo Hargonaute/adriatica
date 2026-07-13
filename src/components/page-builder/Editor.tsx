@@ -30,8 +30,26 @@ import { toast } from 'sonner';
 import { useTemplateBuilderStore } from '@/lib/store/templateBuilderStore';
 import { MockCollectionEntryContext } from '@/contexts/MockCollectionEntryContext';
 import { buildMockEntryData } from '@/lib/mockEntryData';
-import { NavbarShell, PREVIEW_NAV_LINKS } from '@/components/home/NavbarShell';
+import { NavbarShell } from '@/components/home/NavbarShell';
 import { SiteFooter } from '@/components/home/SiteFooter';
+import type { NavLink } from '@/components/home/nav-types';
+import commonJson from '@/data/common.json';
+import { pathForKey, type StaticPageKey } from '@/lib/i18n/pageSlugs';
+
+const NAV_KEY_TO_PAGE_EDITOR: Record<string, StaticPageKey> = {
+  rd: 'research-and-development',
+  products: 'products',
+  solution: 'solution',
+  contact: 'contact',
+};
+
+function buildPreviewNavLinks(locale: 'en' | 'fr'): NavLink[] {
+  const links = (commonJson as Record<'en' | 'fr', { nav: { links: { key: string; label: string }[] } }>)[locale].nav.links;
+  return links.map((l) => {
+    const pageKey = NAV_KEY_TO_PAGE_EDITOR[l.key];
+    return { label: l.label, href: pageKey ? pathForKey(pageKey, locale) : `/${locale}` };
+  });
+}
 
 interface PageBuilderEditorProps {
   initialData: PageData;
@@ -813,17 +831,18 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
   // - index template   → /collections/<basePath>
   // - anything else    → /<page.slug>
   const liveHref: string | null = (() => {
+    const L = language;
     if (isTemplateMode && templateBasePath) {
       if (templateKind === 'detail') {
         return firstEntrySlug
-          ? `/collections/${templateBasePath}/${firstEntrySlug}`
-          : `/collections/${templateBasePath}`;
+          ? `/${L}/collections/${templateBasePath}/${firstEntrySlug}`
+          : `/${L}/collections/${templateBasePath}`;
       }
       if (templateKind === 'index') {
-        return `/collections/${templateBasePath}`;
+        return `/${L}/collections/${templateBasePath}`;
       }
     }
-    if (data.status === 'published') return `/${data.slug}`;
+    if (data.status === 'published') return `/${L}/${data.slug}`;
     return null;
   })();
 
@@ -1407,7 +1426,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                       'w-[390px] max-w-[390px] shadow-xl rounded-3xl overflow-hidden border border-slate-300 dark:border-slate-700'
                   )}
                 >
-                  <NavbarShell links={PREVIEW_NAV_LINKS} />
+                  <NavbarShell locale={language} links={buildPreviewNavLinks(language)} />
                   <main>
                     {previewBlocks.length === 0 ? (
                       <div className="text-center py-32 text-slate-400 text-sm">
@@ -1417,7 +1436,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                       previewBlocks.map((block) => <RenderPreview key={block.id} block={block} />)
                     )}
                   </main>
-                  <SiteFooter />
+                  <SiteFooter locale={language} />
                 </div>
               </div>
             </div>
@@ -1453,7 +1472,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                   'max-w-[390px] shadow-xl rounded-3xl overflow-hidden border border-slate-300 dark:border-slate-700'
               )}
             >
-              <NavbarShell links={PREVIEW_NAV_LINKS} />
+              <NavbarShell locale={language} links={buildPreviewNavLinks(language)} />
               <main>
                 {blocks.length === 0 ? (
                   <div className="text-center py-32 text-slate-400 text-sm">
@@ -1463,7 +1482,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
                   blocks.map((block) => <RenderPreview key={block.id} block={block} />)
                 )}
               </main>
-              <SiteFooter />
+              <SiteFooter locale={language} />
             </div>
           </div>
         )}
