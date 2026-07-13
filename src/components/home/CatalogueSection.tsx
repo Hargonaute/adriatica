@@ -17,7 +17,9 @@ export function CatalogueSection({ heading, ctaLabel, imageUrl, imageAlt }: Cata
             <h2 className="font-[family-name:var(--font-inter)] text-4xl sm:text-5xl md:text-[56px] font-bold tracking-tight mb-8 leading-[1.1]">
               {heading}
             </h2>
-            <button
+            <a
+              href="/Adriatica Final Catalogue.pdf"
+              download="Adriatica Final Catalogue.pdf"
               className="flex items-center justify-center gap-[6px] px-[18px] py-[12px] rounded-[8px] bg-white text-[#414651] font-[family-name:var(--font-inter)] border border-[#d5d7da] overflow-hidden shrink-0 w-fit hover:bg-slate-50 transition-colors"
               style={{
                 boxShadow:
@@ -28,7 +30,7 @@ export function CatalogueSection({ heading, ctaLabel, imageUrl, imageAlt }: Cata
                 <span className="relative leading-[24px] font-semibold text-[16px]">{ctaLabel}</span>
               </div>
               <Download className="w-[20px] max-h-full relative" strokeWidth={2} />
-            </button>
+            </a>
           </div>
 
           <div className="w-full lg:w-[55%] relative flex items-center justify-center">

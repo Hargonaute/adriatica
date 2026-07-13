@@ -59,7 +59,7 @@ export default async function Home({
         imageAlt={data.hero.imageAlt}
         productSearchLocale={L}
       />
-      <TrustedBySection tagline={common.trustedBy.tagline} />
+      {/* <TrustedBySection tagline={common.trustedBy.tagline} /> */}
       <EntrepriseSection
         heading={data.entreprise.heading}
         ctaLabel={data.entreprise.ctaLabel}
