@@ -34,10 +34,6 @@ export function SynergieSection({
             <Image src={imageUrl} alt={imageAlt} fill className="object-cover" />
           </div>
 
-          <div className="flex items-center gap-1.5 text-slate-400 text-[13px]">
-            <Link2 size={13} className="shrink-0" />
-            <span>{imageCaption}</span>
-          </div>
         </div>
       </div>
     </section>

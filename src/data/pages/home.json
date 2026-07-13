@@ -36,7 +36,7 @@
       "heading": "Recherche et\nDéveloppement",
       "body": "Maghreb Adriatica est aux côtés des agriculteurs depuis plus de 50 ans, dès lors elle a toujours cherché à satisfaire les demandes des clients et les besoins nutritionnels des différentes cultures dans le monde avec des propositions innovantes.",
       "ctaLabel": "Découvrir",
-      "ctaHref": "#decouvrir-rd",
+      "ctaHref": "/recherche-et-developpement",
       "imageUrl": "/home_page_img/Adriatica Web.jpg",
       "imageAlt": "Scientifique travaillant avec une pipette"
     },
@@ -90,7 +90,7 @@
       "heading": "Research &\nDevelopment",
       "body": "Maghreb Adriatica has stood alongside farmers for more than 50 years. Ever since, it has worked to meet customer demands and the nutritional needs of crops around the world with innovative solutions.",
       "ctaLabel": "Discover",
-      "ctaHref": "#decouvrir-rd",
+      "ctaHref": "/research-and-development",
       "imageUrl": "/home_page_img/Adriatica Web.jpg",
       "imageAlt": "Scientist working with a pipette"
     },

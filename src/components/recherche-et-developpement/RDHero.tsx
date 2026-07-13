@@ -39,14 +39,7 @@ export function RDHero({ heading, subheading, ctaLabel, ctaHref, imageUrl, image
           <Image src={imageUrl} alt={imageAlt} fill className="object-cover" priority />
         </div>
 
-        <div className="flex items-center gap-4">
-          <button className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-colors bg-white shadow-sm">
-            <ArrowLeft size={20} />
-          </button>
-          <button className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-colors bg-white shadow-sm">
-            <ArrowRight size={20} />
-          </button>
-        </div>
+
       </div>
     </section>
   );
