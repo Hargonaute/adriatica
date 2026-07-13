@@ -39,3 +39,4 @@ export function SynergieSection({
     </section>
   );
 }
+//d
