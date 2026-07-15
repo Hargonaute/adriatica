@@ -68,9 +68,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         </div>
 
         <div className="pt-8 border-t border-slate-800 flex flex-col-reverse md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-400 text-sm text-center md:text-left">
-            {common.footer.copyright}
-          </p>
+    
           <div className="flex gap-6">
             {common.footer.legal.map((l) => (
               <Link
