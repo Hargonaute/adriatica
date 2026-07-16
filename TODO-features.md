@@ -31,7 +31,7 @@
 
 ---
 
-## 2. Legal Pages — Terms & Conditions + Privacy Policy
+## ✅ 2. Legal Pages — Terms & Conditions + Privacy Policy
 
 - Create two new static routes under `src/app/(site)/[locale]/[slug]/staticRoutes.tsx` OR as separate page files
 - Pages needed:

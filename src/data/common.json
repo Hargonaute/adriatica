@@ -34,8 +34,8 @@
       "newsletterButton": "S'inscrire",
       "copyright": "Copyright 2025 - Adriatica S.p.A. - Strada Dogado 300/19-21 - Loreo (RO) - ITALIA - info (at) k-adriatica.it - P.IVA 01135290292",
       "legal": [
-        { "label": "Conditions", "href": "#" },
-        { "label": "Confidentialité", "href": "#" },
+        { "label": "Conditions", "href": "/fr/legal/terms" },
+        { "label": "Confidentialité", "href": "/fr/legal/privacy" },
         { "label": "Cookies", "href": "#" }
       ]
     },
@@ -117,8 +117,8 @@
       "newsletterButton": "Subscribe",
       "copyright": "Copyright 2025 - Adriatica S.p.A. - Strada Dogado 300/19-21 - Loreo (RO) - ITALIA - info (at) k-adriatica.it - P.IVA 01135290292",
       "legal": [
-        { "label": "Terms", "href": "#" },
-        { "label": "Privacy", "href": "#" },
+        { "label": "Terms", "href": "/en/legal/terms" },
+        { "label": "Privacy", "href": "/en/legal/privacy" },
         { "label": "Cookies", "href": "#" }
       ]
     },
