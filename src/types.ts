@@ -243,6 +243,32 @@ export interface DownloadButtonBlockData extends BaseBlockSettings {
   urlFieldKey?: string | null;
 }
 
+export interface ButtonBlockData extends BaseBlockSettings {
+  type: 'button';
+  label?: string;
+  url?: string;
+  variant?: 'primary' | 'outline' | 'ghost';
+  icon?: 'none' | 'arrow' | 'external' | 'download';
+  /** Overrides BaseBlockSettings.align for the button's flex alignment. */
+  align?: 'left' | 'center' | 'right';
+  openInNewTab?: boolean;
+}
+
+export interface ContactFormSimpleBlockData extends BaseBlockSettings {
+  type: 'contact-form-simple';
+  heading?: string;
+  body?: string;
+  imageUrl?: string;
+}
+
+export interface CatalogueBlockData extends BaseBlockSettings {
+  type: 'catalogue';
+  heading?: string;
+  ctaLabel?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+}
+
 export interface ContainerBlockData extends BaseBlockSettings {
   type: 'container';
   direction: 'row' | 'column';
@@ -312,11 +338,14 @@ export type BlockData =
   | CollectionListBlockData
   | NewsletterBlockData
   | ContactFormBlockData
+  | ContactFormSimpleBlockData
   | CollectionItemFieldsBlockData
   | ProductHeroBlockData
   | SectionHeadingBlockData
   | KeyValueListBlockData
   | DownloadButtonBlockData
+  | ButtonBlockData
+  | CatalogueBlockData
   | ContainerBlockData
   | RepeaterBlockData
   | BoundTextBlockData

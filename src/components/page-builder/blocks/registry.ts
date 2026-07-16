@@ -1,5 +1,5 @@
 import { type BlockData } from '@/types';
-import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library, Mail, PhoneCall, Type, CalendarDays, AlignLeft, ListTree, Table as TableIcon, PackageOpen, Heading, ListChecks, FileDown } from 'lucide-react';
+import { FileText, Image as ImageIcon, Video, FormInput, Sparkles, LayoutGrid, Minus, MousePointerClick, Library, Mail, PhoneCall, Type, CalendarDays, AlignLeft, ListTree, Table as TableIcon, PackageOpen, Heading, ListChecks, FileDown, BookOpen } from 'lucide-react';
 import React from 'react';
 
 import { RichTextEditor, RichTextPreview } from './rich-text/RichTextBlock';
@@ -23,6 +23,9 @@ import { ProductHeroEditor, ProductHeroPreview } from './product-hero/ProductHer
 import { SectionHeadingEditor, SectionHeadingPreview } from './section-heading/SectionHeadingBlock';
 import { KeyValueListEditor, KeyValueListPreview } from './key-value-list/KeyValueListBlock';
 import { DownloadButtonEditor, DownloadButtonPreview } from './download-button/DownloadButtonBlock';
+import { ButtonEditor, ButtonPreview } from './button/ButtonBlock';
+import { ContactFormSimpleEditor, ContactFormSimplePreview } from './contact-form-simple/ContactFormSimpleBlock';
+import { CatalogueEditor, CataloguePreview } from './catalogue/CatalogueBlock';
 
 export type BlockConfig<T extends BlockData = BlockData> = {
   type: T['type'];
@@ -356,6 +359,53 @@ export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
     }),
     Editor: DownloadButtonEditor,
     Preview: DownloadButtonPreview,
+  },
+  'button': {
+    type: 'button',
+    label: 'Button',
+    description: 'Standalone CTA button with label, URL, variant, and icon',
+    icon: MousePointerClick,
+    createDefault: () => ({
+      label: 'Click here',
+      url: '',
+      variant: 'primary',
+      icon: 'none',
+      align: 'left',
+      openInNewTab: false,
+    }),
+    Editor: ButtonEditor,
+    Preview: ButtonPreview,
+  },
+  'contact-form-simple': {
+    type: 'contact-form-simple',
+    label: 'Contact Form (Simple)',
+    description: 'Contact form with side image — without the info cards',
+    icon: PhoneCall,
+    createDefault: () => ({
+      heading: 'Nous contacter',
+      body: 'Notre équipe serait ravie de vous entendre.',
+      imageUrl: '',
+      paddingTop: 'none',
+      paddingBottom: 'none',
+    }),
+    Editor: ContactFormSimpleEditor,
+    Preview: ContactFormSimplePreview,
+  },
+  'catalogue': {
+    type: 'catalogue',
+    label: 'Catalogue Download',
+    description: 'Full-width red section with heading, image, and catalogue download button',
+    icon: BookOpen,
+    createDefault: () => ({
+      heading: 'Téléchargez notre catalogue',
+      ctaLabel: 'Télécharger le catalogue',
+      imageUrl: '',
+      imageAlt: 'Adriatica catalogue',
+      paddingTop: 'none',
+      paddingBottom: 'none',
+    }),
+    Editor: CatalogueEditor,
+    Preview: CataloguePreview,
   },
 };
 
