@@ -60,14 +60,20 @@ export function AssetPicker({ onSelect, trigger }: AssetPickerProps) {
         access: 'public',
         handleUploadUrl: '/api/upload',
       });
-      
-      toast.success('Upload complete');
-      await fetchAssets(); // Refresh list
-      
-      // Optional: Auto-select uploaded file?
-      // onSelect(newBlob.url);
-      // setOpen(false);
 
+      // Save to DB immediately — don't rely on the webhook (unreachable in local dev)
+      await fetch('/api/assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: newBlob.url,
+          pathname: newBlob.pathname,
+          contentType: newBlob.contentType,
+        }),
+      });
+
+      toast.success('Upload complete');
+      await fetchAssets();
     } catch (error) {
       console.error('Upload failed', error);
       toast.error('Upload failed');

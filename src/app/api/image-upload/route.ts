@@ -1,5 +1,8 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { assets } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 /** Quick check: is Vercel Blob configured? */
 export async function GET() {
@@ -23,7 +26,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const blob = await put(file.name, file, { access: 'public' });
+    const blob = await put(file.name, file, { access: 'public', addRandomSuffix: true });
+
+    // Save to assets library so it appears in the AssetPicker
+    const [existing] = await db.select().from(assets).where(eq(assets.url, blob.url)).limit(1);
+    if (!existing) {
+      await db.insert(assets).values({
+        url: blob.url,
+        pathname: blob.pathname,
+        contentType: file.type || null,
+        alt: '',
+      });
+    }
+
     return NextResponse.json({ url: blob.url });
   } catch (error) {
     console.error('Image upload error:', error);

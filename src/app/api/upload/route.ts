@@ -2,6 +2,7 @@ import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { assets } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function POST(request: Request): Promise<NextResponse> {
   const body = (await request.json()) as HandleUploadBody;
@@ -14,9 +15,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         // Authenticate request here if needed
         return {
           allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'],
-          tokenPayload: JSON.stringify({
-            // optional payload to pass to onUploadCompleted
-          }),
+          addRandomSuffix: true,
+          tokenPayload: JSON.stringify({}),
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
@@ -24,12 +24,15 @@ export async function POST(request: Request): Promise<NextResponse> {
 
         // Save asset metadata to DB
         try {
-          await db.insert(assets).values({
-            url: blob.url,
-            pathname: blob.pathname,
-            contentType: blob.contentType,
-            alt: '', // Initial empty alt, user can update later
-          });
+          const [existing] = await db.select().from(assets).where(eq(assets.url, blob.url)).limit(1);
+          if (!existing) {
+            await db.insert(assets).values({
+              url: blob.url,
+              pathname: blob.pathname,
+              contentType: blob.contentType,
+              alt: '',
+            });
+          }
         } catch (dbError) {
           console.error('Failed to save asset to DB:', dbError);
         }
