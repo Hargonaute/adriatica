@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Trash2, ArrowLeft, Code, Database, ExternalLink, Layout, AlertTriangle } from 'lucide-react';
+import { Trash2, ArrowLeft, Code, Database, ExternalLink, Layout, AlertTriangle, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -19,6 +19,7 @@ interface Field {
     type: string;
     required: boolean;
     order: number;
+    options?: any;
 }
 
 interface CollectionData {
@@ -39,16 +40,128 @@ interface PageListItem {
     status: string;
 }
 
+// ── Select / Multi-select option builder ──────────────────────────────────────
+
+function OptionBuilder({
+    options,
+    onChange,
+}: {
+    options: Array<{ label: string; value: string }>;
+    onChange: (opts: Array<{ label: string; value: string }>) => void;
+}) {
+    const add = () => onChange([...options, { label: '', value: '' }]);
+    const remove = (i: number) => onChange(options.filter((_, idx) => idx !== i));
+    const update = (i: number, field: 'label' | 'value', val: string) => {
+        const next = [...options];
+        next[i] = { ...next[i], [field]: val };
+        // auto-derive value from label if value is empty or still matches previous auto
+        if (field === 'label') {
+            const autoValue = val.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+            if (!next[i].value || next[i].value === options[i].value) {
+                next[i].value = autoValue;
+            }
+        }
+        onChange(next);
+    };
+
+    return (
+        <div className="space-y-2">
+            {options.map((opt, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                    <Input
+                        placeholder="Label"
+                        value={opt.label}
+                        onChange={e => update(i, 'label', e.target.value)}
+                        className="text-xs"
+                    />
+                    <Input
+                        placeholder="Value"
+                        value={opt.value}
+                        onChange={e => update(i, 'value', e.target.value)}
+                        className="text-xs font-mono"
+                    />
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => remove(i)}>
+                        <X className="h-3.5 w-3.5" />
+                    </Button>
+                </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={add} className="text-xs">
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add option
+            </Button>
+        </div>
+    );
+}
+
+// ── List sub-field builder (for list type with itemType=object) ───────────────
+
+interface SubFieldDef { key: string; label: string; type: string }
+
+function SubFieldBuilder({
+    subFields,
+    onChange,
+}: {
+    subFields: SubFieldDef[];
+    onChange: (sf: SubFieldDef[]) => void;
+}) {
+    const primitiveTypes = ['text', 'number', 'url', 'email', 'date'];
+    const add = () => onChange([...subFields, { key: '', label: '', type: 'text' }]);
+    const remove = (i: number) => onChange(subFields.filter((_, idx) => idx !== i));
+    const update = (i: number, field: keyof SubFieldDef, val: string) => {
+        const next = [...subFields];
+        next[i] = { ...next[i], [field]: val };
+        if (field === 'label' && (!next[i].key || next[i].key === subFields[i].key)) {
+            next[i].key = val.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        }
+        onChange(next);
+    };
+
+    return (
+        <div className="space-y-2">
+            {subFields.map((sf, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                    <Input
+                        placeholder="Label"
+                        value={sf.label}
+                        onChange={e => update(i, 'label', e.target.value)}
+                        className="text-xs"
+                    />
+                    <Input
+                        placeholder="key"
+                        value={sf.key}
+                        onChange={e => update(i, 'key', e.target.value)}
+                        className="text-xs font-mono"
+                    />
+                    <select
+                        value={sf.type}
+                        onChange={e => update(i, 'type', e.target.value)}
+                        className="h-9 rounded-md border bg-background px-2 text-xs outline-none focus:ring-2 focus:ring-ring"
+                    >
+                        {primitiveTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => remove(i)}>
+                        <X className="h-3.5 w-3.5" />
+                    </Button>
+                </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={add} className="text-xs">
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add sub-field
+            </Button>
+        </div>
+    );
+}
+
 // ── Isolated Add Field Form ───────────────────────────────────────────────────
 
 function AddFieldForm({
     collectionId,
     nextOrder,
     onAdded,
+    existingFields,
 }: {
     collectionId: string;
     nextOrder: number;
     onAdded: (field: Field) => void;
+    existingFields: Field[];
 }) {
     const [label, setLabel] = useState('');
     const [key, setKey] = useState('');
@@ -57,17 +170,108 @@ function AddFieldForm({
     const [required, setRequired] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
+    // select / multi-select
+    const [selectOptions, setSelectOptions] = useState<Array<{ label: string; value: string }>>([]);
+    const [selectDefault, setSelectDefault] = useState('');
+    const [msMin, setMsMin] = useState('');
+    const [msMax, setMsMax] = useState('');
+
+    // list
+    const [listItemType, setListItemType] = useState('text');
+    const [listSubFields, setListSubFields] = useState<SubFieldDef[]>([]);
+
+    // reference
+    const [refCollectionId, setRefCollectionId] = useState('');
+    const [refMultiple, setRefMultiple] = useState(false);
+    const [availableCollections, setAvailableCollections] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+
+    // slug
+    const [slugSource, setSlugSource] = useState('');
+
+    // Fetch collections when reference type is selected
+    useEffect(() => {
+        if (type !== 'reference') return;
+        fetch('/api/collections')
+            .then(r => r.json())
+            .then(d => setAvailableCollections(Array.isArray(d) ? d : []))
+            .catch(() => {});
+    }, [type]);
+
+    const resetTypeConfig = () => {
+        setSelectOptions([]);
+        setSelectDefault('');
+        setMsMin('');
+        setMsMax('');
+        setListItemType('text');
+        setListSubFields([]);
+        setRefCollectionId('');
+        setRefMultiple(false);
+        setSlugSource('');
+    };
+
+    const handleTypeChange = (val: string) => {
+        setType(val);
+        resetTypeConfig();
+    };
+
     const reset = () => {
         setLabel('');
         setKey('');
         setKeyTouched(false);
         setType('text');
         setRequired(false);
+        resetTypeConfig();
+    };
+
+    const buildOptions = (): any => {
+        switch (type) {
+            case 'select':
+                return selectOptions.length > 0
+                    ? { options: selectOptions, ...(selectDefault ? { default: selectDefault } : {}) }
+                    : null;
+            case 'multi-select':
+                return selectOptions.length > 0
+                    ? {
+                        options: selectOptions,
+                        ...(msMin !== '' ? { min: Number(msMin) } : {}),
+                        ...(msMax !== '' ? { max: Number(msMax) } : {}),
+                    }
+                    : null;
+            case 'list':
+                return {
+                    itemType: listItemType,
+                    ...(listItemType === 'object' && listSubFields.length > 0 ? { subFields: listSubFields } : {}),
+                };
+            case 'reference':
+                return refCollectionId ? { collection: refCollectionId, multiple: refMultiple } : null;
+            case 'slug':
+                return slugSource ? { source: slugSource } : {};
+            default:
+                return null;
+        }
+    };
+
+    const configValid = (): boolean => {
+        switch (type) {
+            case 'select':
+            case 'multi-select':
+                return selectOptions.length > 0 && selectOptions.every(o => o.label && o.value);
+            case 'list':
+                return listItemType !== 'object' || listSubFields.length > 0;
+            case 'reference':
+                return !!refCollectionId;
+            default:
+                return true;
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!label.trim() || !key.trim()) return;
+        if (!configValid()) {
+            toast.error('Please complete the field configuration before saving.');
+            return;
+        }
         setSubmitting(true);
         try {
             const res = await fetch('/api/fields', {
@@ -80,6 +284,7 @@ function AddFieldForm({
                     type,
                     required,
                     order: nextOrder,
+                    options: buildOptions(),
                 }),
             });
 
@@ -98,6 +303,8 @@ function AddFieldForm({
             setSubmitting(false);
         }
     };
+
+    const textFields = existingFields.filter(f => f.type === 'text' || f.type === 'textarea');
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -126,7 +333,7 @@ function AddFieldForm({
                 </div>
                 <div className="space-y-1.5">
                     <Label className="text-xs">Type</Label>
-                    <Select value={type} onValueChange={setType}>
+                    <Select value={type} onValueChange={handleTypeChange}>
                         <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
@@ -139,6 +346,12 @@ function AddFieldForm({
                             <SelectItem value="date">Date</SelectItem>
                             <SelectItem value="checkbox">Checkbox</SelectItem>
                             <SelectItem value="image">Image URL</SelectItem>
+                            <SelectItem value="url">URL</SelectItem>
+                            <SelectItem value="select">Select (single choice)</SelectItem>
+                            <SelectItem value="multi-select">Multi-select (tags)</SelectItem>
+                            <SelectItem value="list">List (repeatable)</SelectItem>
+                            <SelectItem value="reference">Reference (relation)</SelectItem>
+                            <SelectItem value="slug">Slug (URL-friendly)</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -151,7 +364,131 @@ function AddFieldForm({
                     <Label htmlFor="field-required" className="text-sm cursor-pointer">Required field</Label>
                 </div>
             </div>
-            <Button type="submit" disabled={submitting || !label.trim() || !key.trim()}>
+
+            {/* ── select / multi-select config ── */}
+            {(type === 'select' || type === 'multi-select') && (
+                <div className="space-y-3 rounded-md border bg-muted/20 p-4">
+                    <p className="text-xs font-medium">Options</p>
+                    <OptionBuilder options={selectOptions} onChange={setSelectOptions} />
+                    {type === 'select' && selectOptions.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
+                            <Label className="text-xs">Default value (optional)</Label>
+                            <Select value={selectDefault || '__none__'} onValueChange={v => setSelectDefault(v === '__none__' ? '' : v)}>
+                                <SelectTrigger className="text-xs">
+                                    <SelectValue placeholder="No default" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="__none__">No default</SelectItem>
+                                    {selectOptions.filter(o => o.value).map(o => (
+                                        <SelectItem key={o.value} value={o.value}>{o.label || o.value}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                    {type === 'multi-select' && (
+                        <div className="flex gap-4 pt-1">
+                            <div className="space-y-1.5">
+                                <Label className="text-xs">Min selections (optional)</Label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    value={msMin}
+                                    onChange={e => setMsMin(e.target.value)}
+                                    placeholder="—"
+                                    className="text-xs w-24"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-xs">Max selections (optional)</Label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={msMax}
+                                    onChange={e => setMsMax(e.target.value)}
+                                    placeholder="—"
+                                    className="text-xs w-24"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── list config ── */}
+            {type === 'list' && (
+                <div className="space-y-3 rounded-md border bg-muted/20 p-4">
+                    <div className="space-y-1.5">
+                        <Label className="text-xs">Item type</Label>
+                        <Select value={listItemType} onValueChange={v => { setListItemType(v); setListSubFields([]); }}>
+                            <SelectTrigger className="text-xs">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="text">Text</SelectItem>
+                                <SelectItem value="number">Number</SelectItem>
+                                <SelectItem value="url">URL</SelectItem>
+                                <SelectItem value="email">Email</SelectItem>
+                                <SelectItem value="date">Date</SelectItem>
+                                <SelectItem value="object">Structured object (sub-fields)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {listItemType === 'object' && (
+                        <div className="space-y-2">
+                            <p className="text-xs font-medium">Sub-fields</p>
+                            <SubFieldBuilder subFields={listSubFields} onChange={setListSubFields} />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── reference config ── */}
+            {type === 'reference' && (
+                <div className="space-y-3 rounded-md border bg-muted/20 p-4">
+                    <div className="space-y-1.5">
+                        <Label className="text-xs">Target collection</Label>
+                        <Select value={refCollectionId || '__none__'} onValueChange={v => setRefCollectionId(v === '__none__' ? '' : v)}>
+                            <SelectTrigger className="text-xs">
+                                <SelectValue placeholder="Select a collection…" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="__none__">Select a collection…</SelectItem>
+                                {availableCollections.map(c => (
+                                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Switch id="ref-multiple" checked={refMultiple} onCheckedChange={setRefMultiple} />
+                        <Label htmlFor="ref-multiple" className="text-xs cursor-pointer">Allow multiple references (one-to-many)</Label>
+                    </div>
+                </div>
+            )}
+
+            {/* ── slug config ── */}
+            {type === 'slug' && (
+                <div className="space-y-3 rounded-md border bg-muted/20 p-4">
+                    <div className="space-y-1.5">
+                        <Label className="text-xs">Derive from field (optional)</Label>
+                        <Select value={slugSource || '__none__'} onValueChange={v => setSlugSource(v === '__none__' ? '' : v)}>
+                            <SelectTrigger className="text-xs">
+                                <SelectValue placeholder="Manual entry only" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="__none__">Manual entry only</SelectItem>
+                                {textFields.map(f => (
+                                    <SelectItem key={f.key} value={f.key}>{f.label} ({f.key})</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">When set, the slug field auto-generates from this field while it&apos;s empty, and a "Generate" button appears in the item editor.</p>
+                    </div>
+                </div>
+            )}
+
+            <Button type="submit" disabled={submitting || !label.trim() || !key.trim() || !configValid()}>
                 {submitting ? 'Adding…' : 'Add Field'}
             </Button>
         </form>
@@ -293,6 +630,9 @@ export default function CollectionDetailsPage({ params }: { params: Promise<{ id
                                                 <span className="text-xs font-mono text-muted-foreground shrink-0">({field.key})</span>
                                                 <span className="text-xs px-2 py-0.5 rounded-full bg-secondary shrink-0">{field.type}</span>
                                                 {field.required && <span className="text-xs text-destructive font-medium shrink-0">Required</span>}
+                                                {field.options?.options?.length > 0 && (
+                                                    <span className="text-xs text-muted-foreground shrink-0">{field.options.options.length} options</span>
+                                                )}
                                             </div>
                                             <Button
                                                 variant="ghost"
@@ -314,6 +654,7 @@ export default function CollectionDetailsPage({ params }: { params: Promise<{ id
                                     collectionId={id}
                                     nextOrder={data.fields.length + 1}
                                     onAdded={newField => setData(prev => prev ? { ...prev, fields: [...prev.fields, newField] } : null)}
+                                    existingFields={data.fields}
                                 />
                             </div>
                         </CardContent>

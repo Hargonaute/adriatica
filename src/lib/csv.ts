@@ -13,7 +13,13 @@ export type CsvFieldType =
   | 'textarea'
   | 'checkbox'
   | 'rich-text'
-  | 'image';
+  | 'image'
+  | 'url'
+  | 'select'
+  | 'multi-select'
+  | 'list'
+  | 'reference'
+  | 'slug';
 
 export interface CsvField {
   key: string;
@@ -160,6 +166,12 @@ const EXAMPLE_BY_TYPE: Record<CsvFieldType, string> = {
   checkbox: 'true',
   'rich-text': '<p>Example HTML</p>',
   image: 'https://example.com/image.jpg',
+  url: 'https://example.com',
+  select: 'option_value',
+  'multi-select': '["option1","option2"]',
+  list: '["item1","item2"]',
+  reference: 'entry-uuid-here',
+  slug: 'url-friendly-slug',
 };
 
 /**
@@ -225,15 +237,30 @@ function coerce(
       if (FALSE_VALUES.has(lc)) return { value: false };
       return { value: false, error: `"${field.key}" must be true/false (got "${trimmed}")` };
     }
-    case 'image': {
+    case 'image':
+    case 'url': {
       try {
-        // Allow absolute URLs only
-        new URL(trimmed);
+        const u = new URL(trimmed);
+        if (!['http:', 'https:'].includes(u.protocol)) throw new Error();
         return { value: trimmed };
       } catch {
-        return { value: trimmed, error: `"${field.key}" must be a valid URL` };
+        return { value: trimmed, error: `"${field.key}" must be a valid http(s) URL` };
       }
     }
+    case 'multi-select':
+    case 'list': {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (!Array.isArray(parsed)) throw new Error();
+        return { value: parsed };
+      } catch {
+        // Fall back to splitting on comma
+        return { value: trimmed.split(',').map(s => s.trim()).filter(Boolean) };
+      }
+    }
+    case 'select':
+    case 'reference':
+    case 'slug':
     case 'text':
     case 'textarea':
     case 'rich-text':

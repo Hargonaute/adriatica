@@ -70,7 +70,7 @@ export const fields = pgTable('fields', {
   key: text('key').notNull(),
   label: text('label').notNull(),
   type: text('type', {
-    enum: ['text', 'number', 'email', 'date', 'textarea', 'checkbox', 'rich-text', 'image'],
+    enum: ['text', 'number', 'email', 'date', 'textarea', 'checkbox', 'rich-text', 'image', 'select', 'multi-select', 'list', 'url', 'reference', 'slug'],
   }).notNull(),
   required: boolean('required').default(false),
   options: jsonb('options'),
