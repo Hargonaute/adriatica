@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { collections, fields } from '@/lib/db/schema';
+import { collections, fields, pages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
@@ -64,6 +64,15 @@ export async function PATCH(
 
     if (!result.length) {
       return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+    }
+
+    // When a detail template page is linked, mark that page as a template so
+    // the page builder enables field bindings without a manual DB edit.
+    if ('detailTemplatePageId' in updates && updates.detailTemplatePageId) {
+      await db
+        .update(pages)
+        .set({ isTemplate: true, templateKind: 'detail', templateCollectionId: id })
+        .where(eq(pages.id, updates.detailTemplatePageId));
     }
 
     return NextResponse.json(result[0]);

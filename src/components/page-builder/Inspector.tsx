@@ -925,10 +925,24 @@ function CompositeBindingSection({
   collectionIdOverride?: string | null;
 }) {
   const storeCollectionId = useTemplateBuilderStore((s) => s.collectionId);
-  const collectionId = collectionIdOverride ?? storeCollectionId;
+  const contextCollectionId = collectionIdOverride ?? storeCollectionId;
+
+  // Fallback manual picker when the page isn't wired as a template in the DB
+  const [manualCollectionId, setManualCollectionId] = useState<string | null>(null);
+  const [allCollections, setAllCollections] = useState<Array<{ id: string; name: string }>>([]);
+  const collectionId = contextCollectionId ?? manualCollectionId;
+  const showCollectionPicker = !contextCollectionId;
 
   const [fields, setFields] = useState<CollectionField[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!showCollectionPicker) return;
+    fetch('/api/collections')
+      .then((r) => r.json())
+      .then((data) => setAllCollections(Array.isArray(data) ? data : []))
+      .catch(() => setAllCollections([]));
+  }, [showCollectionPicker]);
 
   useEffect(() => {
     if (!collectionId) { setFields([]); return; }
@@ -947,9 +961,28 @@ function CompositeBindingSection({
     <div className="space-y-4">
       <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Field Bindings</h4>
 
-      {!collectionId ? (
-        <p className="text-xs text-muted-foreground">No collection set for this template.</p>
-      ) : loading ? (
+      {showCollectionPicker && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">Collection</Label>
+          <Select
+            value={manualCollectionId ?? '__none__'}
+            onValueChange={(v) => setManualCollectionId(v === '__none__' ? null : v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Pick a collection" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">— None —</SelectItem>
+              {allCollections.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground">
+            No template collection detected — pick one to browse its fields.
+          </p>
+        </div>
+      )}
+
+      {!collectionId ? null : loading ? (
         <p className="text-xs text-muted-foreground">Loading fields…</p>
       ) : (
         <div className="space-y-3">
