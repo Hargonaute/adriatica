@@ -5,21 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RichTextInput } from '@/components/ui/rich-text-input';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Pencil, Trash2, X, Check, Upload, Download, FileUp, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, X, Check, Upload, Download, FileUp, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { BulkImportDialog } from '@/components/dashboard/BulkImportDialog';
 import { buildTemplateCSV, downloadCSV } from '@/lib/csv';
 import { slugify } from '@/lib/slugify';
+import type { FieldType } from '@/types';
 
 interface Field {
   id: string;
   key: string;
   label: string;
-  type: 'text' | 'number' | 'email' | 'date' | 'textarea' | 'checkbox' | 'rich-text' | 'image';
+  type: FieldType;
   required: boolean;
   order: number;
+  options?: any;
 }
 
 interface Collection {
@@ -84,7 +87,6 @@ function ImageFieldInput({
 
   return (
     <div className="space-y-3">
-      {/* Upload button */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
           <Button
@@ -111,15 +113,11 @@ function ImageFieldInput({
           </p>
         )}
       </div>
-
-      {/* Divider */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <div className="flex-1 border-t" />
         <span>or paste a URL</span>
         <div className="flex-1 border-t" />
       </div>
-
-      {/* URL input */}
       <input
         type="url"
         value={value ?? ''}
@@ -127,8 +125,6 @@ function ImageFieldInput({
         placeholder="https://example.com/image.jpg"
         className={base}
       />
-
-      {/* Preview */}
       {value && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -142,9 +138,9 @@ function ImageFieldInput({
   );
 }
 
-// ── Dynamic field renderer ────────────────────────────────────────────────────
+// ── List field input ──────────────────────────────────────────────────────────
 
-function FieldInput({
+function ListFieldInput({
   field,
   value,
   onChange,
@@ -154,15 +150,182 @@ function FieldInput({
   onChange: (val: any) => void;
 }) {
   const base = 'w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring';
+  const opts = field.options as { itemType?: string; subFields?: Array<{ key: string; label: string; type: string }> } | undefined;
+  const itemType = opts?.itemType ?? 'text';
+  const subFields = opts?.subFields ?? [];
+  const items: any[] = Array.isArray(value) ? value : [];
+
+  const updateItem = (i: number, v: any) => {
+    const next = [...items];
+    next[i] = v;
+    onChange(next);
+  };
+
+  const updateSubField = (i: number, key: string, v: any) => {
+    const next = [...items];
+    next[i] = { ...(next[i] ?? {}), [key]: v };
+    onChange(next);
+  };
+
+  const addItem = () => {
+    const empty = itemType === 'object' ? {} : itemType === 'number' ? 0 : '';
+    onChange([...items, empty]);
+  };
+
+  const removeItem = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+
+  const moveItem = (i: number, dir: 1 | -1) => {
+    const j = i + dir;
+    if (j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  const inputType = (t: string) =>
+    t === 'number' ? 'number' : t === 'date' ? 'date' : t === 'url' ? 'url' : t === 'email' ? 'email' : 'text';
+
+  return (
+    <div className="space-y-2">
+      {items.map((item, i) => (
+        <div key={i} className="flex items-start gap-2">
+          <div className="flex flex-col gap-0.5 pt-2">
+            <button type="button" disabled={i === 0} onClick={() => moveItem(i, -1)} className="text-muted-foreground hover:text-foreground disabled:opacity-30">
+              <ChevronUp className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" disabled={i === items.length - 1} onClick={() => moveItem(i, 1)} className="text-muted-foreground hover:text-foreground disabled:opacity-30">
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <div className="flex-1 min-w-0">
+            {itemType === 'object' ? (
+              <div className="space-y-2 p-3 border rounded-md bg-muted/20">
+                {subFields.map(sf => (
+                  <div key={sf.key} className="space-y-1">
+                    <label className="text-xs text-muted-foreground">{sf.label}</label>
+                    <input
+                      type={inputType(sf.type)}
+                      value={item?.[sf.key] ?? ''}
+                      onChange={e => updateSubField(i, sf.key, sf.type === 'number' ? Number(e.target.value) : e.target.value)}
+                      className={base}
+                    />
+                  </div>
+                ))}
+                {subFields.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No sub-fields defined.</p>
+                )}
+              </div>
+            ) : (
+              <input
+                type={inputType(itemType)}
+                value={item ?? ''}
+                onChange={e => updateItem(i, itemType === 'number' ? Number(e.target.value) : e.target.value)}
+                placeholder={`Item ${i + 1}`}
+                className={base}
+              />
+            )}
+          </div>
+          <button type="button" onClick={() => removeItem(i)} className="text-muted-foreground hover:text-destructive mt-2 shrink-0">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={addItem} className="text-xs">
+        <Plus className="h-3.5 w-3.5 mr-1.5" /> Add item
+      </Button>
+    </div>
+  );
+}
+
+// ── Reference field input ─────────────────────────────────────────────────────
+
+function ReferenceFieldInput({
+  field,
+  value,
+  onChange,
+}: {
+  field: Field;
+  value: any;
+  onChange: (val: any) => void;
+}) {
+  const opts = field.options as { collection?: string; multiple?: boolean } | undefined;
+  const [entries, setEntries] = useState<Array<{ id: string; slug: string | null; data: Record<string, any> }>>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!opts?.collection) return;
+    setLoading(true);
+    fetch(`/api/entries?collectionId=${opts.collection}`)
+      .then(r => r.json())
+      .then(d => setEntries(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [opts?.collection]);
+
+  if (!opts?.collection) {
+    return <p className="text-sm text-muted-foreground italic">No target collection configured.</p>;
+  }
+
+  const getLabel = (entry: { id: string; slug: string | null; data: Record<string, any> }) =>
+    entry.slug ?? Object.values(entry.data).find((v): v is string => typeof v === 'string' && !!v) ?? entry.id;
+
+  if (loading) return <p className="text-sm text-muted-foreground">Loading references…</p>;
+
+  if (opts.multiple) {
+    const selected: string[] = Array.isArray(value) ? value : [];
+    const toggle = (id: string) =>
+      onChange(selected.includes(id) ? selected.filter(v => v !== id) : [...selected, id]);
+    return (
+      <div className="max-h-48 overflow-y-auto border rounded-md divide-y">
+        {entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground p-3">No entries in target collection.</p>
+        ) : entries.map(entry => (
+          <label key={entry.id} className="flex items-center gap-2 px-3 py-2 hover:bg-muted cursor-pointer">
+            <input
+              type="checkbox"
+              checked={selected.includes(entry.id)}
+              onChange={() => toggle(entry.id)}
+              className="h-4 w-4 rounded border"
+            />
+            <span className="text-sm">{getLabel(entry)}</span>
+          </label>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <Select value={value ?? '__none__'} onValueChange={v => onChange(v === '__none__' ? null : v)}>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Select a reference…" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__none__">— None —</SelectItem>
+        {entries.map(entry => (
+          <SelectItem key={entry.id} value={entry.id}>{getLabel(entry)}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// ── Dynamic field renderer ────────────────────────────────────────────────────
+
+function FieldInput({
+  field,
+  value,
+  onChange,
+  siblingValues,
+}: {
+  field: Field;
+  value: any;
+  onChange: (val: any) => void;
+  siblingValues?: Record<string, any>;
+}) {
+  const base = 'w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring';
 
   if (field.type === 'rich-text') {
-    return (
-      <RichTextInput
-        value={value ?? ''}
-        onChange={onChange}
-        minHeight="180px"
-      />
-    );
+    return <RichTextInput value={value ?? ''} onChange={onChange} minHeight="180px" />;
   }
 
   if (field.type === 'image') {
@@ -192,6 +355,103 @@ function FieldInput({
           className="h-4 w-4 rounded border"
         />
         <label htmlFor={field.key} className="text-sm">{field.label}</label>
+      </div>
+    );
+  }
+
+  if (field.type === 'select') {
+    const opts: Array<{ label: string; value: string }> = field.options?.options ?? [];
+    return (
+      <Select value={value ?? '__none__'} onValueChange={v => onChange(v === '__none__' ? null : v)}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select an option…" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__none__">— None —</SelectItem>
+          {opts.map(opt => (
+            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  if (field.type === 'multi-select') {
+    const opts: Array<{ label: string; value: string }> = field.options?.options ?? [];
+    const selected: string[] = Array.isArray(value) ? value : [];
+    const toggle = (val: string) =>
+      onChange(selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val]);
+    return (
+      <div className="flex flex-wrap gap-2">
+        {opts.length === 0 ? (
+          <p className="text-sm text-muted-foreground italic">No options configured.</p>
+        ) : opts.map(opt => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => toggle(opt.value)}
+            className={`px-3 py-1 rounded-full border text-sm transition-colors ${
+              selected.includes(opt.value)
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'hover:border-foreground/50 bg-background'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (field.type === 'list') {
+    return <ListFieldInput field={field} value={value} onChange={onChange} />;
+  }
+
+  if (field.type === 'url') {
+    return (
+      <input
+        type="url"
+        required={field.required}
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value)}
+        placeholder="https://example.com"
+        className={base}
+      />
+    );
+  }
+
+  if (field.type === 'reference') {
+    return <ReferenceFieldInput field={field} value={value} onChange={onChange} />;
+  }
+
+  if (field.type === 'slug') {
+    const opts = field.options as { source?: string } | undefined;
+    const sourceValue = opts?.source ? siblingValues?.[opts.source] : undefined;
+    const canGenerate = opts?.source && sourceValue != null && sourceValue !== '';
+    return (
+      <div className="space-y-1.5">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            required={field.required}
+            value={value ?? ''}
+            onChange={e => onChange(slugify(e.target.value))}
+            placeholder="url-friendly-slug"
+            className={`${base} font-mono flex-1`}
+          />
+          {canGenerate && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onChange(slugify(String(sourceValue)))}
+              title={`Generate from "${opts?.source}"`}
+            >
+              Auto
+            </Button>
+          )}
+        </div>
+        {value && <p className="text-xs text-muted-foreground font-mono">/{value}</p>}
       </div>
     );
   }
@@ -230,11 +490,21 @@ function ItemForm({
 }) {
   const [values, setValues] = useState<Record<string, any>>(initial ?? {});
   const [slug, setSlug] = useState(initialSlug);
-  // Assume any pre-existing slug is user-owned; don't clobber it on field edits.
   const [slugTouched, setSlugTouched] = useState(!!initialSlug);
 
   const set = (key: string, val: any) => {
-    setValues(prev => ({ ...prev, [key]: val }));
+    setValues(prev => {
+      const next = { ...prev, [key]: val };
+      // Auto-fill empty slug-type fields that source from this key
+      if (typeof val === 'string') {
+        fields.forEach(f => {
+          if (f.type === 'slug' && f.options?.source === key && !prev[f.key]) {
+            next[f.key] = slugify(val);
+          }
+        });
+      }
+      return next;
+    });
     if (!slugTouched && slugSourceKey && key === slugSourceKey && typeof val === 'string') {
       setSlug(slugify(val));
     }
@@ -246,6 +516,28 @@ function ItemForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (slugEmpty) return;
+    // Client-side validation for fields with constraints
+    for (const field of fields) {
+      const val = values[field.key];
+      const isEmpty = val == null || val === '' || (Array.isArray(val) && val.length === 0);
+      if (field.required && isEmpty) {
+        toast.error(`${field.label} is required.`);
+        return;
+      }
+      if (!isEmpty && field.type === 'multi-select' && field.options) {
+        const min: number | undefined = field.options.min;
+        const max: number | undefined = field.options.max;
+        const count = Array.isArray(val) ? val.length : 0;
+        if (min != null && count < min) {
+          toast.error(`${field.label}: select at least ${min} option(s).`);
+          return;
+        }
+        if (max != null && count > max) {
+          toast.error(`${field.label}: select at most ${max} option(s).`);
+          return;
+        }
+      }
+    }
     await onSubmit(trimmedSlug, values);
   }
 
@@ -282,7 +574,12 @@ function ItemForm({
               {field.required && <span className="text-destructive ml-0.5">*</span>}
             </Label>
           )}
-          <FieldInput field={field} value={values[field.key]} onChange={val => set(field.key, val)} />
+          <FieldInput
+            field={field}
+            value={values[field.key]}
+            onChange={val => set(field.key, val)}
+            siblingValues={values}
+          />
         </div>
       ))}
 
@@ -297,6 +594,38 @@ function ItemForm({
       </div>
     </form>
   );
+}
+
+// ── Field preview helper (card list view) ────────────────────────────────────
+
+function fieldPreview(field: Field, val: any): string {
+  if (val == null || val === '') return '—';
+  switch (field.type) {
+    case 'checkbox':
+      return val ? '✓ Yes' : '✗ No';
+    case 'rich-text':
+      return String(val).replace(/<[^>]*>/g, '').slice(0, 80) || '—';
+    case 'select': {
+      const opt = (field.options?.options ?? []).find((o: any) => o.value === val);
+      return opt?.label ?? String(val).slice(0, 80);
+    }
+    case 'multi-select': {
+      if (!Array.isArray(val) || val.length === 0) return '—';
+      const opts: any[] = field.options?.options ?? [];
+      return val.map((v: string) => {
+        const o = opts.find((x: any) => x.value === v);
+        return o?.label ?? v;
+      }).join(', ').slice(0, 80);
+    }
+    case 'list':
+      return Array.isArray(val) ? `${val.length} item${val.length !== 1 ? 's' : ''}` : '—';
+    case 'reference': {
+      const ids = Array.isArray(val) ? val : [val];
+      return ids.length > 0 ? `${ids.length} ref${ids.length !== 1 ? 's' : ''}` : '—';
+    }
+    default:
+      return String(val).slice(0, 80);
+  }
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -388,8 +717,6 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
   if (!collection) return <div className="p-10 text-center text-muted-foreground">Collection not found</div>;
 
   const fields = collection.fields;
-  // Field to watch for slug auto-generation: explicit itemSlugField wins,
-  // otherwise the first text field (mirrors generateEntrySlug on the server).
   const slugSourceKey =
     collection.itemSlugField ??
     fields.find(f => f.type === 'text')?.key ??
@@ -514,7 +841,6 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
                 </>
               ) : (
                 <CardContent className="flex items-start justify-between gap-4 py-4">
-                  {/* Missing slug indicator */}
                   {(!item.slug || !item.slug.trim()) && (
                     <span
                       className="shrink-0 inline-flex items-center rounded-full bg-destructive/10 text-destructive text-xs font-semibold px-2 py-0.5 mt-0.5"
@@ -523,7 +849,6 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
                       No slug
                     </span>
                   )}
-                  {/* Field preview */}
                   <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
                     {fields.slice(0, 4).map(field => {
                       const val = item.data[field.key];
@@ -541,18 +866,10 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
                           </div>
                         );
                       }
-                      let preview = '—';
-                      if (field.type === 'checkbox') {
-                        preview = val ? '✓ Yes' : '✗ No';
-                      } else if (field.type === 'rich-text') {
-                        preview = String(val ?? '').replace(/<[^>]*>/g, '').slice(0, 80) || '—';
-                      } else {
-                        preview = String(val ?? '—').slice(0, 80);
-                      }
                       return (
                         <div key={field.key} className="min-w-0">
                           <span className="text-xs text-muted-foreground block">{field.label}</span>
-                          <span className="text-sm font-medium truncate block">{preview}</span>
+                          <span className="text-sm font-medium truncate block">{fieldPreview(field, val)}</span>
                         </div>
                       );
                     })}
@@ -560,7 +877,6 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
                       {new Date(item.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                  {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
                     {item.status === 'published' && item.slug && collection.detailTemplatePageId && (
                       <a

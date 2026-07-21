@@ -9,13 +9,68 @@ export type FieldType =
   | 'textarea'
   | 'checkbox'
   | 'rich-text'
-  | 'image';
+  | 'image'
+  | 'select'
+  | 'multi-select'
+  | 'list'
+  | 'url'
+  | 'reference'
+  | 'slug';
+
+// --- Field-specific option shapes stored in fields.options (jsonb) ---
+
+export interface SelectOption {
+  label: string;
+  value: string;
+}
+
+export interface SelectFieldOptions {
+  options: SelectOption[];
+  default?: string;
+}
+
+export interface MultiSelectFieldOptions {
+  options: SelectOption[];
+  min?: number;
+  max?: number;
+}
+
+export type ListItemPrimitiveType = 'text' | 'number' | 'url' | 'email' | 'date';
+
+export interface ListSubField {
+  key: string;
+  label: string;
+  type: ListItemPrimitiveType;
+}
+
+export interface ListFieldOptions {
+  itemType: ListItemPrimitiveType | 'object';
+  subFields?: ListSubField[];
+}
+
+export interface ReferenceFieldOptions {
+  collection: string; // target collectionId
+  multiple: boolean;
+}
+
+export interface SlugFieldOptions {
+  source?: string; // key of the field to derive the slug from
+}
+
+export type FieldOptions =
+  | SelectFieldOptions
+  | MultiSelectFieldOptions
+  | ListFieldOptions
+  | ReferenceFieldOptions
+  | SlugFieldOptions;
 
 export interface CollectionField {
   id: string;
   key: string;
   label: string;
   type: FieldType;
+  required?: boolean;
+  options?: FieldOptions | null;
 }
 
 // --- Base Block Settings (Shared) ---
