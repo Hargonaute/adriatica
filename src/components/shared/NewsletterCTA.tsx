@@ -92,7 +92,7 @@ export function NewsletterCTA({
   }
 
   return (
-    <section className={`${sectionBgMap[sectionBg]} w-full py-16 md:py-24`}>
+    <section className={`${sectionBgMap[sectionBg]} w-full py-16 md:py-24`} data-reveal>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-[2rem] overflow-hidden flex flex-col-reverse lg:flex-row shadow-xl">
           <div className="flex-1 p-10 md:p-14 lg:p-16 xl:p-20 flex flex-col justify-center">

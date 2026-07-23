@@ -206,6 +206,7 @@ export function RenderPreview({ block }: RenderPreviewProps) {
 
   const sectionProps = {
     'data-block-id': block.id,
+    'data-reveal': '',
     className: customClass,
     style: sectionStyle,
   } as const;

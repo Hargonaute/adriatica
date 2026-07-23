@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import { ContactForm } from './ContactForm';
 import { loadCommon } from '@/lib/i18n/loadPageData';
@@ -26,7 +27,7 @@ export function ContactSection({
     <section className="bg-white w-full py-16" id="contact">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-start">
-          <div className="w-full lg:w-1/2 flex flex-col pt-8">
+          <div className="w-full lg:w-1/2 flex flex-col pt-8" data-reveal="right">
             {heading && (
               <h2 className="font-[family-name:var(--font-inter)] text-4xl sm:text-5xl font-bold tracking-tight text-[#0f172a] mb-4">
                 {heading}
@@ -36,7 +37,11 @@ export function ContactSection({
             <ContactForm labels={common.contactForm} collectionSlug={collectionSlug} />
           </div>
 
-          <div className="w-full lg:w-1/2 h-[500px] sm:h-[600px] lg:h-[800px] relative rounded-[2rem] overflow-hidden bg-slate-100 shadow-xl">
+          <div
+            className="w-full lg:w-1/2 h-[500px] sm:h-[600px] lg:h-[800px] relative rounded-[2rem] overflow-hidden bg-slate-100 shadow-xl"
+            data-reveal="left"
+            style={{ '--reveal-delay': '120ms' } as CSSProperties}
+          >
             <Image src={imageUrl} alt={imageAlt} fill className="object-cover" priority={false} />
           </div>
         </div>

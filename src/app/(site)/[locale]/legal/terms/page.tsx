@@ -71,7 +71,7 @@ export default async function TermsPage({
 
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#fff' }}>
-      <section style={{ maxWidth: 800, margin: '0 auto', padding: '80px 24px 120px' }}>
+      <section style={{ maxWidth: 800, margin: '0 auto', padding: '80px 24px 120px' }} data-reveal>
         <h1
           style={{
             fontSize: 36,

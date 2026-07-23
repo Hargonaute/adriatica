@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
@@ -22,7 +23,10 @@ export function EntrepriseSection({
   return (
     <section className="bg-white w-full py-24" id="entreprise">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+        <div
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12"
+          data-reveal
+        >
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
             {heading}
           </h2>
@@ -39,13 +43,20 @@ export function EntrepriseSection({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-stretch">
-          <div className="space-y-6 text-[17px] text-slate-600 leading-relaxed font-medium">
+          <div
+            className="space-y-6 text-[17px] text-slate-600 leading-relaxed font-medium"
+            data-reveal="right"
+          >
             {paragraphs.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
           </div>
 
-          <div className="relative w-full h-full min-h-[400px] rounded-2xl overflow-hidden bg-slate-100 shadow-xl">
+          <div
+            className="relative w-full h-full min-h-[400px] rounded-2xl overflow-hidden bg-slate-100 shadow-xl"
+            data-reveal="left"
+            style={{ '--reveal-delay': '120ms' } as CSSProperties}
+          >
             <Image src={imageUrl} alt={imageAlt} fill className="object-cover" />
           </div>
         </div>

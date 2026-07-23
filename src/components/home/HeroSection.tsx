@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
@@ -29,7 +30,7 @@ export function HeroSection({
 }: HeroSectionProps) {
   return (
     <section className="pt-14 pb-12 sm:pt-20 sm:pb-16 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto text-center">
-      <div className="max-w-4xl mx-auto space-y-5 sm:space-y-6">
+      <div className="max-w-4xl mx-auto space-y-5 sm:space-y-6" data-reveal>
         {headline && (
           <h1 className="font-[family-name:var(--font-inter)] font-semibold text-[34px] leading-[1.1] sm:text-5xl sm:leading-tight md:text-[60px] md:leading-[72px] tracking-[-0.02em] text-center text-slate-900">
             {headline}
@@ -43,7 +44,11 @@ export function HeroSection({
       </div>
 
       {(primaryCtaLabel || secondaryCtaLabel) && (
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div
+          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          data-reveal
+          style={{ '--reveal-delay': '120ms' } as CSSProperties}
+        >
           {secondaryCtaLabel && (
             productSearchLocale ? (
               <HeroProductSearch
@@ -72,7 +77,11 @@ export function HeroSection({
       )}
 
       {imageUrl && (
-        <div className="mt-10 sm:mt-16 w-full max-w-[1200px] mx-auto aspect-[16/9] md:aspect-[21/9] rounded-2xl sm:rounded-[2rem] overflow-hidden bg-slate-100 shadow-2xl relative">
+        <div
+          className="mt-10 sm:mt-16 w-full max-w-[1200px] mx-auto aspect-[16/9] md:aspect-[21/9] rounded-2xl sm:rounded-[2rem] overflow-hidden bg-slate-100 shadow-2xl relative"
+          data-reveal="scale"
+          style={{ '--reveal-delay': '220ms' } as CSSProperties}
+        >
           <Image
             src={imageUrl}
             alt={imageAlt}

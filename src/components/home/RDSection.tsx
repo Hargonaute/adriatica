@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
@@ -17,7 +18,10 @@ export function RDSection({ heading, body, ctaLabel, ctaHref, imageUrl, imageAlt
     <section className="bg-white w-full pb-16 sm:pb-24" id="rd">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-[#BC0D2A] w-full rounded-2xl sm:rounded-[2rem] overflow-hidden flex flex-col lg:flex-row shadow-xl">
-          <div className="p-8 sm:p-10 lg:p-14 xl:p-20 flex-1 flex flex-col justify-center text-white">
+          <div
+            className="p-8 sm:p-10 lg:p-14 xl:p-20 flex-1 flex flex-col justify-center text-white"
+            data-reveal="right"
+          >
             <h2 className="font-[family-name:var(--font-inter)] text-[32px] sm:text-5xl lg:text-5xl xl:text-[56px] font-semibold tracking-tight mb-6 sm:mb-8 leading-[1.15]">
               {headingLines.map((line, i) => (
                 <span key={i}>
@@ -41,7 +45,11 @@ export function RDSection({ heading, body, ctaLabel, ctaHref, imageUrl, imageAlt
             </Link>
           </div>
 
-          <div className="w-full lg:w-[48%] xl:w-[50%] shrink-0 pt-8 px-8 sm:pt-12 sm:px-12 lg:pt-16 lg:pl-8 lg:pr-0 xl:pt-20 xl:pl-16 flex relative min-h-[300px] sm:min-h-[400px] lg:min-h-[500px]">
+          <div
+            className="w-full lg:w-[48%] xl:w-[50%] shrink-0 pt-8 px-8 sm:pt-12 sm:px-12 lg:pt-16 lg:pl-8 lg:pr-0 xl:pt-20 xl:pl-16 flex relative min-h-[300px] sm:min-h-[400px] lg:min-h-[500px]"
+            data-reveal="left"
+            style={{ '--reveal-delay': '120ms' } as CSSProperties}
+          >
             <div className="w-full h-full bg-white rounded-tl-[1.8rem] pt-[2px] pl-[2px] relative">
               <div className="relative w-full h-full rounded-tl-[1.7rem] overflow-hidden bg-black/5">
                 <Image src={imageUrl} alt={imageAlt} fill className="object-cover" />

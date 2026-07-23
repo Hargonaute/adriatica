@@ -2,6 +2,7 @@ import { db, pages, collections, entries, fields } from '@/lib/db';
 import { eq, and, or, isNull, desc } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
 import { RenderPreview } from '@/components/page-builder/renderPreview';
 import { type Block } from '@/types';
@@ -175,7 +176,7 @@ export default async function PublicPage({
   return (
     <main className="min-h-screen bg-white">
       <section className="bg-white w-full pt-16 pb-12 xl:pt-24">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8" data-reveal>
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
             <Link href={`/${L}`} className="hover:text-[#BC0D2A] transition-colors">
               {common.site.homeCrumb}
@@ -197,7 +198,7 @@ export default async function PublicPage({
           <p className="text-slate-500 text-center py-20">{common.site.noItemsYet}</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {colEntries.map((entry) => {
+            {colEntries.map((entry, i) => {
               const itemData = entry.data as Record<string, unknown>;
               const title = titleField ? String(itemData[titleField.key] ?? '') : '';
               const imgUrl = imageField ? String(itemData[imageField.key] ?? '') : '';
@@ -210,6 +211,8 @@ export default async function PublicPage({
                 <Link
                   key={entry.id}
                   href={href}
+                  data-reveal
+                  style={{ '--reveal-delay': `${(i % 3) * 90}ms` } as CSSProperties}
                   className="group rounded-2xl border bg-white overflow-hidden hover:shadow-lg hover:border-slate-200 transition-all"
                 >
                   {imgUrl && (

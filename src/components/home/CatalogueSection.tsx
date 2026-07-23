@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import { Download } from 'lucide-react';
 
@@ -13,7 +14,10 @@ export function CatalogueSection({ heading, ctaLabel, imageUrl, imageAlt }: Cata
     <section className="bg-[#BC0D2A] w-full py-16 md:py-20 overflow-hidden" id="catalogue">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-8">
-          <div className="w-full lg:w-[45%] text-white z-10 flex flex-col justify-center">
+          <div
+            className="w-full lg:w-[45%] text-white z-10 flex flex-col justify-center"
+            data-reveal="right"
+          >
             <h2 className="font-[family-name:var(--font-inter)] text-4xl sm:text-5xl md:text-[56px] font-bold tracking-tight mb-8 leading-[1.1]">
               {heading}
             </h2>
@@ -33,7 +37,11 @@ export function CatalogueSection({ heading, ctaLabel, imageUrl, imageAlt }: Cata
             </a>
           </div>
 
-          <div className="w-full lg:w-[55%] relative flex items-center justify-center">
+          <div
+            className="w-full lg:w-[55%] relative flex items-center justify-center"
+            data-reveal="scale"
+            style={{ '--reveal-delay': '120ms' } as CSSProperties}
+          >
             <div className="relative w-full max-w-[650px] aspect-[4/3]">
               <Image src={imageUrl} alt={imageAlt} fill className="object-contain" />
             </div>
