@@ -17,7 +17,7 @@ export interface DurabiliteSectionProps {
 export function DurabiliteSection({ sections }: DurabiliteSectionProps) {
   return (
     <section className="bg-white w-full py-8 pb-24">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl space-y-16">
           {sections.map((section, idx) => (
             <div key={idx} className="space-y-6 text-[15px] sm:text-base text-slate-600 leading-relaxed font-medium">

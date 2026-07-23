@@ -11,7 +11,7 @@ export interface CatalogueSectionProps {
 export function CatalogueSection({ heading, ctaLabel, imageUrl, imageAlt }: CatalogueSectionProps) {
   return (
     <section className="bg-[#BC0D2A] w-full py-16 md:py-20 overflow-hidden" id="catalogue">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-8">
           <div className="w-full lg:w-[45%] text-white z-10 flex flex-col justify-center">
             <h2 className="font-[family-name:var(--font-inter)] text-4xl sm:text-5xl md:text-[56px] font-bold tracking-tight mb-8 leading-[1.1]">

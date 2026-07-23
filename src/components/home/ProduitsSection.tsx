@@ -14,7 +14,7 @@ export interface ProduitsSectionProps {
 export function ProduitsSection({ heading, body, items }: ProduitsSectionProps) {
   return (
     <section className="bg-white w-full py-24 border-t border-slate-100" id="produits">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl text-left mb-20">
           <h2 className="font-[family-name:var(--font-inter)] text-4xl font-bold tracking-tight text-slate-900 mb-4">
             {heading}

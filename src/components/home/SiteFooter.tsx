@@ -25,7 +25,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
 
   return (
     <footer className="bg-[#0b0f19] w-full pt-16 pb-8 border-t border-slate-800">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-12 lg:gap-8 mb-16">
           <div className="w-full lg:w-[35%] flex flex-col gap-6">
             <div className="bg-white inline-flex items-center self-start px-4 py-3 rounded-md">

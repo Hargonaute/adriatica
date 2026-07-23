@@ -17,8 +17,8 @@ export function SynergieSection({
   imageCaption,
 }: SynergieSectionProps) {
   return (
-    <section className="bg-white w-full py-8 pb-8 ">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+    <section className="bg-white w-full py-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="font-[family-name:var(--font-inter)] text-[24px] md:text-[28px] font-bold text-slate-900 tracking-tight mb-8">
           {heading}
         </h2>

@@ -21,7 +21,7 @@ export function EntrepriseSection({
 }: EntrepriseSectionProps) {
   return (
     <section className="bg-white w-full py-24" id="entreprise">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
             {heading}

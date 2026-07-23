@@ -23,8 +23,8 @@ export function ContactSection({
 }: ContactSectionProps) {
   const common = loadCommon(locale);
   return (
-    <section className="bg-white w-full py-8 md:py-8" id="contact">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+    <section className="bg-white w-full py-16" id="contact">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-start">
           <div className="w-full lg:w-1/2 flex flex-col pt-8">
             {heading && (

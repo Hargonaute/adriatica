@@ -21,7 +21,7 @@ export function ProduitsHero({
 }: ProduitsHeroProps) {
   return (
     <section className="bg-white w-full pt-16 pb-24 xl:pt-24">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mb-12 text-[#475467]">
           <h1 className="font-[family-name:var(--font-inter)] text-4xl sm:text-5xl md:text-[56px] font-bold text-[#101828] leading-[1.1] tracking-tight mb-6">
             {heading}

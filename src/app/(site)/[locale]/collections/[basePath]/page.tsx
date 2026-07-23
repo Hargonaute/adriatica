@@ -87,7 +87,7 @@ export default async function CollectionIndexPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-white">
       <section className="bg-white w-full pt-16 pb-12 xl:pt-24">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
             <Link href={`/${L}`} className="hover:text-[#BC0D2A] transition-colors">
               {common.site.homeCrumb}
@@ -104,7 +104,7 @@ export default async function CollectionIndexPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="max-w-[1400px] mx-auto px-6 lg:px-8 pb-24">
+      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         {colEntries.length === 0 ? (
           <p className="text-slate-500 text-center py-20">{common.site.noItemsYet}</p>
         ) : (

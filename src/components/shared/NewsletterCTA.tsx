@@ -93,7 +93,7 @@ export function NewsletterCTA({
 
   return (
     <section className={`${sectionBgMap[sectionBg]} w-full py-16 md:py-24`}>
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-[2rem] overflow-hidden flex flex-col-reverse lg:flex-row shadow-xl">
           <div className="flex-1 p-10 md:p-14 lg:p-16 xl:p-20 flex flex-col justify-center">
             <h2 className="font-[family-name:var(--font-inter)] text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-4">

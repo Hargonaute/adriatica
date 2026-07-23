@@ -141,7 +141,7 @@ export default async function CollectionItemDetailPage({ params }: Props) {
         </div>
       )}
 
-      <div className="max-w-[860px] mx-auto px-6 lg:px-8 py-16">
+      <div className="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
           <Link href={`/${L}`} className="hover:text-[#BC0D2A] transition-colors">
             {common.site.homeCrumb}
