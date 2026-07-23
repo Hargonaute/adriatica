@@ -23,7 +23,7 @@ import { BLOCKS_REGISTRY } from './blocks/registry';
 import { Inspector } from './Inspector';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Code, Layout, Save, Globe, ExternalLink, ArrowLeft, Plus, Monitor, Tablet, Smartphone, Loader2, Check, AlertCircle, Settings, X, Columns2 } from 'lucide-react';
+import { Eye, Code, Layout, Save, Globe, ExternalLink, ArrowLeft, Plus, Monitor, Tablet, Smartphone, Loader2, Check, AlertCircle, Settings, X, Columns2, ClipboardCopy, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -149,6 +149,11 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
   const previewPanelRef = useRef<HTMLDivElement | null>(null);
   const previewUpdatingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stylePreviewTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── JSON import state ────────────────────────────────────────────────────
+  const [importJson, setImportJson] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState(false);
 
   // ── Inspector panel state ────────────────────────────────────────────────
   const [inspectorHeight, setInspectorHeight] = useState(INSPECTOR_DEFAULT);
@@ -770,6 +775,91 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
     }
   };
 
+  // ── JSON import ──────────────────────────────────────────────────────────
+  // Accepts three input shapes:
+  //   1. Full PageData    — { blocks: { en: [...], fr?: [...] }, title?, meta? }
+  //   2. Blocks object    — { en: [...], fr?: [...] }
+  //   3. Block array      — Block[]   (loaded into the active language)
+  const handleImportJson = useCallback(() => {
+    setImportError(null);
+    const raw = importJson.trim();
+    if (!raw) { setImportError('Paste some JSON first.'); return; }
+
+    let parsed: unknown;
+    try { parsed = JSON.parse(raw); } catch (e) {
+      setImportError(`Not valid JSON — ${(e as Error).message}`);
+      return;
+    }
+
+    const normalizeBlockList = (arr: unknown): Block[] => {
+      if (!Array.isArray(arr)) return [];
+      return (arr as Record<string, unknown>[]).map((b, i) => ({
+        ...b,
+        id: (typeof b.id === 'string' && b.id) ? b.id : uuidv4(),
+        order: typeof b.order === 'number' ? b.order : i,
+      })) as Block[];
+    };
+
+    let newBlocks: { en: Block[]; fr?: Block[] };
+    let newTitle: string | undefined;
+    let newMeta: Partial<PageData['meta']> | undefined;
+
+    if (Array.isArray(parsed)) {
+      // Shape 3 — raw block array for the active language
+      newBlocks = { ...data.blocks, [language]: normalizeBlockList(parsed) } as { en: Block[]; fr?: Block[] };
+    } else if (parsed && typeof parsed === 'object') {
+      const obj = parsed as Record<string, unknown>;
+
+      if (obj.blocks && typeof obj.blocks === 'object' && !Array.isArray(obj.blocks)) {
+        // Shape 1 — full PageData or { blocks: { en, fr? } }
+        const b = obj.blocks as Record<string, unknown>;
+        newBlocks = {
+          en: normalizeBlockList(b.en ?? []),
+          ...(Array.isArray(b.fr) ? { fr: normalizeBlockList(b.fr) } : {}),
+        };
+        if (typeof obj.title === 'string') newTitle = obj.title;
+        if (obj.meta && typeof obj.meta === 'object') newMeta = obj.meta as Partial<PageData['meta']>;
+      } else if (Array.isArray(obj.en)) {
+        // Shape 2 — { en: [...], fr?: [...] }
+        newBlocks = {
+          en: normalizeBlockList(obj.en),
+          ...(Array.isArray(obj.fr) ? { fr: normalizeBlockList(obj.fr) } : {}),
+        };
+      } else {
+        setImportError('Unrecognised shape. Paste a Block[], a { en: Block[] } object, or full PageData JSON.');
+        return;
+      }
+    } else {
+      setImportError('Expected a JSON object or array.');
+      return;
+    }
+
+    setData((prev) => ({
+      ...prev,
+      blocks: newBlocks,
+      ...(newTitle !== undefined ? { title: newTitle } : {}),
+      ...(newMeta !== undefined ? { meta: { ...prev.meta, ...newMeta } } : {}),
+    }));
+    markDirty();
+    setImportJson('');
+    setImportSuccess(true);
+    setTimeout(() => setImportSuccess(false), 3000);
+
+    // Auto-switch to whichever language has blocks so the canvas isn't empty
+    const currentHasBlocks = (newBlocks[language as 'en' | 'fr'] ?? []).length > 0;
+    const otherLang = language === 'en' ? 'fr' : 'en';
+    const otherHasBlocks = (newBlocks[otherLang] ?? []).length > 0;
+    if (!currentHasBlocks && otherHasBlocks) {
+      setLanguage(otherLang);
+      toast.success(`JSON imported — switched to ${otherLang.toUpperCase()} (that's where the blocks are).`);
+    } else {
+      toast.success('JSON imported successfully.');
+    }
+
+    setActiveTab('edit');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [importJson, data.blocks, language]);
+
   const selectedBlock = selectedBlockId ? findBlock(blocks, selectedBlockId) : null;
   const parentRepeater = selectedBlockId ? findParentRepeater(blocks, selectedBlockId) : null;
   const repeaterContext = parentRepeater
@@ -1118,7 +1208,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
 
         {activeTab === 'edit' && (() => {
           const showSplit = splitMode && wideScreen;
-          const previewBlocks = previewData.blocks[language] || [];
+          const previewBlocks = data.blocks[language] || [];
           const previewViewportPx =
             previewViewport === 'desktop' ? 0 : previewViewport === 'tablet' ? 768 : 390;
           const showScrollHint =
@@ -1488,10 +1578,136 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
         )}
 
         {activeTab === 'json' && (
-          <main className="flex-1 overflow-y-auto p-6 bg-slate-900">
-            <pre className="bg-slate-950 text-green-400 p-6 rounded-xl text-xs font-mono overflow-auto max-w-5xl mx-auto leading-relaxed">
-              {JSON.stringify(data, null, 2)}
-            </pre>
+          <main className="flex-1 overflow-y-auto p-6 bg-slate-900 space-y-6">
+            <div className="max-w-5xl mx-auto space-y-6">
+
+              {/* ── Current page JSON ───────────────────────────── */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                    Current page JSON
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+                      toast.success('Copied to clipboard');
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 px-2.5 py-1 rounded-md transition-colors"
+                  >
+                    <ClipboardCopy className="h-3.5 w-3.5" />
+                    Copy
+                  </button>
+                </div>
+                <pre className="bg-slate-950 text-green-400 p-6 rounded-xl text-xs font-mono overflow-auto leading-relaxed max-h-[40vh]">
+                  {JSON.stringify(data, null, 2)}
+                </pre>
+              </div>
+
+              {/* ── Import JSON ──────────────────────────────────── */}
+              <div className="bg-slate-800 rounded-xl p-5 space-y-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-white flex items-center gap-2">
+                    <Upload className="h-4 w-4 text-[#BC0D2A]" />
+                    Import JSON
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Paste AI-generated JSON below. Accepted formats:
+                    full <code className="text-slate-300">PageData</code>,
+                    a <code className="text-slate-300">{'{ en: Block[] }'}</code> object,
+                    or a raw <code className="text-slate-300">Block[]</code> array (loads into the active language).
+                  </p>
+                </div>
+
+                {/* AI prompt hint */}
+                <details className="group">
+                  <summary className="text-xs text-slate-400 hover:text-slate-200 cursor-pointer select-none list-none flex items-center gap-1">
+                    <span className="group-open:rotate-90 inline-block transition-transform">▶</span>
+                    Show example AI prompt
+                  </summary>
+                  <div className="mt-2 rounded-lg bg-slate-900 border border-slate-700 p-3">
+                    <p className="text-[11px] text-slate-300 leading-relaxed font-mono whitespace-pre-wrap">{`Generate a Blueprint CMS page JSON for a [describe your page].
+
+Return ONLY valid JSON matching this shape — no explanation, no markdown fences:
+{
+  "blocks": {
+    "en": [ ...Block objects... ],
+    "fr": [ ...same blocks translated... ]
+  },
+  "title": "Page Title"
+}
+
+Available block types and their required data fields:
+- hero: { headline, subheadline, ctaLabel, ctaUrl, backgroundImage }
+- rich-text: { content } (HTML string)
+- section-heading: { heading, subheading, align, size, showDivider }
+- cta: { headline, body, primaryLabel, primaryUrl, secondaryLabel, secondaryUrl }
+- columns: { columns (2|3|4), items: [{ id, icon, title, body }] }
+- image: { url, alt, caption }
+- video: { url, title }
+- table: { headers, rows, striped, bordered }
+- key-value-list: { heading, items: [{ id, label, value }], striped, showDividers }
+- spacer: { size (xs|sm|md|lg|xl), showDivider }
+- button: { label, url, variant (primary|outline|ghost), align }
+- download-button: { label, url, icon (download|file|none), variant, openInNewTab }
+- newsletter: { heading, body, buttonLabel, imageUrl }
+- contact-form-simple: { heading, body, imageUrl }
+- product-hero: { title, subtitle1, body, ctaLabel, ctaUrl, image, imagePosition (left|right) }
+- catalogue: { heading, ctaLabel, imageUrl, imageAlt }
+
+Every block must also include: { id (uuid), type, order (integer), paddingTop, paddingBottom, align, maxWidth, background }
+Padding values: none | sm | md | lg | xl
+Background values: none | muted | dark | brand-red | brand-green | navy
+MaxWidth values: sm | md | lg | full`}</p>
+                  </div>
+                </details>
+
+                <textarea
+                  value={importJson}
+                  onChange={(e) => { setImportJson(e.target.value); setImportError(null); }}
+                  placeholder={'Paste JSON here…'}
+                  rows={10}
+                  className="w-full bg-slate-950 text-green-300 placeholder:text-slate-600 text-xs font-mono p-4 rounded-lg border border-slate-700 focus:border-[#BC0D2A] focus:outline-none resize-y"
+                  spellCheck={false}
+                />
+
+                {importError && (
+                  <div className="flex items-start gap-2 rounded-lg bg-red-950/40 border border-red-800 px-3 py-2 text-xs text-red-300">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    {importError}
+                  </div>
+                )}
+
+                {importSuccess && (
+                  <div className="flex items-center gap-2 rounded-lg bg-green-950/40 border border-green-800 px-3 py-2 text-xs text-green-300">
+                    <Check className="h-3.5 w-3.5 shrink-0" />
+                    Imported! Switching to Edit tab…
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleImportJson}
+                    disabled={!importJson.trim()}
+                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-[#BC0D2A] hover:bg-[#9A0B22] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Apply JSON to page
+                  </button>
+                  {importJson && (
+                    <button
+                      type="button"
+                      onClick={() => { setImportJson(''); setImportError(null); }}
+                      className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+            </div>
           </main>
         )}
       </div>

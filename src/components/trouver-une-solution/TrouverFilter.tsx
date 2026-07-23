@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { Search, ChevronDown, Undo2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Locale } from '@/lib/i18n/config';
@@ -55,8 +56,17 @@ type CollectionMeta = {
 type Entry = {
   id: string;
   collectionId: string;
+  slug: string | null;
   data: Record<string, unknown>;
 };
+
+// Product detail pages are DB pages with slug `produit-<slug>`, served by the
+// generic /[locale]/[slug] route — so the URL is a single segment
+// /produit-<slug>, not the nested /produit/<slug>.
+function productHref(locale: Locale, entry: Entry): string | null {
+  if (!entry.slug) return null;
+  return `/${locale}/produit-${entry.slug}`;
+}
 
 function CustomSelect({
   placeholder,
@@ -224,6 +234,11 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
     return (firstText ?? ordered[0])?.key ?? null;
   }, [collection]);
 
+  const imageKey = useMemo(() => {
+    if (!collection) return null;
+    return collection.fields.find((f) => f.type === 'image')?.key ?? null;
+  }, [collection]);
+
   const cultureOptions = useMemo(
     () => uniqueValues(entries, CULTURE_KEY, locale),
     [entries, locale]
@@ -373,23 +388,34 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filtered.map((entry) => {
                   const name = nameKey ? getStringValue(entry, nameKey) : entry.id;
-                  return (
-                    <div
-                      key={entry.id}
-                      className="flex flex-col items-center p-6 bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow rounded-xl"
-                    >
+                  const href = productHref(locale, entry);
+                  const imageUrl = imageKey ? getStringValue(entry, imageKey).trim() : '';
+                  const card = (
+                    <>
                       <div className="relative w-full aspect-[4/5] max-w-[160px] mx-auto mb-6">
                         <Image
-                          src="/produit_page_img/Adriatica Web Featured Icon.png"
+                          src={imageUrl || '/produit_page_img/Adriatica Web Featured Icon.png'}
                           alt={name}
                           fill
+                          sizes="160px"
                           className="object-contain"
                         />
-                        <div className="absolute inset-0 bg-[#BC0D2A] mix-blend-multiply opacity-50 rounded-lg pointer-events-none"></div>
                       </div>
                       <h4 className="font-[family-name:var(--font-inter)] font-bold text-[#202737] text-base text-center tracking-tight">
                         {name || labels.untitled}
                       </h4>
+                    </>
+                  );
+                  const cardClassName =
+                    'flex flex-col items-center p-6 bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow rounded-xl';
+
+                  return href ? (
+                    <Link key={entry.id} href={href} className={cardClassName}>
+                      {card}
+                    </Link>
+                  ) : (
+                    <div key={entry.id} className={cardClassName}>
+                      {card}
                     </div>
                   );
                 })}

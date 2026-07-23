@@ -30,7 +30,7 @@ const getCmsLinks = cache(async (locale: Locale): Promise<NavLink[]> => {
     }
 
     return rows
-      .filter((p) => !reserved.has(p.slug))
+      .filter((p) => !reserved.has(p.slug) && !p.slug.startsWith('produit-'))
       .map((p) => ({ label: p.title, href: `/${locale}/${p.slug}` }));
   } catch (err) {
     console.error('Navbar: failed to load CMS pages', err);

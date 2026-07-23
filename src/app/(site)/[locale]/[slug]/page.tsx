@@ -7,8 +7,16 @@ import { RenderPreview } from '@/components/page-builder/renderPreview';
 import { type Block } from '@/types';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { keyForSlug } from '@/lib/i18n/pageSlugs';
-import { loadCommon } from '@/lib/i18n/loadPageData';
+import { loadCommon, loadHome } from '@/lib/i18n/loadPageData';
 import { renderStaticPage, staticPageMetadata } from './staticRoutes';
+import { CatalogueSection } from '@/components/home/CatalogueSection';
+import { ContactSection } from '@/components/home/ContactSection';
+
+// Product detail pages (DB slug `produit-…`) always end with the same fixed
+// catalogue + contact sections as the rest of the site — rendered from the real
+// home components (like the navbar/footer), not as page-builder blocks. Any such
+// blocks left in a page's saved data are dropped so they don't render twice.
+const FIXED_SECTION_BLOCK_TYPES = new Set(['catalogue', 'contact-form-simple']);
 
 export const revalidate = 60;
 
@@ -98,13 +106,35 @@ export default async function PublicPage({
   const page = await loadDbPage(slug);
   if (page) {
     const blocks = ((page.published_blocks as Record<Locale, Block[]> | null)?.[L] ?? []) as Block[];
+    const isProduct = slug.startsWith('produit-');
+    const contentBlocks = isProduct
+      ? blocks.filter((b) => !FIXED_SECTION_BLOCK_TYPES.has(b.type))
+      : blocks;
+    const home = isProduct ? loadHome(L) : null;
     return (
       <main className="min-h-screen bg-background">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-8 py-16">
-          {blocks.map((block) => (
+          {contentBlocks.map((block) => (
             <RenderPreview key={block.id} block={block} />
           ))}
         </div>
+        {home && (
+          <>
+            <CatalogueSection
+              heading={home.catalogue.heading}
+              ctaLabel={home.catalogue.ctaLabel}
+              imageUrl={home.catalogue.imageUrl}
+              imageAlt={home.catalogue.imageAlt}
+            />
+            <ContactSection
+              heading={home.contact.heading}
+              body={home.contact.body}
+              imageUrl="/home_page_img/Adriatica Web.jpg"
+              imageAlt={home.contact.imageAlt}
+              locale={L}
+            />
+          </>
+        )}
       </main>
     );
   }

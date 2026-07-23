@@ -908,6 +908,126 @@ function FieldBindingSection({
   );
 }
 
+// Per-column field bindings for Table blocks. Column types and field pickers
+// are shown in template mode so each column cell can pull from a collection field.
+function TableBindingSection({
+  blockId,
+  data,
+  onChange,
+  collectionIdOverride,
+}: {
+  blockId: string;
+  data: Record<string, any>;
+  onChange: (id: string, updates: Partial<BlockData>) => void;
+  collectionIdOverride?: string | null;
+}) {
+  const storeCollectionId = useTemplateBuilderStore((s) => s.collectionId);
+  const contextCollectionId = collectionIdOverride ?? storeCollectionId;
+
+  const [manualCollectionId, setManualCollectionId] = useState<string | null>(null);
+  const [allCollections, setAllCollections] = useState<Array<{ id: string; name: string }>>([]);
+  const collectionId = contextCollectionId ?? manualCollectionId;
+  const showCollectionPicker = !contextCollectionId;
+
+  const [fields, setFields] = useState<CollectionField[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!showCollectionPicker) return;
+    fetch('/api/collections')
+      .then((r) => r.json())
+      .then((d) => setAllCollections(Array.isArray(d) ? d : []))
+      .catch(() => setAllCollections([]));
+  }, [showCollectionPicker]);
+
+  useEffect(() => {
+    if (!collectionId) { setFields([]); return; }
+    setLoading(true);
+    fetch(`/api/collections/${collectionId}`)
+      .then((r) => r.json())
+      .then((col) => setFields(col.fields ?? []))
+      .catch(() => setFields([]))
+      .finally(() => setLoading(false));
+  }, [collectionId]);
+
+  const headers: string[] = data.headers ?? [];
+  const columnConfigs: Array<{ type?: string; fieldKey?: string | null }> = data.columnConfigs ?? [];
+
+  const updateFieldKey = (colIdx: number, fieldKey: string | null) => {
+    const base: Array<{ type?: string; fieldKey?: string | null }> =
+      columnConfigs.length >= headers.length
+        ? columnConfigs.slice(0, headers.length)
+        : [...columnConfigs, ...Array(headers.length - columnConfigs.length).fill({})];
+    const next = base.map((c, i) => (i === colIdx ? { ...c, fieldKey } : c));
+    onChange(blockId, { columnConfigs: next } as Partial<BlockData>);
+  };
+
+  if (headers.length === 0) return null;
+
+  return (
+    <div className="space-y-4">
+      <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Field Bindings</h4>
+
+      {showCollectionPicker && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">Collection</Label>
+          <Select
+            value={manualCollectionId ?? '__none__'}
+            onValueChange={(v) => setManualCollectionId(v === '__none__' ? null : v)}
+          >
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Pick a collection" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">— None —</SelectItem>
+              {allCollections.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground">
+            No template collection detected — pick one to browse its fields.
+          </p>
+        </div>
+      )}
+
+      {!collectionId ? null : loading ? (
+        <p className="text-xs text-muted-foreground">Loading fields…</p>
+      ) : (
+        <div className="space-y-3">
+          {headers.map((header, colIdx) => {
+            const config = columnConfigs[colIdx] ?? {};
+            const fieldKey = config.fieldKey ?? null;
+            const colType = config.type ?? 'text';
+            const allowed: FieldType[] = colType === 'rich-text'
+              ? ['rich-text', 'textarea']
+              : ['text', 'number', 'email', 'textarea', 'select', 'url', 'slug'];
+            const filteredFields = fields.filter((f) => allowed.includes(f.type as FieldType));
+
+            return (
+              <div key={colIdx} className="space-y-1.5">
+                <Label className="text-xs">{header || `Column ${colIdx + 1}`}</Label>
+                <Select
+                  value={fieldKey ?? '__none__'}
+                  onValueChange={(v) => updateFieldKey(colIdx, v === '__none__' ? null : v)}
+                >
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— None (use literal) —</SelectItem>
+                    {filteredFields.map((f) => (
+                      <SelectItem key={f.id} value={f.key}>
+                        {f.label} <span className="text-muted-foreground ml-1">({f.type})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Per-prop field bindings for composite blocks (Product Hero, Section Heading,
 // Download Button). Loads the collection's fields and lets the user pick which
 // field feeds each bindable prop. Only shown in template mode / repeater context.
@@ -1060,6 +1180,7 @@ function BlockInspectorPanel({
   const isBoundText = selectedBlock.type === 'bound-text';
   const isBoundRichText = selectedBlock.type === 'bound-rich-text';
   const isComposite = selectedBlock.type in COMPOSITE_BINDINGS;
+  const isTable = selectedBlock.type === 'table';
 
   return (
     <div className="p-4 space-y-6">
@@ -1132,6 +1253,19 @@ function BlockInspectorPanel({
           <CompositeBindingSection
             blockId={selectedBlock.id}
             blockType={selectedBlock.type}
+            data={data}
+            onChange={onChange}
+            collectionIdOverride={repeaterContext?.collectionId ?? null}
+          />
+          <Separator />
+        </>
+      )}
+
+      {/* Field bindings — table columns in template mode */}
+      {effectiveMode === 'template' && isTable && (
+        <>
+          <TableBindingSection
+            blockId={selectedBlock.id}
             data={data}
             onChange={onChange}
             collectionIdOverride={repeaterContext?.collectionId ?? null}

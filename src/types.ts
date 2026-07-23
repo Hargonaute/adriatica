@@ -174,6 +174,11 @@ export interface SpacerBlockData extends BaseBlockSettings {
   dividerStyle?: 'solid' | 'dashed' | 'dotted';
 }
 
+export interface TableColumnConfig {
+  type?: 'text' | 'rich-text';
+  fieldKey?: string | null;
+}
+
 export interface TableBlockData extends BaseBlockSettings {
   type: 'table';
   /** Optional heading shown above the table. */
@@ -185,6 +190,8 @@ export interface TableBlockData extends BaseBlockSettings {
   striped?: boolean;
   /** Visible cell borders. Defaults to true. */
   bordered?: boolean;
+  /** Per-column type and field-binding config. Index matches headers. */
+  columnConfigs?: TableColumnConfig[];
 }
 
 export interface CtaBlockData extends BaseBlockSettings {
@@ -313,15 +320,10 @@ export interface ContactFormSimpleBlockData extends BaseBlockSettings {
   type: 'contact-form-simple';
   heading?: string;
   body?: string;
-  imageUrl?: string;
 }
 
 export interface CatalogueBlockData extends BaseBlockSettings {
   type: 'catalogue';
-  heading?: string;
-  ctaLabel?: string;
-  imageUrl?: string;
-  imageAlt?: string;
 }
 
 export interface ContainerBlockData extends BaseBlockSettings {

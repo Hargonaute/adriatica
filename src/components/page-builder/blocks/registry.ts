@@ -379,12 +379,11 @@ export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
   'contact-form-simple': {
     type: 'contact-form-simple',
     label: 'Contact Form (Simple)',
-    description: 'Contact form with side image — without the info cards',
+    description: 'Contact form with the contact page side image — without the info cards',
     icon: PhoneCall,
     createDefault: () => ({
       heading: 'Nous contacter',
       body: 'Notre équipe serait ravie de vous entendre.',
-      imageUrl: '',
       paddingTop: 'none',
       paddingBottom: 'none',
     }),
@@ -394,13 +393,9 @@ export const BLOCKS_REGISTRY: Record<string, BlockConfig<any>> = {
   'catalogue': {
     type: 'catalogue',
     label: 'Catalogue Download',
-    description: 'Full-width red section with heading, image, and catalogue download button',
+    description: 'Full-width red section with the homepage catalogue image and download button',
     icon: BookOpen,
     createDefault: () => ({
-      heading: 'Téléchargez notre catalogue',
-      ctaLabel: 'Télécharger le catalogue',
-      imageUrl: '',
-      imageAlt: 'Adriatica catalogue',
       paddingTop: 'none',
       paddingBottom: 'none',
     }),

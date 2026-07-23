@@ -1,12 +1,18 @@
 'use client';
 
-import { type BlockData } from '@/types';
+import React from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { type BlockData, type TableColumnConfig } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCollectionItem } from '@/contexts/CollectionItemContext';
+import { useRepeaterEntry } from '@/contexts/RepeaterEntryContext';
+import { useMockCollectionEntry } from '@/contexts/MockCollectionEntryContext';
 
 type TableBlock = BlockData & { type: 'table' };
 
@@ -16,13 +22,72 @@ const DEFAULT_ROWS: string[][] = [
   ['', '', ''],
 ];
 
-// Normalise every row to match headers length so add/remove column ops stay safe.
 function normaliseRows(rows: string[][], colCount: number): string[][] {
   return rows.map((r) => {
     if (r.length === colCount) return r;
     if (r.length > colCount) return r.slice(0, colCount);
     return [...r, ...Array(colCount - r.length).fill('')];
   });
+}
+
+function normaliseConfigs(configs: TableColumnConfig[] | undefined, colCount: number): TableColumnConfig[] {
+  const base = configs ?? [];
+  if (base.length === colCount) return base;
+  if (base.length > colCount) return base.slice(0, colCount);
+  return [...base, ...Array(colCount - base.length).fill({})];
+}
+
+// Same resolution logic as ProductHeroBlock — bound value wins over literal.
+function useBoundValue(
+  fieldKey: string | null | undefined,
+  literal: string | undefined,
+): string | undefined {
+  const repeaterCtx = useRepeaterEntry();
+  const mockCtx = useMockCollectionEntry();
+  const collectionCtx = useCollectionItem();
+
+  if (fieldKey) {
+    if (repeaterCtx) {
+      const v = repeaterCtx.entryData[fieldKey];
+      if (v != null) return String(v);
+    }
+    if (mockCtx) {
+      const v = mockCtx.entryData[fieldKey];
+      if (v != null) return String(v);
+    }
+    if (collectionCtx?.entry) {
+      const v = collectionCtx.entry.data[fieldKey];
+      if (v != null) return String(v);
+    }
+  }
+
+  return literal;
+}
+
+// ── Rich-text cell editor ─────────────────────────────────────────────────
+
+function RichCellEditor({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (html: string) => void;
+}) {
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [StarterKit.configure({ link: false })],
+    content: value,
+    editorProps: {
+      attributes: { class: 'p-1.5 min-h-[56px] focus:outline-none text-xs prose prose-xs max-w-none' },
+    },
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+  });
+
+  return (
+    <div className="border rounded bg-background">
+      <EditorContent editor={editor} />
+    </div>
+  );
 }
 
 // ── Editor ────────────────────────────────────────────────────────────────
@@ -36,6 +101,7 @@ export function TableEditor({
 }) {
   const headers: string[] = block.headers ?? DEFAULT_HEADERS;
   const rows: string[][] = normaliseRows(block.rows ?? DEFAULT_ROWS, headers.length);
+  const configs: TableColumnConfig[] = normaliseConfigs((block as any).columnConfigs, headers.length);
   const striped = block.striped ?? true;
   const bordered = block.bordered ?? true;
 
@@ -51,6 +117,11 @@ export function TableEditor({
     onChange({ rows: next });
   };
 
+  const updateColType = (colIdx: number, type: 'text' | 'rich-text') => {
+    const next = configs.map((c, i) => (i === colIdx ? { ...c, type } : c));
+    onChange({ columnConfigs: next } as Partial<BlockData>);
+  };
+
   const addRow = () => {
     onChange({ rows: [...rows, Array(headers.length).fill('')] });
   };
@@ -64,7 +135,8 @@ export function TableEditor({
     onChange({
       headers: [...headers, `Column ${headers.length + 1}`],
       rows: rows.map((r) => [...r, '']),
-    });
+      columnConfigs: [...configs, {}],
+    } as Partial<BlockData>);
   };
 
   const removeLastColumn = () => {
@@ -72,7 +144,8 @@ export function TableEditor({
     onChange({
       headers: headers.slice(0, -1),
       rows: rows.map((r) => r.slice(0, -1)),
-    });
+      columnConfigs: configs.slice(0, -1),
+    } as Partial<BlockData>);
   };
 
   return (
@@ -107,36 +180,79 @@ export function TableEditor({
           <table className="w-full text-xs">
             <thead className="bg-muted">
               <tr>
-                {headers.map((h: string, i: number) => (
-                  <th key={i} className="p-1.5 border-r last:border-r-0 border-border">
-                    <Input
-                      value={h}
-                      onChange={(e) => updateHeader(i, e.target.value)}
-                      placeholder={`Header ${i + 1}`}
-                      className="h-7 text-xs font-semibold"
-                    />
-                  </th>
-                ))}
+                {headers.map((h: string, i: number) => {
+                  const colType = configs[i]?.type ?? 'text';
+                  return (
+                    <th key={i} className="p-1.5 border-r last:border-r-0 border-border align-top">
+                      <Input
+                        value={h}
+                        onChange={(e) => updateHeader(i, e.target.value)}
+                        placeholder={`Header ${i + 1}`}
+                        className="h-7 text-xs font-semibold mb-1.5"
+                      />
+                      {/* Per-column type toggle */}
+                      <div className="flex gap-1 justify-center">
+                        <button
+                          type="button"
+                          onClick={() => updateColType(i, 'text')}
+                          className={cn(
+                            'text-[10px] px-1.5 py-0.5 rounded border transition-colors',
+                            colType === 'text'
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          Text
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateColType(i, 'rich-text')}
+                          className={cn(
+                            'text-[10px] px-1.5 py-0.5 rounded border transition-colors',
+                            colType === 'rich-text'
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          Rich
+                        </button>
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
               {rows.map((row: string[], ri: number) => (
                 <tr key={ri} className="border-t border-border">
-                  {row.map((cell: string, ci: number) => (
-                    <td key={ci} className="p-1.5 border-r last:border-r-0 border-border">
-                      <Input
-                        value={cell}
-                        onChange={(e) => updateCell(ri, ci, e.target.value)}
-                        placeholder="—"
-                        className="h-7 text-xs"
-                      />
-                    </td>
-                  ))}
+                  {row.map((cell: string, ci: number) => {
+                    const colType = configs[ci]?.type ?? 'text';
+                    return (
+                      <td key={ci} className="p-1.5 border-r last:border-r-0 border-border align-top">
+                        {colType === 'rich-text' ? (
+                          <RichCellEditor
+                            value={cell}
+                            onChange={(html) => updateCell(ri, ci, html)}
+                          />
+                        ) : (
+                          <Input
+                            value={cell}
+                            onChange={(e) => updateCell(ri, ci, e.target.value)}
+                            placeholder="—"
+                            className="h-7 text-xs"
+                          />
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <p className="text-[10px] text-muted-foreground">
+          Toggle Text / Rich per column. Field bindings are configured in the Inspector (template mode).
+        </p>
       </div>
 
       {/* Row + column controls */}
@@ -176,9 +292,35 @@ export function TableEditor({
 
 // ── Preview ───────────────────────────────────────────────────────────────
 
+// Separate component so each cell can call useBoundValue independently.
+function BoundCell({
+  fieldKey,
+  literal,
+  isRichText,
+  className,
+}: {
+  fieldKey: string | null | undefined;
+  literal: string;
+  isRichText: boolean;
+  className?: string;
+}) {
+  const resolved = useBoundValue(fieldKey, literal);
+  const content = resolved ?? '';
+  return (
+    <td className={className}>
+      {isRichText || content.startsWith('<') ? (
+        <span dangerouslySetInnerHTML={{ __html: content }} />
+      ) : (
+        content || '—'
+      )}
+    </td>
+  );
+}
+
 export function TablePreview({ block, className }: { block: TableBlock; className?: string }) {
   const headers: string[] = block.headers ?? DEFAULT_HEADERS;
   const rows: string[][] = normaliseRows(block.rows ?? DEFAULT_ROWS, headers.length);
+  const configs: TableColumnConfig[] = normaliseConfigs((block as any).columnConfigs, headers.length);
   const striped = block.striped ?? true;
   const bordered = block.bordered ?? true;
 
@@ -224,14 +366,18 @@ export function TablePreview({ block, className }: { block: TableBlock; classNam
                 key={ri}
                 className={cn(striped && ri % 2 === 1 && 'bg-slate-50/60')}
               >
-                {row.map((cell: string, ci: number) => (
-                  <td
-                    key={ci}
-                    className={cn(cellBase, cellBorder, 'text-slate-700')}
-                  >
-                    {cell || '—'}
-                  </td>
-                ))}
+                {row.map((cell: string, ci: number) => {
+                  const config = configs[ci];
+                  return (
+                    <BoundCell
+                      key={ci}
+                      fieldKey={config?.fieldKey}
+                      literal={cell}
+                      isRichText={config?.type === 'rich-text'}
+                      className={cn(cellBase, cellBorder, 'text-slate-700')}
+                    />
+                  );
+                })}
               </tr>
             ))}
           </tbody>

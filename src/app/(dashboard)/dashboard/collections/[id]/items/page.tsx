@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Plus, Pencil, Trash2, X, Check, Upload, Download, FileUp, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { BulkImportDialog } from '@/components/dashboard/BulkImportDialog';
-import { buildTemplateCSV, downloadCSV } from '@/lib/csv';
+import { buildTemplateCSV, buildEntriesCSV, downloadCSV } from '@/lib/csv';
 import { slugify } from '@/lib/slugify';
 import type { FieldType } from '@/types';
 
@@ -747,6 +747,24 @@ export default function ItemsPage({ params }: { params: Promise<{ id: string }> 
               >
                 <Download className="h-4 w-4 mr-1.5" /> Template
               </Button>
+              {items.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    downloadCSV(
+                      `${collection.slug}-export.csv`,
+                      buildEntriesCSV(
+                        fields.map(f => ({ key: f.key, label: f.label, type: f.type, required: f.required })),
+                        items.map(i => ({ id: i.id, slug: i.slug, data: i.data })),
+                      ),
+                    )
+                  }
+                  title="Download all items as CSV (edit and re-import to update them)"
+                >
+                  <Download className="h-4 w-4 mr-1.5" /> Bulk Export
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"

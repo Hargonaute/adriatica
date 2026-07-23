@@ -28,6 +28,14 @@ export interface CsvField {
   required: boolean;
 }
 
+/**
+ * Reserved column headers that map to top-level entry properties rather than
+ * a collection field. On import, a non-empty `id` turns the row into an update
+ * of the existing entry; `slug` sets the entry's URL slug explicitly.
+ * A field whose key collides with one of these takes precedence (treated as a field).
+ */
+export const RESERVED_COLUMNS = ['id', 'slug'] as const;
+
 export interface RowIssue {
   row: number;        // 1-based row number in source file (header = row 1, first data row = 2)
   column?: string;    // field key the issue is about (optional for whole-row issues)
@@ -38,6 +46,10 @@ export interface RowIssue {
 export interface ValidatedRow {
   /** 1-based source row number (header excluded — first data row = 2). */
   row: number;
+  /** Existing entry id (from the reserved `id` column) — when present the row updates instead of inserts. */
+  id?: string;
+  /** Explicit entry slug (from the reserved `slug` column), if provided. */
+  slug?: string;
   /** Coerced field values keyed by field.key. */
   data: Record<string, unknown>;
   /** Errors for this specific row. Row is skipped on import if non-empty. */
@@ -176,16 +188,47 @@ const EXAMPLE_BY_TYPE: Record<CsvFieldType, string> = {
 
 /**
  * Build an empty CSV template:
- *   row 1 → header (field keys)
+ *   row 1 → header (reserved `id`/`slug` columns + field keys)
  *   row 2 → one example row with type-appropriate sample values
  *
- * Field keys are used as headers so they round-trip through parseCSV → import unchanged.
+ * The leading `id` column is left blank — fill it only to update an existing
+ * entry (leave blank to create a new one). Field keys are used as headers so
+ * they round-trip through parseCSV → import unchanged.
  */
 export function buildTemplateCSV(fields: CsvField[]): string {
   if (fields.length === 0) return '';
-  const headers = fields.map(f => f.key);
-  const example = fields.map(f => EXAMPLE_BY_TYPE[f.type] ?? '');
+  const headers = ['id', 'slug', ...fields.map(f => f.key)];
+  const example = ['', 'url-friendly-slug', ...fields.map(f => EXAMPLE_BY_TYPE[f.type] ?? '')];
   return stringifyCSV([headers, example]);
+}
+
+/** Serialize a single entry field value into a CSV cell string. */
+function serializeCell(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+/**
+ * Build a CSV export of existing entries:
+ *   row 1 → header (`id`, `slug`, then each field key)
+ *   rows  → one line per entry, id + slug included so the file round-trips:
+ *           re-importing it updates the same entries in place.
+ *
+ * Array/object field values (list, multi-select, reference…) are JSON-encoded
+ * so they parse back through the same import validator.
+ */
+export function buildEntriesCSV(
+  fields: CsvField[],
+  entries: Array<{ id: string; slug: string | null; data: Record<string, unknown> }>,
+): string {
+  const headers = ['id', 'slug', ...fields.map(f => f.key)];
+  const rows: unknown[][] = entries.map(entry => [
+    entry.id,
+    entry.slug ?? '',
+    ...fields.map(f => serializeCell(entry.data?.[f.key])),
+  ]);
+  return stringifyCSV([headers, ...rows]);
 }
 
 // ── Validation / coercion ────────────────────────────────────────────────────
@@ -299,6 +342,7 @@ export function validateRows(
   headers.forEach(h => {
     if (h === '') return;
     if (fieldByKey.has(h)) knownKeys.push(h);
+    else if ((RESERVED_COLUMNS as readonly string[]).includes(h)) return; // reserved → handled below, not "unknown"
     else unknownKeys.push(h);
   });
 
@@ -310,10 +354,18 @@ export function validateRows(
     const rowNumber = idx + 2; // header is row 1
     const data: Record<string, unknown> = {};
     const errors: RowIssue[] = [];
+    let rowId: string | undefined;
+    let rowSlug: string | undefined;
 
     headers.forEach((header, colIdx) => {
       const field = fieldByKey.get(header);
-      if (!field) return; // unknown header → ignored
+      if (!field) {
+        // Reserved columns (only when not shadowed by a field of the same key).
+        const raw = (cells[colIdx] ?? '').trim();
+        if (header === 'id' && raw) rowId = raw;
+        else if (header === 'slug' && raw) rowSlug = raw;
+        return; // otherwise unknown header → ignored
+      }
       const raw = cells[colIdx] ?? '';
       const { value, error } = coerce(raw, field);
       data[field.key] = value;
@@ -341,7 +393,7 @@ export function validateRows(
       }
     });
 
-    return { row: rowNumber, data, errors };
+    return { row: rowNumber, id: rowId, slug: rowSlug, data, errors };
   });
 
   const errorCount = validatedRows.reduce((sum, r) => sum + r.errors.length, 0);

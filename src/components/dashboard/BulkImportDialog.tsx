@@ -78,7 +78,9 @@ export function BulkImportDialog({
 
   const handleImport = async () => {
     if (!report) return;
-    const validRows = report.rows.filter(r => r.errors.length === 0).map(r => r.data);
+    const validRows = report.rows
+      .filter(r => r.errors.length === 0)
+      .map(r => ({ id: r.id, slug: r.slug, data: r.data }));
     if (validRows.length === 0) {
       toast.error('Nothing to import — all rows have errors');
       return;
@@ -92,7 +94,16 @@ export function BulkImportDialog({
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || 'Import failed');
-      toast.success(`Imported ${body.inserted} item${body.inserted === 1 ? '' : 's'}`);
+      const inserted = body.inserted ?? 0;
+      const updated = body.updated ?? 0;
+      const skipped = body.skipped ?? 0;
+      const parts: string[] = [];
+      if (inserted) parts.push(`created ${inserted}`);
+      if (updated) parts.push(`updated ${updated}`);
+      if (parts.length === 0) parts.push('no items imported');
+      let msg = parts.join(', ');
+      if (skipped) msg += ` (${skipped} skipped — unknown id)`;
+      toast.success(msg.charAt(0).toUpperCase() + msg.slice(1));
       onImported();
       handleClose(false);
     } catch (err: any) {
@@ -112,7 +123,9 @@ export function BulkImportDialog({
         <DialogHeader>
           <DialogTitle>Bulk Import from CSV</DialogTitle>
           <DialogDescription>
-            Upload a CSV file. Headers must match this collection&apos;s field keys. Rows with errors will be skipped.
+            Upload a CSV file. Headers must match this collection&apos;s field keys. Rows with a value in
+            the <code className="font-mono">id</code> column update that existing entry; rows without one
+            create a new entry. Rows with errors are skipped.
           </DialogDescription>
         </DialogHeader>
 
