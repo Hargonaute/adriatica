@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import { Download } from 'lucide-react';
+import { CATALOGUE_PDF_URL, CATALOGUE_PDF_FILENAME } from '@/lib/catalogue';
 
 export interface CatalogueSectionProps {
   heading: string;
@@ -22,8 +23,8 @@ export function CatalogueSection({ heading, ctaLabel, imageUrl, imageAlt }: Cata
               {heading}
             </h2>
             <a
-              href="/Adriatica Final Catalogue.pdf"
-              download="Adriatica Final Catalogue.pdf"
+              href={CATALOGUE_PDF_URL}
+              download={CATALOGUE_PDF_FILENAME}
               className="flex items-center justify-center gap-[6px] px-[18px] py-[12px] rounded-[8px] bg-white text-[#414651] font-[family-name:var(--font-inter)] border border-[#d5d7da] overflow-hidden shrink-0 w-fit hover:bg-slate-50 transition-colors"
               style={{
                 boxShadow:

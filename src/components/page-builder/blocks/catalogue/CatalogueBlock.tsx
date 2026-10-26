@@ -3,6 +3,7 @@
 import { type CatalogueBlockData } from '@/types';
 import { Download } from 'lucide-react';
 import homeData from '@/data/pages/home.json';
+import { CATALOGUE_PDF_URL, CATALOGUE_PDF_FILENAME } from '@/lib/catalogue';
 
 type Block = CatalogueBlockData;
 
@@ -14,7 +15,7 @@ export function CatalogueEditor(_props: { block: Block; onChange: (updates: Part
       <p className="text-xs text-muted-foreground">
         Full-width red catalogue section. This block is fixed — heading, CTA
         label, and image always match the homepage catalogue section, and the
-        download link always points to <code>/Adriatica Final Catalogue.pdf</code>.
+        download link always points to <code>{CATALOGUE_PDF_URL}</code>.
       </p>
     </div>
   );
@@ -66,8 +67,8 @@ export function CataloguePreview(_props: { block: Block }) {
               {heading}
             </h2>
             <a
-              href="/Adriatica Final Catalogue.pdf"
-              download="Adriatica Final Catalogue.pdf"
+              href={CATALOGUE_PDF_URL}
+              download={CATALOGUE_PDF_FILENAME}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '12px 18px', borderRadius: 8, background: 'white', color: '#414651', border: '1px solid #d5d7da', textDecoration: 'none', width: 'fit-content', fontWeight: 600, fontSize: 16, boxShadow: '0px 0px 0px 1px rgba(10,13,18,0.18) inset, 0px -2px 0px rgba(10,13,18,0.05) inset, 0px 1px 2px rgba(10,13,18,0.05)' }}
             >
               {ctaLabel}
