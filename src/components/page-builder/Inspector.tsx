@@ -10,6 +10,14 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  CULTURES,
+  FAMILLES,
+  PROBLEMATIQUES,
+  PRODUCT_PAGE_PREFIX,
+  foldKey,
+  readProductMeta,
+} from '@/lib/products/productMeta';
 
 // Sensible UI fallbacks for fields that aren't part of any block's createDefault().
 // These keep the inspector's controls from showing an empty/un-selected state when
@@ -211,6 +219,13 @@ function PageSettingsPanel({
         </div>
       </div>
 
+      {pageData.slug.startsWith(PRODUCT_PAGE_PREFIX) && (
+        <>
+          <Separator />
+          <ProductFiltersSection pageData={pageData} onPageChange={onPageChange} />
+        </>
+      )}
+
       <Separator />
 
       {/* Open Graph / Social */}
@@ -241,6 +256,136 @@ function PageSettingsPanel({
             />
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Product filter metadata (product pages only) ─────────────────────────
+
+const NO_FAMILLE = '__none__';
+
+function ToggleChips({
+  options,
+  selected,
+  onChange,
+}: {
+  options: readonly string[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const selectedKeys = new Set(selected.map(foldKey));
+  // Keep values that aren't in the canonical list visible so they can be removed.
+  const extras = selected.filter((v) => !options.some((o) => foldKey(o) === foldKey(v)));
+  const all = [...options, ...extras];
+
+  const toggle = (value: string) => {
+    const k = foldKey(value);
+    onChange(
+      selectedKeys.has(k) ? selected.filter((v) => foldKey(v) !== k) : [...selected, value]
+    );
+  };
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {all.map((option) => {
+        const active = selectedKeys.has(foldKey(option));
+        return (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={active}
+            onClick={() => toggle(option)}
+            className={
+              'px-2 py-1 rounded-md border text-xs text-left transition-colors ' +
+              (active
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100'
+                : 'text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800')
+            }
+          >
+            {option}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProductFiltersSection({
+  pageData,
+  onPageChange,
+}: {
+  pageData: PageData;
+  onPageChange: (updates: Partial<PageData>) => void;
+}) {
+  const meta = pageData.meta ?? {};
+  const product = readProductMeta(meta) ?? {};
+  const famille = product.famille ?? '';
+  const problematiques = product.problematiques ?? [];
+  const cultures = product.cultures ?? [];
+
+  const setProduct = (updates: Partial<typeof product>) => {
+    const next = { famille, problematiques, cultures, ...updates };
+    onPageChange({
+      meta: {
+        ...meta,
+        product: {
+          ...(next.famille ? { famille: next.famille } : {}),
+          problematiques: next.problematiques,
+          cultures: next.cultures,
+        },
+      },
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Product filters</h4>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Used by the “Trouver une solution” page. Saved with the page.
+        </p>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Famille</Label>
+        <Select
+          value={famille || NO_FAMILLE}
+          onValueChange={(v) => setProduct({ famille: v === NO_FAMILLE ? '' : v })}
+        >
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NO_FAMILLE}>—</SelectItem>
+            {(FAMILLES as readonly string[]).includes(famille) || !famille ? null : (
+              <SelectItem value={famille}>{famille}</SelectItem>
+            )}
+            {FAMILLES.map((f) => (
+              <SelectItem key={f} value={f}>
+                {f}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Problématiques</Label>
+        <ToggleChips
+          options={PROBLEMATIQUES}
+          selected={problematiques}
+          onChange={(next) => setProduct({ problematiques: next })}
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Cultures</Label>
+        <ToggleChips
+          options={CULTURES}
+          selected={cultures}
+          onChange={(next) => setProduct({ cultures: next })}
+        />
       </div>
     </div>
   );

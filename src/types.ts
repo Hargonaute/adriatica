@@ -428,6 +428,14 @@ export interface PageMeta {
   canonical?: string;
   /** Set to true to tell search engines not to index this page. */
   noIndex?: boolean;
+  /** Filter metadata for product pages (slug `produit-…`), used by "Trouver une solution". */
+  product?: ProductFilterMeta;
+}
+
+export interface ProductFilterMeta {
+  famille?: string;
+  problematiques?: string[];
+  cultures?: string[];
 }
 
 export interface PageData {

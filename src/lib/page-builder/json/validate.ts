@@ -73,13 +73,18 @@ const BlockSchema = z.object({
   data: BaseBlockSettingsSchema.passthrough(),
 });
 
+// .passthrough() so meta keys written by other tools (e.g. the catalogue
+// import) are never silently stripped when the editor saves or publishes.
+// `product` (filter metadata) is deliberately unchecked here: a malformed value
+// must never block saving a page — readers sanitise it via readProductMeta().
 const PageMetaSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   ogImage: z.string().optional(),
   canonical: z.string().optional(),
   noIndex: z.boolean().optional(),
-});
+  product: z.unknown().optional(),
+}).passthrough();
 
 const PageDataSchema = z.object({
   id: z.string(),
@@ -106,7 +111,8 @@ export function validatePageData(data: unknown): { success: boolean; error?: str
 
   // Deep validation using registry (optional)
   // We can iterate over blocks and call registry[type].validate if it exists
-  const typedData = result.data as PageData;
+  // `meta.product` is z.unknown() above, so cast via unknown (runtime unchanged).
+  const typedData = result.data as unknown as PageData;
   const allBlocks = [...typedData.blocks.en, ...(typedData.blocks.fr || [])];
 
   for (const block of allBlocks) {

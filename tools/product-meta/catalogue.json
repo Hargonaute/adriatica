@@ -1,0 +1,443 @@
+[
+  {
+    "produit": "Atrium Root",
+    "type": "Produit principal",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "Stimulation de racines, croissance végétative & anti-stress",
+    "cultures": "Maraîchage · Arbres fruitiers · Fraisier · Bananier"
+  },
+  {
+    "produit": "Fertea RootActiv S",
+    "type": "Autre référence",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "Stimulation de racines, croissance végétative & anti-stress",
+    "cultures": ""
+  },
+  {
+    "produit": "Black Leo",
+    "type": "Produit principal",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "STIMULATION DE RACINES, CROISSANCE VÉGÉTATIVE & ANTI-STRESS",
+    "cultures": "Céréales · Vigne · Olivier · Pomme de terre"
+  },
+  {
+    "produit": "Vitalmino",
+    "type": "Produit principal",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "STIMULATION DE RACINES, CROISSANCE VÉGÉTATIVE & ANTI-STRESS",
+    "cultures": "Maraîchage · Arbres fruitiers · Vigne · Agrumes"
+  },
+  {
+    "produit": "Fertea AminoBoost 30",
+    "type": "Autre référence",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "STIMULATION DE RACINES, CROISSANCE VÉGÉTATIVE & ANTI-STRESS",
+    "cultures": ""
+  },
+  {
+    "produit": "Fertea AminoGreen 17",
+    "type": "Autre référence",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "STIMULATION DE RACINES, CROISSANCE VÉGÉTATIVE & ANTI-STRESS",
+    "cultures": ""
+  },
+  {
+    "produit": "Elevatto Leaf",
+    "type": "Produit principal",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "STIMULATION DE RACINES, CROISSANCE VÉGÉTATIVE & ANTI-STRESS",
+    "cultures": "Olivier · Vigne · Tomate · Pomme de terre"
+  },
+  {
+    "produit": "Elevatto Green",
+    "type": "Produit principal",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "STIMULATION DE RACINES, CROISSANCE VÉGÉTATIVE & ANTI-STRESS",
+    "cultures": "Olivier · Vigne · Tomate · Pomme de terre"
+  },
+  {
+    "produit": "Fertea HumiSoil 40",
+    "type": "Autre référence",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "STIMULATION DE RACINES, CROISSANCE VÉGÉTATIVE & ANTI-STRESS",
+    "cultures": ""
+  },
+  {
+    "produit": "eK-lon Max",
+    "type": "Produit principal",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "ANTI-STRESS & RÉSISTANCE AUX CONDITIONS DIFFICILES",
+    "cultures": "Maraîchage · Vigne · Olivier · Agrumes"
+  },
+  {
+    "produit": "Bacillus",
+    "type": "Produit principal",
+    "famille": "Biostimulants et engrais organiques",
+    "sousCategorie": "AMÉLIORATION DU SOL (STRUCTURE – MO – MICROBIOLOGIE) & ANTI-STRESS",
+    "cultures": "Maraîchage · Arbres fruitiers · Ornementales · Vigne"
+  },
+  {
+    "produit": "Sequifill 6.0 T SS",
+    "type": "Produit principal",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEURS DE CARENCES EN FER",
+    "cultures": "Vigne · Olivier · Agrumes · Arbres fruitiers"
+  },
+  {
+    "produit": "Fertea MicroFer",
+    "type": "Autre référence",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEURS DE CARENCES EN FER",
+    "cultures": ""
+  },
+  {
+    "produit": "Atrium Fe EDDHA",
+    "type": "Autre référence",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEURS DE CARENCES EN FER",
+    "cultures": ""
+  },
+  {
+    "produit": "Atrium Fluid",
+    "type": "Produit principal",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEURS DE CARENCES EN BORE",
+    "cultures": "Maraîchage · Arbres fruitiers · Vigne · Agrumes"
+  },
+  {
+    "produit": "Fertimon Boro",
+    "type": "Autre référence",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEURS DE CARENCES EN BORE",
+    "cultures": ""
+  },
+  {
+    "produit": "Fertea MicroB 15",
+    "type": "Autre référence",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEURS DE CARENCES EN BORE",
+    "cultures": ""
+  },
+  {
+    "produit": "Atrium Cu",
+    "type": "Produit principal",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "Correcteurs de carences en cuivre",
+    "cultures": "Olivier · Tomate · Vigne · Agrumes"
+  },
+  {
+    "produit": "Fertea MicroMnZn",
+    "type": "Produit principal",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEUR DE CARENCE EN ZINC",
+    "cultures": "Arbres fruitiers · Maraîchage · Ornementales · Hydroponie"
+  },
+  {
+    "produit": "Atrium Zn Complex",
+    "type": "Autre référence",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEUR DE CARENCE EN ZINC",
+    "cultures": ""
+  },
+  {
+    "produit": "Agrozin 16 L Complex",
+    "type": "Autre référence",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEUR DE CARENCE EN ZINC",
+    "cultures": ""
+  },
+  {
+    "produit": "Fertea MicroMo",
+    "type": "Produit principal",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEUR DE CARENCE EN MOLYBDÈNE",
+    "cultures": "Arbres fruitiers · Maraîchage · Ornementales · Hydroponie"
+  },
+  {
+    "produit": "Fertea MicroMix Complete",
+    "type": "Produit principal",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEUR COMPLET D’OLIGO-ÉLÉMENTS (B, CU, FE, MN, MO, ZN)",
+    "cultures": "Arbres fruitiers · Maraîchage · Hydroponie · Agrumes"
+  },
+  {
+    "produit": "Atrium QS",
+    "type": "Autre référence",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEUR COMPLET D’OLIGO-ÉLÉMENTS (B, CU, FE, MN, MO, ZN)",
+    "cultures": ""
+  },
+  {
+    "produit": "Vita CalMag",
+    "type": "Produit principal",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEUR DE CARENCE EN CALCIUM",
+    "cultures": "Arbres fruitiers · Vigne · Maraîchage · Tomate"
+  },
+  {
+    "produit": "Cabal",
+    "type": "Autre référence",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEUR DE CARENCE EN CALCIUM",
+    "cultures": ""
+  },
+  {
+    "produit": "Calcio",
+    "type": "Autre référence",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "CORRECTEUR DE CARENCE EN CALCIUM",
+    "cultures": ""
+  },
+  {
+    "produit": "Agrobor 11 L",
+    "type": "Produit principal",
+    "famille": "Correcteurs de carences",
+    "sousCategorie": "",
+    "cultures": ""
+  },
+  {
+    "produit": "Optimal pH",
+    "type": "Produit principal",
+    "famille": "Adjuvants et régulateurs de pH",
+    "sousCategorie": "RÉGULATEURS DE PH & CONDITIONNEURS DE BOUILLIE",
+    "cultures": ""
+  },
+  {
+    "produit": "Super pH",
+    "type": "Autre référence",
+    "famille": "Adjuvants et régulateurs de pH",
+    "sousCategorie": "RÉGULATEURS DE PH & CONDITIONNEURS DE BOUILLIE",
+    "cultures": ""
+  },
+  {
+    "produit": "Fertea pH-Control",
+    "type": "Autre référence",
+    "famille": "Adjuvants et régulateurs de pH",
+    "sousCategorie": "RÉGULATEURS DE PH & CONDITIONNEURS DE BOUILLIE",
+    "cultures": ""
+  },
+  {
+    "produit": "Acide Nitrique",
+    "type": "Carte",
+    "famille": "Adjuvants et régulateurs de pH",
+    "sousCategorie": "ACIDIFIANTS & CORRECTEURS DE PH",
+    "cultures": ""
+  },
+  {
+    "produit": "Acide Phosphorique",
+    "type": "Carte",
+    "famille": "Adjuvants et régulateurs de pH",
+    "sousCategorie": "ACIDIFIANTS & CORRECTEURS DE PH",
+    "cultures": ""
+  },
+  {
+    "produit": "Acide Sulfurique",
+    "type": "Carte",
+    "famille": "Adjuvants et régulateurs de pH",
+    "sousCategorie": "ACIDIFIANTS & CORRECTEURS DE PH",
+    "cultures": ""
+  },
+  {
+    "produit": "Fill K 40 + 4 MgO",
+    "type": "Produit principal",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "BOOSTERS POTASSIQUES",
+    "cultures": "Vigne · Agrumes · Olivier · Fraisier"
+  },
+  {
+    "produit": "Fertea K Boost",
+    "type": "Autre référence",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "BOOSTERS POTASSIQUES",
+    "cultures": ""
+  },
+  {
+    "produit": "Vita K Bio",
+    "type": "Autre référence",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "BOOSTERS POTASSIQUES",
+    "cultures": ""
+  },
+  {
+    "produit": "Fill PK Plus",
+    "type": "Produit principal",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "BOOSTERS POTASSIQUES",
+    "cultures": "Vigne · Arbres fruitiers · Fraisier · Maraîchage"
+  },
+  {
+    "produit": "Fertea PhytoK 50",
+    "type": "Autre référence",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "BOOSTERS POTASSIQUES",
+    "cultures": ""
+  },
+  {
+    "produit": "Twister",
+    "type": "Produit principal",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "FLORAISON – NOUAISON – AMÉLIORATION DES FRUITS",
+    "cultures": "Maraîchage · Vigne · Arbres fruitiers · Agrumes"
+  },
+  {
+    "produit": "Rojo 2-10-26",
+    "type": "Autre référence",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "FLORAISON – NOUAISON – AMÉLIORATION DES FRUITS",
+    "cultures": ""
+  },
+  {
+    "produit": "Kamab",
+    "type": "Produit principal",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "TROUBLES PHYSIOLOGIQUES DES PLANTES",
+    "cultures": "Vigne · Fraisier · Arbres fruitiers · Maraîchage"
+  },
+  {
+    "produit": "Hendosar",
+    "type": "Produit principal",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "TROUBLES PHYSIOLOGIQUES DES PLANTES",
+    "cultures": "Vigne · Fraisier · Arbres fruitiers · Maraîchage"
+  },
+  {
+    "produit": "Geosan L",
+    "type": "Produit principal",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "DÉSALINISANT & SOLUTIONS CALCIO-POTASSIQUES",
+    "cultures": "Vigne · Agrumes · Olivier · Fraisier"
+  },
+  {
+    "produit": "Atrium Salis",
+    "type": "Autre référence",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "DÉSALINISANT & SOLUTIONS CALCIO-POTASSIQUES",
+    "cultures": ""
+  },
+  {
+    "produit": "Fertea Salifix Ca",
+    "type": "Autre référence",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "DÉSALINISANT & SOLUTIONS CALCIO-POTASSIQUES",
+    "cultures": ""
+  },
+  {
+    "produit": "Pharmamin-M",
+    "type": "Produit principal",
+    "famille": "Engrais nutritionnels",
+    "sousCategorie": "",
+    "cultures": ""
+  },
+  {
+    "produit": "N-GOOO 26",
+    "type": "Produit principal",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL GRANULÉ",
+    "cultures": "Céréales · Maraîchage · Pomme de terre · Arbres fruitiers"
+  },
+  {
+    "produit": "Chlorure de Potassium",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL GRANULÉ",
+    "cultures": ""
+  },
+  {
+    "produit": "Sulfate d’Ammonium",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL GRANULÉ",
+    "cultures": ""
+  },
+  {
+    "produit": "Urée",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL GRANULÉ",
+    "cultures": ""
+  },
+  {
+    "produit": "Ammonitrate 34,5%",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL GRANULÉ",
+    "cultures": ""
+  },
+  {
+    "produit": "NPK Blend",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL GRANULÉ",
+    "cultures": ""
+  },
+  {
+    "produit": "Nitrate de Calcium",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL HYDROSOLUBLES",
+    "cultures": ""
+  },
+  {
+    "produit": "Sulfate de Magnésium",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL HYDROSOLUBLES",
+    "cultures": ""
+  },
+  {
+    "produit": "Sulfate de Potassium",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL HYDROSOLUBLES",
+    "cultures": ""
+  },
+  {
+    "produit": "Nitrate de Potassium",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL HYDROSOLUBLES",
+    "cultures": ""
+  },
+  {
+    "produit": "MAP 12-61",
+    "type": "Carte",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "CONVENTIONNEL HYDROSOLUBLES",
+    "cultures": ""
+  },
+  {
+    "produit": "Idron",
+    "type": "Gamme",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "NPK hydrosolubles",
+    "cultures": "Tomate · Fraisier · Agrumes · Ornementales"
+  },
+  {
+    "produit": "K Sol",
+    "type": "Gamme",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "NPK hydrosolubles",
+    "cultures": "Tomate · Fraisier · Agrumes · Ornementales"
+  },
+  {
+    "produit": "Fertimon Cristal",
+    "type": "Autre référence",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "NPK hydrosolubles",
+    "cultures": ""
+  },
+  {
+    "produit": "Atticus",
+    "type": "Autre référence",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "NPK hydrosolubles",
+    "cultures": ""
+  },
+  {
+    "produit": "Fertea Solvia",
+    "type": "Autre référence",
+    "famille": "Engrais conventionnels",
+    "sousCategorie": "NPK hydrosolubles",
+    "cultures": ""
+  }
+]

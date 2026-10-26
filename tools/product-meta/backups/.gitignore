@@ -1,0 +1,3 @@
+# Import backups may contain production page metadata — keep them local.
+*
+!.gitignore

@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { Search, ChevronDown, Undo2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Locale } from '@/lib/i18n/config';
-
-const COLLECTION_SLUG = 'produit';
-const CULTURE_KEY = 'culture';
-const PROBLEMATIQUE_KEY = 'problematique';
-const STADE_KEY = 'stade_mode_d_utilisation_';
+import {
+  facetOptions,
+  matchesFilters,
+  type ProductFilterItem,
+} from '@/lib/products/productMeta';
 
 export interface TrouverFilterLabels {
   criteresHeading: string;
@@ -19,8 +19,8 @@ export interface TrouverFilterLabels {
   culturePlaceholder: string;
   problematiqueLabel: string;
   problematiquePlaceholder: string;
-  stadeLabel: string;
-  stadePlaceholder: string;
+  familleLabel: string;
+  famillePlaceholder: string;
   resetLabel: string;
   recommendationHeading: string;
   productSingular: string;
@@ -37,35 +37,13 @@ export interface TrouverFilterProps {
   locale: Locale;
 }
 
-type FieldDef = {
-  id: string;
-  key: string;
-  label: string;
-  type: string;
-  order: number | null;
-};
+const PLACEHOLDER_IMAGE = '/produit_page_img/Adriatica Web Featured Icon.png';
 
-type CollectionMeta = {
-  id: string;
-  slug: string;
-  name: string;
-  itemSlugField: string | null;
-  fields: FieldDef[];
-};
-
-type Entry = {
-  id: string;
-  collectionId: string;
-  slug: string | null;
-  data: Record<string, unknown>;
-};
-
-// Product detail pages are DB pages with slug `produit-<slug>`, served by the
-// generic /[locale]/[slug] route — so the URL is a single segment
-// /produit-<slug>, not the nested /produit/<slug>.
-function productHref(locale: Locale, entry: Entry): string | null {
-  if (!entry.slug) return null;
-  return `/${locale}/produit-${entry.slug}`;
+// next/image only optimises local files and hosts allowed in next.config.ts;
+// anything else (e.g. an external URL typed in a product-hero) is rendered
+// unoptimised instead of throwing.
+function isOptimizableImage(src: string): boolean {
+  return src.startsWith('/') || /^https:\/\/[^/]+\.public\.blob\.vercel-storage\.com\//.test(src);
 }
 
 function CustomSelect({
@@ -160,29 +138,14 @@ function CustomSelect({
   );
 }
 
-function getStringValue(entry: Entry, key: string): string {
-  const v = entry.data?.[key];
-  return typeof v === 'string' ? v : v == null ? '' : String(v);
-}
-
-function uniqueValues(entries: Entry[], key: string, locale: Locale): string[] {
-  const set = new Set<string>();
-  for (const e of entries) {
-    const v = getStringValue(e, key).trim();
-    if (v) set.add(v);
-  }
-  return Array.from(set).sort((a, b) => a.localeCompare(b, locale));
-}
-
 export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
-  const [collection, setCollection] = useState<CollectionMeta | null>(null);
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [items, setItems] = useState<ProductFilterItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [culture, setCulture] = useState<string | null>(null);
+  const [famille, setFamille] = useState<string | null>(null);
   const [problematique, setProblematique] = useState<string | null>(null);
-  const [stade, setStade] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -192,26 +155,10 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
       try {
         setLoading(true);
         setError(null);
-
-        const listRes = await fetch('/api/collections');
-        if (!listRes.ok) throw new Error('Failed to load collections');
-        const list = (await listRes.json()) as Array<{ id: string; slug: string }>;
-        const match = list.find((c) => c.slug === COLLECTION_SLUG);
-        if (!match) throw new Error(`Collection "${COLLECTION_SLUG}" not found`);
-
-        const [metaRes, entriesRes] = await Promise.all([
-          fetch(`/api/collections/${match.id}`),
-          fetch(`/api/entries?collectionId=${match.id}`),
-        ]);
-        if (!metaRes.ok) throw new Error('Failed to load collection metadata');
-        if (!entriesRes.ok) throw new Error('Failed to load entries');
-
-        const meta = (await metaRes.json()) as CollectionMeta;
-        const data = (await entriesRes.json()) as Entry[];
-
-        if (cancelled) return;
-        setCollection(meta);
-        setEntries(data);
+        const res = await fetch('/api/products');
+        if (!res.ok) throw new Error('Failed to load products');
+        const data = (await res.json()) as ProductFilterItem[];
+        if (!cancelled) setItems(data);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Unknown error');
       } finally {
@@ -224,56 +171,19 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
     };
   }, []);
 
-  const nameKey = useMemo(() => {
-    if (!collection) return null;
-    if (collection.itemSlugField) return collection.itemSlugField;
-    const ordered = [...collection.fields].sort(
-      (a, b) => (a.order ?? 0) - (b.order ?? 0)
-    );
-    const firstText = ordered.find((f) => f.type === 'text');
-    return (firstText ?? ordered[0])?.key ?? null;
-  }, [collection]);
+  const cultureOptions = useMemo(() => facetOptions(items, 'cultures'), [items]);
+  const familleOptions = useMemo(() => facetOptions(items, 'familles'), [items]);
+  const problematiqueOptions = useMemo(() => facetOptions(items, 'problematiques'), [items]);
 
-  const imageKey = useMemo(() => {
-    if (!collection) return null;
-    return collection.fields.find((f) => f.type === 'image')?.key ?? null;
-  }, [collection]);
-
-  const cultureOptions = useMemo(
-    () => uniqueValues(entries, CULTURE_KEY, locale),
-    [entries, locale]
+  const filtered = useMemo(
+    () => items.filter((item) => matchesFilters(item, { culture, famille, problematique, search })),
+    [items, culture, famille, problematique, search]
   );
-  const problematiqueOptions = useMemo(
-    () => uniqueValues(entries, PROBLEMATIQUE_KEY, locale),
-    [entries, locale]
-  );
-  const stadeOptions = useMemo(
-    () => uniqueValues(entries, STADE_KEY, locale),
-    [entries, locale]
-  );
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return entries.filter((e) => {
-      if (culture && getStringValue(e, CULTURE_KEY).trim() !== culture) return false;
-      if (
-        problematique &&
-        getStringValue(e, PROBLEMATIQUE_KEY).trim() !== problematique
-      )
-        return false;
-      if (stade && getStringValue(e, STADE_KEY).trim() !== stade) return false;
-      if (q && nameKey) {
-        const name = getStringValue(e, nameKey).toLowerCase();
-        if (!name.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [entries, culture, problematique, stade, search, nameKey]);
 
   const handleReset = () => {
     setCulture(null);
+    setFamille(null);
     setProblematique(null);
-    setStade(null);
     setSearch('');
   };
 
@@ -321,13 +231,13 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
 
               <div className="flex flex-col gap-2 relative z-20">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  {labels.problematiqueLabel}
+                  {labels.familleLabel}
                 </label>
                 <CustomSelect
-                  placeholder={labels.problematiquePlaceholder}
-                  options={problematiqueOptions}
-                  value={problematique}
-                  onChange={setProblematique}
+                  placeholder={labels.famillePlaceholder}
+                  options={familleOptions}
+                  value={famille}
+                  onChange={setFamille}
                   allOption={labels.allOption}
                   noOptions={labels.noOptions}
                 />
@@ -335,13 +245,13 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
 
               <div className="flex flex-col gap-2 relative z-10">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  {labels.stadeLabel}
+                  {labels.problematiqueLabel}
                 </label>
                 <CustomSelect
-                  placeholder={labels.stadePlaceholder}
-                  options={stadeOptions}
-                  value={stade}
-                  onChange={setStade}
+                  placeholder={labels.problematiquePlaceholder}
+                  options={problematiqueOptions}
+                  value={problematique}
+                  onChange={setProblematique}
                   allOption={labels.allOption}
                   noOptions={labels.noOptions}
                 />
@@ -386,19 +296,22 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filtered.map((entry) => {
-                  const name = nameKey ? getStringValue(entry, nameKey) : entry.id;
-                  const href = productHref(locale, entry);
-                  const imageUrl = imageKey ? getStringValue(entry, imageKey).trim() : '';
+                {filtered.map((item) => {
+                  const name = item.name;
+                  // Product pages are DB pages with slug `produit-<slug>`, served by the
+                  // generic /[locale]/[slug] route (single segment, not /produit/<slug>).
+                  const href = item.pathSlug ? `/${locale}/${item.pathSlug}` : null;
+                  const imageUrl = item.image || PLACEHOLDER_IMAGE;
                   const card = (
                     <>
                       <div className="relative w-full aspect-[4/5] max-w-[160px] mx-auto mb-6">
                         <Image
-                          src={imageUrl || '/produit_page_img/Adriatica Web Featured Icon.png'}
+                          src={imageUrl}
                           alt={name}
                           fill
                           sizes="160px"
                           className="object-contain"
+                          unoptimized={!isOptimizableImage(imageUrl)}
                         />
                       </div>
                       <h4 className="font-[family-name:var(--font-inter)] font-bold text-[#202737] text-base text-center tracking-tight">
@@ -410,11 +323,11 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
                     'flex flex-col items-center p-6 bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow rounded-xl';
 
                   return href ? (
-                    <Link key={entry.id} href={href} className={cardClassName}>
+                    <Link key={item.id} href={href} className={cardClassName}>
                       {card}
                     </Link>
                   ) : (
-                    <div key={entry.id} className={cardClassName}>
+                    <div key={item.id} className={cardClassName}>
                       {card}
                     </div>
                   );
