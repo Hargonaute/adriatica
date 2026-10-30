@@ -54,16 +54,17 @@ Le titre et le slug peuvent être modifiés plus tard.
 ### 1.3 L'éditeur en un coup d'œil
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│ ← Pages   Nom de la page  [Draft]   Edit | Preview | JSON   ⚙ Settings  EN|FR  Save  Publish │
-├──────────────┬────────────────────────────────────────────────────────┤
-│  Blocs       │                                                         │
-│  (ajouter    │        Votre page, composée de blocs empilés           │
-│  des sections)│       de haut en bas                                   │
-│              │                                                         │
-├──────────────┴────────────────────────────────────────────────────────┤
-│  Panneau de réglages du bloc sélectionné (s'ouvre au clic sur un bloc) │
-└───────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ ← Pages   Nom de la page   [Draft]                                   │
+│ Edit | Preview | JSON    ⚙ Settings   EN|FR    Save    Publish       │
+├────────────────┬─────────────────────────────────────────────────────┤
+│ Blocs          │                                                     │
+│ (ajouter des   │ Votre page, composée de blocs empilés               │
+│  sections)     │ de haut en bas                                      │
+│                │                                                     │
+├────────────────┴─────────────────────────────────────────────────────┤
+│ Réglages du bloc sélectionné (s'ouvre au clic sur un bloc)           │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 Barre du haut, de gauche à droite :
@@ -166,6 +167,8 @@ Sur chaque page produit, la bannière **Catalogue** et le **formulaire de contac
 
 Les produits apparaissent aussi sur la page **Trouver une solution** (`/fr/trouver-une-solution`), où les visiteurs les filtrent par **Famille**, **Problématique** et **Culture**.
 
+Sur cette page, la carte de chaque produit reprend le **nom** et l'**image** du premier bloc **Product Hero** de la version **FR**. Les filtres, eux, viennent des **Product filters** de la page (voir 2.3).
+
 ### 2.2 Ajouter un nouveau produit
 
 1. **Pages** → **New Page**.
@@ -173,12 +176,13 @@ Les produits apparaissent aussi sur la page **Trouver une solution** (`/fr/trouv
 3. **URL Slug** : `produit-` + nom du produit, par ex. `produit-humiforte`.
    ⚠️ Sans `produit-` au début, la page **n'est pas** considérée comme un produit.
 4. Cliquez sur **Create Page & Open Editor**.
-5. Ajoutez des blocs. Une page produit type :
-   1. **Product Hero** : image, nom et courte description du produit
-   2. **Rich Text** : description complète et avantages
-   3. **Key-Value List** : composition (par ex. *Azote (N) · 5 %*)
-   4. **Table** : doses par culture (facultatif)
-   5. **Download Button** : fiche technique (PDF)
+5. Ajoutez des blocs. Les pages produits existantes suivent ce modèle :
+   1. **Product Hero** : image, nom, accroche et bénéfices du produit
+   2. **Section Heading** : « Mode d'utilisation »
+   3. **Rich Text** : forme, application, cultures
+   4. **Table** : doses par culture
+   5. **Section Heading** : « Composition du produit »
+   6. **Key-Value List** : composition (par ex. *Azote total (N) · 7,7 %*)
 6. Remplissez les **filtres produit** (section suivante).
 7. Faites de même dans l'autre langue (**EN / FR**).
 8. Cliquez sur **Publish**.
@@ -216,7 +220,13 @@ Ils déterminent où le produit apparaît sur **Trouver une solution**.
 3. Modifiez le texte, les images, les filtres…
 4. Cliquez sur **Publish** pour mettre les modifications en ligne (**Save** seul ne suffit pas).
 
-### 2.5 Retirer un produit
+### 2.5 Créer un produit plus vite avec l'IA (ChatGPT / Claude)
+
+Au lieu d'ajouter les blocs un par un, vous pouvez demander à ChatGPT ou Claude d'écrire la page complète (FR + EN + filtres), puis la **copier-coller** dans l'éditeur, onglet **JSON** → **Apply JSON to page**.
+
+Toute la marche à suivre et le texte à copier dans l'IA sont dans le document séparé **« Créer une page produit avec ChatGPT ou Claude »** (`PROMPT-IA-PRODUITS.md`).
+
+### 2.6 Retirer un produit
 
 - **Pour le masquer temporairement :** ouvrez-le et cliquez sur **Unpublish**. Il disparaît du site et de *Trouver une solution*, mais il est conservé.
 - **Pour le supprimer définitivement :** cliquez sur l'**icône corbeille** dans la liste des pages. Cette action est irréversible.
