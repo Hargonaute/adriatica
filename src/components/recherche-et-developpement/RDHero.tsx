@@ -21,7 +21,13 @@ export function RDHero({ heading, subheading, ctaLabel, ctaHref, imageUrl, image
             {lines.map((line, i) => (
               <span key={i}>
                 {line}
-                {i < lines.length - 1 && <br className="hidden sm:block" />}
+                {/* Space keeps the words apart in textContent and on mobile, where the <br> is hidden. */}
+                {i < lines.length - 1 && (
+                  <>
+                    {' '}
+                    <br className="hidden sm:block" />
+                  </>
+                )}
               </span>
             ))}
           </h1>
