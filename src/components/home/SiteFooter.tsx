@@ -37,9 +37,12 @@ export function SiteFooter({ locale }: { locale: Locale }) {
                 className="h-8 w-auto"
               />
             </div>
-            <p className="text-slate-400 text-[15px] leading-relaxed max-w-sm">
-              {common.footer.description}
-            </p>
+            {/* TODO-CLIENT: footer text pending from Adriatica (A9); hidden while empty. */}
+            {common.footer.description && (
+              <p className="text-slate-400 text-[15px] leading-relaxed max-w-sm">
+                {common.footer.description}
+              </p>
+            )}
           </div>
 
           <div className="w-full lg:w-[30%] flex gap-16 lg:justify-center">
