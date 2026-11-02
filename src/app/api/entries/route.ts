@@ -4,6 +4,7 @@ import { and, eq, desc } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { generateEntrySlug, ensureUniqueEntrySlug } from '@/lib/db/generateEntrySlug';
 import { auth } from '@/lib/auth/auth';
+import { requireSession } from '@/lib/auth/require-session';
 
 // GET /api/entries?collectionId=X — list items in a collection.
 // Public callers only see published entries. Pass ?includeUnpublished=true
@@ -41,6 +42,9 @@ export async function GET(request: Request) {
 
 // POST /api/entries — create a new item
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
 

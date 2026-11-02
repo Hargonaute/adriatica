@@ -3,8 +3,12 @@ import { pages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { requireSession } from '@/lib/auth/require-session';
 
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await request.json();
 

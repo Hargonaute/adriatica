@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { assets } from '@/lib/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { requireSession } from '@/lib/auth/require-session';
 
 export async function GET() {
   try {
@@ -14,6 +15,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const { url, pathname, contentType } = body;

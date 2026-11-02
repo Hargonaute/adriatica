@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { requireDashboardSession } from '@/lib/auth/require-session';
 import { pages, collections } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
@@ -8,6 +9,7 @@ import PageEditorWrapper from './PageEditorWrapper';
 
 export default async function PageEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  await requireDashboardSession(`/dashboard/pages/${id}`);
 
   const result = await db.select().from(pages).where(eq(pages.id, id));
   const page = result[0];

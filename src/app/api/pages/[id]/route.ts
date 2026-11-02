@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { migratePageData } from '@/lib/page-builder/json/migrate';
+import { getValidSession, requireSession } from '@/lib/auth/require-session';
 
 export async function GET(
   _request: Request,
@@ -20,13 +21,19 @@ export async function GET(
 
     const page = result[0];
 
+    // Without a dashboard session: published snapshot only, drafts are 404.
+    const session = await getValidSession();
+    if (!session && (page.status !== 'published' || !page.published_blocks)) {
+      return NextResponse.json({ error: 'Page not found' }, { status: 404 });
+    }
+
     const pageData = {
       id: page.id,
       slug: page.slug,
       title: page.title,
       status: page.status as 'draft' | 'published',
       meta: page.meta as any,
-      blocks: page.draft_blocks as any,
+      blocks: (session ? page.draft_blocks : page.published_blocks) as any,
       schemaVersion: 1,
     };
 
@@ -43,6 +50,9 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await params;
 

@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { pages, assets } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { requireSession } from '@/lib/auth/require-session';
 
 /**
  * POST /api/import/hydrate-images
@@ -27,8 +28,16 @@ import { revalidatePath } from 'next/cache';
  *       }
  *   )
  *   result = r.json()
+ *
+ * Auth: open on `next dev` (the notebook above has no session cookie), like
+ * /api/admin/*. In any other environment a valid dashboard session is required.
  */
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV !== 'development') {
+    const unauthorized = await requireSession();
+    if (unauthorized) return unauthorized;
+  }
+
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json({ error: 'BLOB_NOT_CONFIGURED' }, { status: 503 });
   }

@@ -3,14 +3,21 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { assets } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { requireSession } from '@/lib/auth/require-session';
 
 /** Quick check: is Vercel Blob configured? */
 export async function GET() {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   return NextResponse.json({ blobConfigured: !!process.env.BLOB_READ_WRITE_TOKEN });
 }
 
 /** Server-side upload: accepts multipart/form-data with a `file` field. */
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json(
       { error: 'BLOB_NOT_CONFIGURED' },

@@ -1,6 +1,7 @@
 'use server';
 
 import { Pool } from 'pg';
+import { getValidSession } from '@/lib/auth/require-session';
 
 export interface DbTestResult {
   ok: boolean;
@@ -15,6 +16,12 @@ export interface DbTestResult {
  * The connection string is never logged or persisted.
  */
 export async function testConnection(connectionString: string): Promise<DbTestResult> {
+  // Server actions are public POST endpoints: without this check anyone could
+  // make the server open connections to arbitrary hosts.
+  if (!(await getValidSession())) {
+    return { ok: false, error: 'Unauthorized' };
+  }
+
   if (!connectionString || typeof connectionString !== 'string') {
     return { ok: false, error: 'No connection string provided.' };
   }
