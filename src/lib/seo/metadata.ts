@@ -44,7 +44,8 @@ export interface PageMetadataInput {
   paths: LocalePaths;
   /** Path of the page being rendered; defaults to paths[locale]. */
   selfPath?: string;
-  title?: string;
+  /** Page title; `{ absolute }` bypasses the root "%s | Adriatica" template. */
+  title?: string | { absolute: string };
   description?: string;
   /** Absolute or root-relative image URL; falls back to the default 1200×630 image. */
   image?: string | null;
@@ -54,6 +55,8 @@ export interface PageMetadataInput {
 
 export function buildPageMetadata(input: PageMetadataInput): Metadata {
   const { locale, paths, title, description, noIndex, type = 'website' } = input;
+  // og:title / twitter:title are never templated: use the plain text.
+  const socialTitle = typeof title === 'string' ? title : title?.absolute;
   const selfPath = cleanPath(input.selfPath ?? paths[locale] ?? `/${locale}`);
   const canonical = absoluteUrl(selfPath);
   const otherLocales = LOCALES.filter((l) => l !== locale && paths[l]);
@@ -75,13 +78,13 @@ export function buildPageMetadata(input: PageMetadataInput): Metadata {
       siteName: SITE_NAME,
       locale: OG_LOCALE[locale],
       ...(otherLocales.length ? { alternateLocale: otherLocales.map((l) => OG_LOCALE[l]) } : {}),
-      ...(title ? { title } : {}),
+      ...(socialTitle ? { title: socialTitle } : {}),
       ...(description ? { description } : {}),
       images,
     },
     twitter: {
       card: 'summary_large_image',
-      ...(title ? { title } : {}),
+      ...(socialTitle ? { title: socialTitle } : {}),
       ...(description ? { description } : {}),
       images: images.map((i) => i.url),
     },

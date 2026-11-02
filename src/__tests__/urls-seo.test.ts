@@ -137,6 +137,13 @@ assert('canonical strips query params', frAlt.canonical === `${SITE_URL}/en/prod
 assert('empty locale omitted from hreflang', eq(Object.keys(frAlt.languages), ['fr', 'x-default']));
 assert('explicit image used', eq((frOnly.openGraph as { images: unknown }).images, [{ url: 'https://blob.example/y.png' }]));
 assert('noIndex → robots index:false', eq(frOnly.robots, { index: false, follow: true }));
+const abs = buildPageMetadata({ locale: 'fr', paths: { fr: '/fr' }, title: { absolute: 'Maghreb Adriatica' } });
+assert(
+  '{ absolute } title kept for <title>, plain text for og/twitter',
+  eq(abs.title, { absolute: 'Maghreb Adriatica' }) &&
+    (abs.openGraph as { title?: string }).title === 'Maghreb Adriatica' &&
+    (abs.twitter as { title?: string }).title === 'Maghreb Adriatica'
+);
 assert('x-default falls back to the only locale', buildLanguageAlternates({ en: '/en/a' })['x-default'] === `${SITE_URL}/en/a`);
 assert('absoluteUrl keeps absolute URLs', absoluteUrl('https://a.b/c') === 'https://a.b/c');
 
