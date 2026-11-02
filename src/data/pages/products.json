@@ -1,8 +1,9 @@
 {
+  "_TODO-CLIENT": "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
   "fr": {
     "meta": {
-      "title": "Nos produits",
-      "description": "Découvrez la gamme de produits Adriatica : solutions agronomiques conçues pour améliorer la productivité agricole tout en préservant l'environnement."
+      "title": "Nos produits : engrais et biostimulants",
+      "description": "Biostimulants, correcteurs de carences, régulateurs de pH, engrais nutritionnels et conventionnels : la gamme complète Adriatica pour l'agriculture marocaine."
     },
     "hero": {
       "heading": "PRODUITS",
@@ -34,8 +35,8 @@
   },
   "en": {
     "meta": {
-      "title": "Our products",
-      "description": "Discover the Adriatica product range: agronomic solutions designed to improve agricultural productivity while preserving the environment."
+      "title": "Our products: fertilizers and biostimulants",
+      "description": "Biostimulants, deficiency correctors, pH regulators, nutritional and conventional fertilizers: the complete Adriatica range for Moroccan agriculture."
     },
     "hero": {
       "heading": "PRODUCTS",

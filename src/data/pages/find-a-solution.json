@@ -1,8 +1,9 @@
 {
+  "_TODO-CLIENT": "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
   "fr": {
     "meta": {
-      "title": "Trouver une solution",
-      "description": "Trouvez la solution agronomique Adriatica adaptée à vos cultures et à vos besoins grâce à notre outil de recherche par filtres."
+      "title": "Trouver l'engrais adapté à votre culture",
+      "description": "Choisissez votre culture, votre famille de produits ou votre problématique : Adriatica vous recommande la solution adaptée parmi plus de 50 produits."
     },
     "hero": {
       "heading": "Trouver une solution",
@@ -31,8 +32,8 @@
   },
   "en": {
     "meta": {
-      "title": "Find a solution",
-      "description": "Find the Adriatica agronomic solution best suited to your crops and needs with our filter-based search tool."
+      "title": "Find the right fertilizer for your crop",
+      "description": "Choose your crop, product family or problem: Adriatica recommends the right solution from more than 50 products."
     },
     "hero": {
       "heading": "Find a solution",

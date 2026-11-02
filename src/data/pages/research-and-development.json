@@ -1,8 +1,9 @@
 {
+  "_TODO-CLIENT": "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
   "fr": {
     "meta": {
-      "title": "Recherche et développement",
-      "description": "L'innovation au cœur d'Adriatica : recherche agronomique, synergies et engagement pour la durabilité des écosystèmes agricoles."
+      "title": "Recherche et développement agronomique",
+      "description": "Recherche agronomique, formulations synergiques et essais terrain : comment Adriatica développe des solutions de nutrition des plantes efficaces et durables."
     },
     "hero": {
       "heading": "RECHERCHE ET\nDÉVELOPPEMENT",
@@ -58,8 +59,8 @@
   },
   "en": {
     "meta": {
-      "title": "Research and development",
-      "description": "Innovation at the heart of Adriatica: agronomic research, synergies, and a commitment to the sustainability of agricultural ecosystems."
+      "title": "Agronomic research and development",
+      "description": "Agronomic research, synergistic formulations and field trials: how Adriatica develops effective and sustainable plant nutrition solutions."
     },
     "hero": {
       "heading": "RESEARCH AND\nDEVELOPMENT",

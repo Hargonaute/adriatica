@@ -1,8 +1,9 @@
 {
+  "_TODO-CLIENT": "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
   "fr": {
     "meta": {
-      "title": "Maghreb Adriatica",
-      "description": "Maghreb Adriatica propose des solutions agronomiques afin d'améliorer la productivité agricole tout en respectant l'environnement et la durabilité des écosystèmes."
+      "title": "Engrais, biostimulants et correcteurs de carences au Maroc",
+      "description": "Maghreb Adriatica : biostimulants, correcteurs de carences, engrais hydrosolubles et conventionnels pour toutes les cultures au Maroc. Conseil technique inclus."
     },
     "hero": {
       "headline": "Bienvenue chez Maghreb Adriatica",
@@ -55,8 +56,8 @@
   },
   "en": {
     "meta": {
-      "title": "Maghreb Adriatica",
-      "description": "Maghreb Adriatica offers agronomic solutions to improve agricultural productivity while respecting the environment and the sustainability of ecosystems."
+      "title": "Fertilizers, biostimulants and deficiency correctors in Morocco",
+      "description": "Maghreb Adriatica: biostimulants, deficiency correctors, water-soluble and conventional fertilizers for all crops in Morocco. Technical advice included."
     },
     "hero": {
       "headline": "Welcome to Maghreb Adriatica",

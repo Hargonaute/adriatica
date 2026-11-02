@@ -1,8 +1,9 @@
 {
+  "_TODO-CLIENT": "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
   "fr": {
     "meta": {
-      "title": "Contact",
-      "description": "Contactez Adriatica pour toute question sur nos solutions agronomiques, nos produits ou nos services. Notre équipe est à votre écoute."
+      "title": "Contact : conseil technique et commandes",
+      "description": "Une question sur un produit, une dose ou une commande ? Contactez l'équipe technique et commerciale de Maghreb Adriatica au Maroc."
     },
     "info": {
       "heading": "CONTACT",
@@ -36,8 +37,8 @@
   },
   "en": {
     "meta": {
-      "title": "Contact",
-      "description": "Contact Adriatica with any question about our agronomic solutions, products, or services. Our team is here to help."
+      "title": "Contact: technical advice and orders",
+      "description": "A question about a product, a dose or an order? Contact the Maghreb Adriatica technical and sales team in Morocco."
     },
     "info": {
       "heading": "CONTACT",
