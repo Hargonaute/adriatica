@@ -62,7 +62,7 @@ export function AssetPicker({ onSelect, trigger }: AssetPickerProps) {
       });
 
       // Save to DB immediately — don't rely on the webhook (unreachable in local dev)
-      await fetch('/api/assets', {
+      const res = await fetch('/api/assets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -71,9 +71,13 @@ export function AssetPicker({ onSelect, trigger }: AssetPickerProps) {
           contentType: newBlob.contentType,
         }),
       });
+      const saved = res.ok ? ((await res.json()) as Partial<Asset>) : null;
 
+      // Use the uploaded image right away instead of leaving the editor on the
+      // Upload tab (it previously had to be picked again from the Library tab).
       toast.success('Upload complete');
-      await fetchAssets();
+      onSelect(newBlob.url, saved?.id);
+      setOpen(false);
     } catch (error) {
       console.error('Upload failed', error);
       toast.error('Upload failed');

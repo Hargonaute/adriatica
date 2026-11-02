@@ -10,6 +10,9 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Image as ImageIcon } from 'lucide-react';
+import { AssetPicker } from './AssetPicker';
 import {
   CULTURES,
   FAMILLES,
@@ -267,11 +270,33 @@ function PageSettingsPanel({
         <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Social / Open Graph</h4>
 
         <div className="space-y-1.5">
-          <Label className="text-xs">OG Image URL</Label>
+          <Label className="text-xs">OG Image</Label>
+          <div className="flex gap-2">
+            <AssetPicker
+              onSelect={(url) => setMeta('ogImage', url)}
+              trigger={
+                <Button type="button" variant="outline" size="sm" className="h-8">
+                  <ImageIcon className="mr-1.5 h-3.5 w-3.5" />
+                  {meta.ogImage ? 'Change image' : 'Choose image'}
+                </Button>
+              }
+            />
+            {meta.ogImage && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8"
+                onClick={() => setMeta('ogImage', '')}
+              >
+                Remove
+              </Button>
+            )}
+          </div>
           <Input
             value={meta.ogImage ?? ''}
             onChange={(e) => setMeta('ogImage', e.target.value)}
-            placeholder="https://example.com/og.png (1200×630)"
+            placeholder="…or paste an image URL"
             className="h-8 text-sm"
           />
           <p className="text-xs text-muted-foreground">
