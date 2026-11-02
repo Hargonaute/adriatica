@@ -46,6 +46,7 @@ next-env.d.ts
 !/scripts/content-tables.ts
 !/scripts/backup-content.ts
 !/scripts/restore-content.ts
+!/scripts/reclassify-npk.ts
 
 # content backups (contain full client content, never commit)
 /backups/
