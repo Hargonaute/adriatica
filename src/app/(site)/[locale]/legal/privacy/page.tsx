@@ -1,10 +1,31 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { isLocale, type Locale } from '@/lib/i18n/config';
+import { brandTitle } from '@/lib/seo/brandTitle';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy | Maghreb Adriatica',
+const pageMeta: Record<Locale, { title: string; description: string }> = {
+  fr: {
+    title: 'Politique de confidentialité',
+    description:
+      'Politique de confidentialité de Maghreb Adriatica : données collectées, utilisation, cookies, durée de conservation et exercice de vos droits.',
+  },
+  en: {
+    title: 'Privacy Policy',
+    description:
+      'Maghreb Adriatica privacy policy: data collected, how it is used, cookies, retention period and how to exercise your rights.',
+  },
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return {};
+  const meta = pageMeta[locale as Locale];
+  return { title: brandTitle(meta.title), description: meta.description };
+}
 
 const content: Record<Locale, { title: string; sections: { heading: string; body: string }[] }> = {
   fr: {
