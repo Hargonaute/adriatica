@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "auth:create-user": "tsx scripts/create-user.ts"
+    "auth:create-user": "tsx scripts/create-user.ts",
+    "backup:content": "tsx scripts/backup-content.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
