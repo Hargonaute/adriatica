@@ -7,8 +7,9 @@ import {
   loadProducts,
   loadContact,
   loadRD,
-  loadSolution,
 } from '@/lib/i18n/loadPageData';
+import type { RawSearchParams } from '@/lib/products/catalogueFilter';
+import { SolutionPage, solutionPageMetadata } from './solutionPage';
 
 import { ProduitsHero } from '@/components/produits/ProduitsHero';
 import { ProduitsSection } from '@/components/home/ProduitsSection';
@@ -22,11 +23,15 @@ import { RDHero } from '@/components/recherche-et-developpement/RDHero';
 import { SynergieSection } from '@/components/recherche-et-developpement/SynergieSection';
 import { DurabiliteSection } from '@/components/recherche-et-developpement/DurabiliteSection';
 
-import { TrouverHero } from '@/components/trouver-une-solution/TrouverHero';
-import { TrouverFilter } from '@/components/trouver-une-solution/TrouverFilter';
 import { brandTitle } from '@/lib/seo/brandTitle';
 
-export function staticPageMetadata(key: StaticPageKey, locale: Locale): Metadata {
+export async function staticPageMetadata(
+  key: StaticPageKey,
+  locale: Locale,
+  searchParams: RawSearchParams = {}
+): Promise<Metadata> {
+  // The find-a-solution page's metadata depends on its filters (Lot B).
+  if (key === 'solution') return solutionPageMetadata(locale, searchParams);
   let meta;
   switch (key) {
     case 'products':
@@ -38,9 +43,6 @@ export function staticPageMetadata(key: StaticPageKey, locale: Locale): Metadata
     case 'research-and-development':
       meta = loadRD(locale).meta;
       break;
-    case 'solution':
-      meta = loadSolution(locale).meta;
-      break;
   }
   return buildPageMetadata({
     locale,
@@ -50,7 +52,7 @@ export function staticPageMetadata(key: StaticPageKey, locale: Locale): Metadata
   });
 }
 
-export function renderStaticPage(key: StaticPageKey, locale: Locale) {
+export function renderStaticPage(key: StaticPageKey, locale: Locale, searchParams: RawSearchParams = {}) {
   switch (key) {
     case 'products':
       return <ProductsPage locale={locale} />;
@@ -59,7 +61,7 @@ export function renderStaticPage(key: StaticPageKey, locale: Locale) {
     case 'research-and-development':
       return <RDPage locale={locale} />;
     case 'solution':
-      return <SolutionPage locale={locale} />;
+      return <SolutionPage locale={locale} searchParams={searchParams} />;
   }
 }
 
@@ -156,17 +158,6 @@ function RDPage({ locale }: { locale: Locale }) {
         imageAlt={home.contact.imageAlt}
         locale={locale}
       />
-    </div>
-  );
-}
-
-function SolutionPage({ locale }: { locale: Locale }) {
-  const data = loadSolution(locale);
-  return (
-    <div className="min-h-screen bg-white">
-      <TrouverHero heading={data.hero.heading} subheading={data.hero.subheading} />
-      <TrouverFilter labels={data.filter} locale={locale} />
-      <NewsletterCTA locale={locale} />
     </div>
   );
 }

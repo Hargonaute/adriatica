@@ -7,10 +7,12 @@ import {
   CULTURES,
   FAMILLES,
   PROBLEMATIQUES,
+  NPK_FAMILLE,
   PRODUCT_PAGE_PREFIX,
   canonicalValue,
   foldKey,
   normalizeValues,
+  publicProductFacets,
   readProductMeta,
   splitList,
 } from './productMeta';
@@ -57,11 +59,15 @@ export interface ImportPlan {
 
 export function rowToProductMeta(row: CatalogueRow): ProductFilterMeta {
   const famille = canonicalValue('famille', row.famille);
-  return {
-    ...(famille ? { famille } : {}),
-    problematiques: normalizeValues('problematique', [row.sousCategorie]),
-    cultures: normalizeValues('culture', splitList(row.cultures)),
-  };
+  // B8: the catalogue's "NPK hydrosolubles" sous-catégorie is now a famille
+  // (same rule as publicProductFacets on the read path).
+  return publicProductFacets({
+    product: {
+      ...(famille ? { famille } : {}),
+      problematiques: normalizeValues('problematique', [row.sousCategorie]),
+      cultures: normalizeValues('culture', splitList(row.cultures)),
+    },
+  }) ?? { problematiques: [], cultures: [] };
 }
 
 const CULTURE_PARENT_TYPES = ['produit principal', 'gamme'];
@@ -167,7 +173,7 @@ export function planImport(
     if (!product.famille) plan.warnings.push({ produit: row.produit, message: 'no Famille' });
     else if (!isKnown(FAMILLES, product.famille))
       plan.warnings.push({ produit: row.produit, message: `unknown Famille "${product.famille}"` });
-    if (!product.problematiques?.length)
+    if (!product.problematiques?.length && product.famille !== NPK_FAMILLE)
       plan.warnings.push({ produit: row.produit, message: 'no Sous-catégorie (problématique)' });
     product.problematiques?.forEach((p) => {
       if (!isKnown(PROBLEMATIQUES, p))

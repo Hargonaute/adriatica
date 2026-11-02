@@ -49,17 +49,21 @@ async function loadCollectionIndex(slug: string) {
   return { col, templatePage };
 }
 
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: SearchParams;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isLocale(locale)) return {};
   const L = locale as Locale;
 
   const staticKey = keyForSlug(slug, L);
-  if (staticKey) return staticPageMetadata(staticKey, L);
+  if (staticKey) return staticPageMetadata(staticKey, L, staticKey === 'solution' ? await searchParams : {});
 
   // Product pages live at /{locale}/produit|product/<slug> (308, see below).
   if (productSlugFromPageSlug(slug)) return {};
@@ -97,8 +101,10 @@ export async function generateMetadata({
 
 export default async function PublicPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: SearchParams;
 }) {
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
@@ -107,7 +113,8 @@ export default async function PublicPage({
   // 1) Static JSON page match (products, contact, r&d, solution).
   const staticKey = keyForSlug(slug, L);
   if (staticKey) {
-    return renderStaticPage(staticKey, L);
+    // Only the find-a-solution page reads its query (catalogue filters).
+    return renderStaticPage(staticKey, L, staticKey === 'solution' ? await searchParams : {});
   }
 
   // 2) Product pages (DB slug `produit-<slug>`) have a single public URL per

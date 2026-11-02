@@ -3,7 +3,8 @@
  *
  * Every public page type (home, static pages, legal, DB pages, products) builds
  * its Metadata through buildPageMetadata() so that:
- *   - canonical is absolute, self-referencing and never carries query params;
+ *   - canonical is absolute, self-referencing and never carries query params
+ *     (except an explicit, already-normalised `query`: the filtered catalogue);
  *   - hreflang lists only the locales that exist, plus x-default (= FR);
  *   - openGraph is always complete (Next replaces, not merges, the layout's
  *     openGraph object, so a partial override would drop og:locale / site_name).
@@ -23,15 +24,25 @@ function cleanPath(path: string): string {
   return path.split(/[?#]/)[0];
 }
 
-/** hreflang map: one entry per available locale, plus x-default → FR (or the only locale). */
-export function buildLanguageAlternates(paths: LocalePaths): Record<string, string> {
+/** Absolute URL of a path (query / hash stripped) plus an optional normalised query. */
+function urlWithQuery(path: string, query?: string): string {
+  const q = (query ?? '').replace(/^\?/, '');
+  return absoluteUrl(cleanPath(path)) + (q ? `?${q}` : '');
+}
+
+/**
+ * hreflang map: one entry per available locale, plus x-default → FR (or the
+ * only locale). `query` (already canonical, e.g. "famille=x") is appended to
+ * every entry: the filtered catalogue uses the same query in both locales.
+ */
+export function buildLanguageAlternates(paths: LocalePaths, query?: string): Record<string, string> {
   const languages: Record<string, string> = {};
   LOCALES.forEach((l) => {
     const p = paths[l];
-    if (p) languages[l] = absoluteUrl(cleanPath(p));
+    if (p) languages[l] = urlWithQuery(p, query);
   });
   const xDefault = paths[DEFAULT_LOCALE] ?? LOCALES.map((l) => paths[l]).find(Boolean);
-  if (xDefault) languages['x-default'] = absoluteUrl(cleanPath(xDefault));
+  if (xDefault) languages['x-default'] = urlWithQuery(xDefault, query);
   return languages;
 }
 
@@ -51,14 +62,20 @@ export interface PageMetadataInput {
   image?: string | null;
   noIndex?: boolean;
   type?: 'website' | 'article';
+  /**
+   * Canonical query string (without "?"), appended to canonical, hreflang and
+   * og:url. Only for pages whose query is part of their identity and already
+   * normalised (the filtered catalogue). Omit everywhere else.
+   */
+  query?: string;
 }
 
 export function buildPageMetadata(input: PageMetadataInput): Metadata {
-  const { locale, paths, title, description, noIndex, type = 'website' } = input;
+  const { locale, paths, title, description, noIndex, type = 'website', query } = input;
   // og:title / twitter:title are never templated: use the plain text.
   const socialTitle = typeof title === 'string' ? title : title?.absolute;
   const selfPath = cleanPath(input.selfPath ?? paths[locale] ?? `/${locale}`);
-  const canonical = absoluteUrl(selfPath);
+  const canonical = urlWithQuery(selfPath, query);
   const otherLocales = LOCALES.filter((l) => l !== locale && paths[l]);
 
   const images = input.image
@@ -70,7 +87,7 @@ export function buildPageMetadata(input: PageMetadataInput): Metadata {
     ...(description ? { description } : {}),
     alternates: {
       canonical,
-      languages: buildLanguageAlternates(paths),
+      languages: buildLanguageAlternates(paths, query),
     },
     openGraph: {
       type,

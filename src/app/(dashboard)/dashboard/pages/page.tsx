@@ -6,12 +6,16 @@ import { Plus, Edit, Globe, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { DeletePageButton } from '@/components/dashboard/DeletePageButton';
 import { publicPathForPage } from '@/lib/products/productUrl';
+import { isReservedPageSlug } from '@/lib/products/catalogueIntros';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PagesDashboard() {
   await requireDashboardSession('/dashboard/pages');
-  const allPages = await db.select().from(pages).orderBy(desc(pages.updatedAt));
+  // Reserved rows (e.g. the catalogue intros store) are not editable pages.
+  const allPages = (await db.select().from(pages).orderBy(desc(pages.updatedAt))).filter(
+    (p) => !isReservedPageSlug(p.slug)
+  );
   const staticPages = allPages.filter((p) => !p.isTemplate);
   const templatePages = allPages.filter((p) => p.isTemplate);
 

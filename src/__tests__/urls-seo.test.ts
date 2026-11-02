@@ -19,7 +19,7 @@ import {
   revalidationPathsForPage,
   productSlugFromPageSlug,
 } from '../lib/products/productUrl';
-import { familleSlug } from '../lib/products/familleSlugs';
+import { slugForLabel } from '../lib/products/catalogueSlugs';
 import { FAMILLES } from '../lib/products/productMeta';
 import { buildLanguageAlternates, buildPageMetadata, hasBlocks, resolvePageMeta } from '../lib/seo/metadata';
 import { breadcrumbJsonLd, organizationJsonLd, productJsonLd } from '../lib/seo/jsonLd';
@@ -197,8 +197,8 @@ assert('BreadcrumbList positions + absolute items', eq(bc.itemListElement, [
   { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SITE_URL}/fr` },
   { '@type': 'ListItem', position: 2, name: 'X', item: `${SITE_URL}/fr/produit/x` },
 ]));
-assert('every famille has a provisional slug', FAMILLES.every((f) => !!familleSlug(f)));
-assert('famille slug lookup is case/accent-insensitive', familleSlug('ADJUVANTS ET REGULATEURS DE PH') === 'adjuvants-et-regulateurs-de-ph');
+assert('every famille has a slug (frozen map)', FAMILLES.every((f) => !!slugForLabel('famille', f)));
+assert('famille slug lookup is case/accent-insensitive', slugForLabel('famille', 'ADJUVANTS ET REGULATEURS DE PH') === 'adjuvants-et-regulateurs-de-ph');
 
 // ── result ───────────────────────────────────────────────────────────────────
 

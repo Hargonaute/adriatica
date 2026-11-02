@@ -53,8 +53,13 @@ export function LanguageSwitcher({ locale, variant = 'desktop' }: LanguageSwitch
   function switchTo(next: Locale) {
     if (next === locale) return;
     const translated = translatePath(suffix, locale, next);
+    // The find-a-solution filters (?famille=…) use the same slugs in every
+    // locale: keep them when switching language.
+    const segments = suffix.split('/').filter(Boolean);
+    const keepQuery = segments.length === 1 && keyForSlug(segments[0], locale) === 'solution';
+    const query = keepQuery ? window.location.search : '';
     startTransition(() => {
-      router.push(`/${next}${translated}`);
+      router.push(`/${next}${translated}${query}`);
     });
   }
 

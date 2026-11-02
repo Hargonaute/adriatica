@@ -6,6 +6,8 @@ import { STATIC_PAGE_KEYS, STATIC_PAGE_SLUGS, pathForKey } from '@/lib/i18n/page
 import { publicPathForPage } from '@/lib/products/productUrl';
 import { buildLanguageAlternates, hasBlocks, type LocalePaths } from '@/lib/seo/metadata';
 import { absoluteUrl } from '@/lib/site';
+import { CATALOGUE_TERMS } from '@/lib/products/catalogueSlugs';
+import { catalogueQuery, catalogueSeo, type CatalogueFilters } from '@/lib/products/catalogueFilter';
 
 // /sitemap.xml — generated from the DB on each request, so a publish /
 // unpublish shows up immediately. Lists every indexable public URL in FR and
@@ -13,16 +15,18 @@ import { absoluteUrl } from '@/lib/site';
 //   - coded pages (home, static JSON pages, legal pages);
 //   - published, non-template, non-noIndex DB pages (products at
 //     /fr/produit/<slug> + /en/product/<slug>), only in the locales that have
-//     content.
+//     content;
+//   - the filtered catalogue for each famille and each culture
+//     (/{l}/trouver-une-solution?famille=<slug>, ?culture=<slug>).
 // Legacy collection pages (/collections/…) are deliberately left out.
 export const dynamic = 'force-dynamic';
 
 type Entry = MetadataRoute.Sitemap[number];
 
-function entriesFor(paths: LocalePaths, lastModified?: Date | null): Entry[] {
-  const languages = buildLanguageAlternates(paths);
+function entriesFor(paths: LocalePaths, lastModified?: Date | null, query = ''): Entry[] {
+  const languages = buildLanguageAlternates(paths, query);
   return LOCALES.filter((l) => paths[l]).map((l) => ({
-    url: absoluteUrl(paths[l]!),
+    url: absoluteUrl(paths[l]!) + (query ? `?${query}` : ''),
     ...(lastModified ? { lastModified } : {}),
     alternates: { languages },
   }));
@@ -71,21 +75,29 @@ async function dbPageEntries(): Promise<Entry[]> {
 }
 
 /**
- * TODO(Phase 5 / Lot B): indexable catalogue filter URLs
- * (/{l}/trouver-une-solution?famille=<slug>, …) once the frozen facet slug map
- * and the index/noindex rules per combination exist. Not listed yet on purpose.
+ * Filtered catalogue URLs that are indexable AND listed (catalogueSeo rules):
+ * one famille or one culture. Single-probleme pages are indexable but not
+ * listed; combinations are noindex. Every famille / culture of the frozen map
+ * is listed, even one with no product today (the client wants them indexable).
  */
-async function catalogueFilterEntries(): Promise<Entry[]> {
-  return [];
+function catalogueFilterEntries(): Entry[] {
+  const paths = bothLocales((l) => pathForKey('solution', l));
+  const facets = ['famille', 'culture'] as const;
+  return facets.flatMap((facet) =>
+    CATALOGUE_TERMS[facet]
+      .map((t): CatalogueFilters => ({ [facet]: t.slug }))
+      .filter((f) => catalogueSeo(f).inSitemap)
+      .flatMap((f) => entriesFor(paths, null, catalogueQuery(f)))
+  );
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let dynamicEntries: Entry[] = [];
   try {
-    dynamicEntries = [...(await dbPageEntries()), ...(await catalogueFilterEntries())];
+    dynamicEntries = await dbPageEntries();
   } catch (error) {
     // Never fail the whole sitemap: the coded pages are still listed.
     console.error('sitemap: failed to load DB pages', error);
   }
-  return [...codedPageEntries(), ...dynamicEntries];
+  return [...codedPageEntries(), ...catalogueFilterEntries(), ...dynamicEntries];
 }
