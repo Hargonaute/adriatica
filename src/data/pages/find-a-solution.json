@@ -1,5 +1,8 @@
 {
-  "_TODO-CLIENT": "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
+  "_TODO-CLIENT": [
+    "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
+    "filter.emptyContactText / filter.emptyContactCta (Lot B empty state, FR and EN): our wording, to validate."
+  ],
   "fr": {
     "meta": {
       "title": "Trouver l'engrais adapté à votre culture",
@@ -25,6 +28,8 @@
       "productPlural": "produits",
       "loadingText": "Chargement des produits…",
       "emptyText": "Aucun produit ne correspond à ces critères.",
+      "emptyContactText": "Notre équipe peut vous orienter vers la solution adaptée.",
+      "emptyContactCta": "Nous contacter",
       "allOption": "Tous",
       "noOptions": "Aucune option",
       "untitled": "Sans titre"
@@ -55,6 +60,8 @@
       "productPlural": "products",
       "loadingText": "Loading products…",
       "emptyText": "No product matches these criteria.",
+      "emptyContactText": "Our team can point you to the right solution.",
+      "emptyContactCta": "Contact us",
       "allOption": "All",
       "noOptions": "No options",
       "untitled": "Untitled"
