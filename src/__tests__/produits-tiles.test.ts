@@ -72,10 +72,19 @@ for (const t of fr) {
 }
 
 console.log('\nsolutionFilterHref');
-assert('FR href', solutionFilterHref('fr', 'famille=x') === '/fr/trouver-une-solution?famille=x');
-assert('EN href uses the EN slug', solutionFilterHref('en', 'famille=x') === '/en/find-a-solution?famille=x');
-assert('leading "?" tolerated', solutionFilterHref('fr', '?probleme=y') === '/fr/trouver-une-solution?probleme=y');
+assert('FR href', solutionFilterHref('fr', 'famille=engrais-nutritionnels') === '/fr/trouver-une-solution?famille=engrais-nutritionnels');
+assert('EN href uses the EN slug', solutionFilterHref('en', 'famille=engrais-nutritionnels') === '/en/find-a-solution?famille=engrais-nutritionnels');
+assert('leading "?" tolerated', solutionFilterHref('fr', '?probleme=boosters-potassiques') === '/fr/trouver-une-solution?probleme=boosters-potassiques');
 assert('no query → no link', solutionFilterHref('fr', '') === undefined && solutionFilterHref('fr') === undefined);
+assert('unknown slug → no link (frozen slug map)', solutionFilterHref('fr', 'famille=x') === undefined);
+assert('canonical param order', solutionFilterHref('fr', 'culture=tomate&famille=engrais-nutritionnels') === '/fr/trouver-une-solution?famille=engrais-nutritionnels&culture=tomate');
+
+console.log('\nB5: every tile links through the slug map, already canonical');
+for (const [i, t] of fr.entries()) {
+  const href = solutionFilterHref('fr', t.filterQuery);
+  assert(`FR tile #${i + 1} link is the canonical form of its filterQuery`, href === `/fr/trouver-une-solution?${t.filterQuery}`);
+  assert(`EN tile #${i + 1} link`, solutionFilterHref('en', en[i]?.filterQuery) === `/en/find-a-solution?${t.filterQuery}`);
+}
 
 // ── result ───────────────────────────────────────────────────────────────────
 

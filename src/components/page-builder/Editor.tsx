@@ -36,6 +36,7 @@ import type { NavLink } from '@/components/home/nav-types';
 import commonJson from '@/data/common.json';
 import { pathForKey, type StaticPageKey } from '@/lib/i18n/pageSlugs';
 import { publicPathForPage } from '@/lib/products/productUrl';
+import { productMetaProblems } from '@/lib/products/productMeta';
 
 const NAV_KEY_TO_PAGE_EDITOR: Record<string, StaticPageKey> = {
   rd: 'research-and-development',
@@ -832,6 +833,13 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
       }
     } else {
       setImportError('Expected a JSON object or array.');
+      return;
+    }
+
+    // Product filter values must be editor options (frozen catalogue lists).
+    const productProblems = productMetaProblems((newMeta as { product?: unknown } | undefined)?.product);
+    if (productProblems.length) {
+      setImportError(`meta.product: ${productProblems.join('; ')}`);
       return;
     }
 

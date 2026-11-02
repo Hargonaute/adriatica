@@ -224,6 +224,7 @@ Recopie les valeurs EXACTEMENT comme écrites ci-dessous (majuscules, accents, t
 - Adjuvants et régulateurs de pH
 - Engrais nutritionnels
 - Engrais conventionnels
+- NPK hydrosolubles
 
 "problematiques" : une ou plusieurs valeurs parmi :
 - Stimulation de racines, croissance végétative & anti-stress
@@ -244,7 +245,6 @@ Recopie les valeurs EXACTEMENT comme écrites ci-dessous (majuscules, accents, t
 - Désalinisant & solutions calcio-potassiques
 - Conventionnel granulé
 - Conventionnel hydrosolubles
-- NPK hydrosolubles
 
 "cultures" : une ou plusieurs valeurs parmi :
 Agrumes, Arbres fruitiers, Bananier, Céréales, Fraisier, Hydroponie, Maraîchage, Olivier, Ornementales, Pomme de terre, Tomate, Vigne

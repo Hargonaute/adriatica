@@ -241,7 +241,10 @@ assert(
 
 const allMetas = catalogue.map(rowToProductMeta);
 const problematiques = new Set(allMetas.flatMap((m) => m.problematiques ?? []));
-assert('casing duplicates merged (21 raw → 19 problématiques)', problematiques.size === 19);
+// B8: "NPK hydrosolubles" is a famille now (18 problématiques + 1 famille).
+assert('casing duplicates merged (20 raw → 18 problématiques, NPK moved to famille)', problematiques.size === 18);
+assert('no row keeps "NPK hydrosolubles" as a problématique', !problematiques.has('NPK hydrosolubles'));
+assert('the NPK rows get famille "NPK hydrosolubles"', allMetas.filter((m) => m.famille === 'NPK hydrosolubles').length === 5);
 
 const existing = [
   { id: 'a', slug: 'produit-atrium-root', title: 'Atrium Root', status: 'published', meta: {} },
@@ -270,7 +273,8 @@ const gammePlan = planImport(catalogue, gammePages, {
 });
 const idronUpdates = gammePlan.updates.filter((u) => u.produit === 'Idron');
 assert('array override applies one Gamme row to every variant page', eq(idronUpdates.map((u) => u.slug).sort(), ['produit-idron-npk-20-20-20', 'produit-idron-npk-6-0-48']));
-assert('variant pages get the Gamme metadata', idronUpdates.every((u) => u.product.famille === 'Engrais conventionnels' && eq(u.product.cultures, ['Tomate', 'Fraisier', 'Agrumes', 'Ornementales'])));
+assert('variant pages get the Gamme metadata (B8: famille NPK hydrosolubles)', idronUpdates.every((u) => u.product.famille === 'NPK hydrosolubles' && eq(u.product.problematiques, []) && eq(u.product.cultures, ['Tomate', 'Fraisier', 'Agrumes', 'Ornementales'])));
+assert('NPK rows are not warned about a missing problématique', !gammePlan.warnings.some((w) => w.produit === 'Idron' && w.message.startsWith('no Sous')));
 assert('variant pages no longer reported as without row', !gammePlan.pagesWithoutRow.some((s) => s.startsWith('produit-idron')));
 const inh = inheritCultures(catalogue);
 const inhBy = new Map(inh.inherited.map((i) => [i.produit, i.from]));

@@ -12,9 +12,10 @@ import { loadCommon, loadHome } from '@/lib/i18n/loadPageData';
 import { CatalogueSection } from '@/components/home/CatalogueSection';
 import { ContactSection } from '@/components/home/ContactSection';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { heroFromBlocks, readProductMeta } from '@/lib/products/productMeta';
+import { heroFromBlocks, publicProductFacets } from '@/lib/products/productMeta';
 import { PRODUCT_SEGMENT, pageSlugForProduct, productPath } from '@/lib/products/productUrl';
-import { familleSlug } from '@/lib/products/familleSlugs';
+import { termForLabel, termLabel } from '@/lib/products/catalogueSlugs';
+import { catalogueHref } from '@/lib/i18n/solutionHref';
 import { buildPageMetadata, hasBlocks, resolvePageMeta } from '@/lib/seo/metadata';
 import { breadcrumbJsonLd, productJsonLd } from '@/lib/seo/jsonLd';
 import { absoluteUrl } from '@/lib/site';
@@ -110,14 +111,15 @@ export async function ProductRoutePage({
   const heroName = heroFromBlocks(blocks).title;
   const name = heroName || title || page.title;
   const url = absoluteUrl(productPath(L, slug));
-  const famille = readProductMeta(page.meta)?.famille ?? null;
-  const fSlug = famille ? familleSlug(famille) : null;
-  const solutionPath = pathForKey('solution', L);
+  // Famille from the frozen slug map (B6), with the B8 NPK bridge; it links to
+  // the filtered catalogue (/fr/trouver-une-solution?famille=<slug>).
+  const famille = publicProductFacets(page.meta)?.famille ?? null;
+  const familleTerm = famille ? termForLabel('famille', famille) : null;
   const crumbs = [
     { name: common.site.homeCrumb, url: `/${L}` },
     { name: L === 'fr' ? 'Produits' : 'Products', url: pathForKey('products', L) },
-    ...(famille && fSlug
-      ? [{ name: famille, url: `${solutionPath}?famille=${encodeURIComponent(fSlug)}` }]
+    ...(familleTerm
+      ? [{ name: termLabel(familleTerm, L), url: catalogueHref(L, { famille: familleTerm.slug }) }]
       : []),
     { name, url },
   ];
@@ -131,7 +133,7 @@ export async function ProductRoutePage({
             url,
             image: heroFromBlocks(blocksFor(page, 'fr')).image || null,
             description,
-            category: famille,
+            category: familleTerm ? termLabel(familleTerm, L) : famille,
           }),
           breadcrumbJsonLd(crumbs),
         ]}
