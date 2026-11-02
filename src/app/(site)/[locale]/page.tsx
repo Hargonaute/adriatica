@@ -13,6 +13,7 @@ import { pathForKey } from '@/lib/i18n/pageSlugs';
 import { buildPageMetadata } from '@/lib/seo/metadata';
 import { organizationJsonLd } from '@/lib/seo/jsonLd';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { templatedTitle } from '../../_shell/rootMetadata';
 
 export async function generateMetadata({
   params,
@@ -25,7 +26,7 @@ export async function generateMetadata({
   return buildPageMetadata({
     locale: locale as Locale,
     paths: { fr: '/fr', en: '/en' },
-    title: data.meta.title,
+    title: templatedTitle(data.meta.title),
     description: data.meta.description,
   });
 }

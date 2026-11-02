@@ -47,3 +47,14 @@ export const ROOT_METADATA: Metadata = {
     follow: true,
   },
 };
+
+/**
+ * title.template only applies to CHILD segments of the layout that defines it.
+ * The public home page (/[locale]) sits in the same segment as its root layout
+ * ((site)/[locale]/layout.tsx), so it applies the template explicitly to keep
+ * the title it had when the template lived in the old src/app/layout.tsx.
+ */
+export function templatedTitle(title: string): { absolute: string } {
+  const { template } = ROOT_METADATA.title as { template: string };
+  return { absolute: template.replace("%s", title) };
+}
