@@ -1,18 +1,23 @@
 import type { CSSProperties } from 'react';
+import type { Locale } from '@/lib/i18n/config';
+import { solutionFilterHref } from '@/lib/i18n/solutionHref';
 import { ProduitCard } from './ProduitCard';
 
 export interface ProduitItem {
   title: string;
   image: string;
+  /** Query string (without "?") for the find-a-solution page, e.g. "famille=correcteurs-de-carences". */
+  filterQuery?: string;
 }
 
 export interface ProduitsSectionProps {
   heading: string;
   body: string;
   items: ProduitItem[];
+  locale: Locale;
 }
 
-export function ProduitsSection({ heading, body, items }: ProduitsSectionProps) {
+export function ProduitsSection({ heading, body, items, locale }: ProduitsSectionProps) {
   return (
     <section className="bg-white w-full py-24 border-t border-slate-100" id="produits">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,7 +35,11 @@ export function ProduitsSection({ heading, body, items }: ProduitsSectionProps) 
               data-reveal
               style={{ '--reveal-delay': `${(idx % 4) * 90}ms` } as CSSProperties}
             >
-              <ProduitCard title={product.title} image={product.image} />
+              <ProduitCard
+                title={product.title}
+                image={product.image}
+                href={solutionFilterHref(locale, product.filterQuery)}
+              />
             </div>
           ))}
         </div>

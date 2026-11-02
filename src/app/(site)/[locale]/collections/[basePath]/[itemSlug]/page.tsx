@@ -7,6 +7,7 @@ import { type Block } from '@/types';
 import { TemplateRenderer } from './TemplateRenderer';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { loadCommon } from '@/lib/i18n/loadPageData';
+import { brandTitle } from '@/lib/seo/brandTitle';
 
 export const revalidate = 60;
 
@@ -77,7 +78,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const meta = (data.templatePage?.meta ?? {}) as Record<string, string>;
 
   return {
-    title: entryTitle || meta.title || data.col.name,
+    title: brandTitle(entryTitle || meta.title || data.col.name),
     description: meta.description,
   };
 }

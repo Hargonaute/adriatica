@@ -10,6 +10,7 @@ import { ContactSection } from '@/components/home/ContactSection';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { loadHome, loadCommon, loadProducts } from '@/lib/i18n/loadPageData';
 import { pathForKey } from '@/lib/i18n/pageSlugs';
+import { brandTitle } from '@/lib/seo/brandTitle';
 
 export async function generateMetadata({
   params,
@@ -20,7 +21,7 @@ export async function generateMetadata({
   if (!isLocale(locale)) return {};
   const data = loadHome(locale as Locale);
   return {
-    title: data.meta.title,
+    title: brandTitle(data.meta.title),
     description: data.meta.description,
   };
 }
@@ -72,6 +73,7 @@ export default async function Home({
         heading={data.products.heading}
         body={data.products.body}
         items={products.items}
+        locale={L}
       />
       <RDSection
         heading={data.rd.heading}

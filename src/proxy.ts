@@ -96,7 +96,7 @@ export function proxy(request: NextRequest) {
   if (!isLocaleReserved(pathname) && !pathHasLocale(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = `/${DEFAULT_LOCALE}${pathname}`;
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(url, 308);
   }
 
   // Let the dashboard layout know which page is rendered (it skips its

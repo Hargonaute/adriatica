@@ -12,6 +12,17 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Keep the admin UI, the /login alias and the API out of search engines
+  // (A10). Applies to every response on these paths.
+  async headers() {
+    const noindex = [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }];
+    return [
+      { source: '/dashboard', headers: noindex },
+      { source: '/dashboard/:path*', headers: noindex },
+      { source: '/login', headers: noindex },
+      { source: '/api/:path*', headers: noindex },
+    ];
+  },
   images: {
     // Dev only: on IPv6/NAT64 networks the Blob host resolves to 64:ff9b::/96,
     // which Next treats as a private IP and refuses to optimise ("url" parameter

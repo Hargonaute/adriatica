@@ -9,6 +9,7 @@ import { isLocale, type Locale } from '@/lib/i18n/config';
 import { loadHome } from '@/lib/i18n/loadPageData';
 import { CatalogueSection } from '@/components/home/CatalogueSection';
 import { ContactSection } from '@/components/home/ContactSection';
+import { brandTitle } from '@/lib/seo/brandTitle';
 
 // The catalogue and contact-form sections are fixed on every product page —
 // rendered from the real home components (like the navbar/footer), not as
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     noIndex?: boolean;
   };
   return {
-    title: meta.title || page.title,
+    title: brandTitle(meta.title || page.title),
     description: meta.description,
     openGraph: { images: meta.ogImage ? [meta.ogImage] : [] },
     robots: meta.noIndex ? { index: false } : undefined,

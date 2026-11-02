@@ -23,6 +23,7 @@ import { DurabiliteSection } from '@/components/recherche-et-developpement/Durab
 
 import { TrouverHero } from '@/components/trouver-une-solution/TrouverHero';
 import { TrouverFilter } from '@/components/trouver-une-solution/TrouverFilter';
+import { brandTitle } from '@/lib/seo/brandTitle';
 
 export function staticPageMetadata(key: StaticPageKey, locale: Locale): Metadata {
   let meta;
@@ -40,7 +41,7 @@ export function staticPageMetadata(key: StaticPageKey, locale: Locale): Metadata
       meta = loadSolution(locale).meta;
       break;
   }
-  return { title: meta.title, description: meta.description };
+  return { title: brandTitle(meta.title), description: meta.description };
 }
 
 export function renderStaticPage(key: StaticPageKey, locale: Locale) {
@@ -73,6 +74,7 @@ function ProductsPage({ locale }: { locale: Locale }) {
         heading={data.productsSection.heading}
         body={data.productsSection.body}
         items={data.productsSection.items}
+        locale={locale}
       />
       <CatalogueSection
         heading={home.catalogue.heading}
