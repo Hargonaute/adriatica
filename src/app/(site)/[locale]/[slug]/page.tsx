@@ -1,6 +1,6 @@
 import { db, pages, collections, entries, fields } from '@/lib/db';
 import { eq, and, or, isNull, desc } from 'drizzle-orm';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
@@ -8,16 +8,10 @@ import { RenderPreview } from '@/components/page-builder/renderPreview';
 import { type Block } from '@/types';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { keyForSlug } from '@/lib/i18n/pageSlugs';
-import { loadCommon, loadHome } from '@/lib/i18n/loadPageData';
+import { loadCommon } from '@/lib/i18n/loadPageData';
 import { renderStaticPage, staticPageMetadata } from './staticRoutes';
-import { CatalogueSection } from '@/components/home/CatalogueSection';
-import { ContactSection } from '@/components/home/ContactSection';
-
-// Product detail pages (DB slug `produit-…`) always end with the same fixed
-// catalogue + contact sections as the rest of the site — rendered from the real
-// home components (like the navbar/footer), not as page-builder blocks. Any such
-// blocks left in a page's saved data are dropped so they don't render twice.
-const FIXED_SECTION_BLOCK_TYPES = new Set(['catalogue', 'contact-form-simple']);
+import { productSlugFromPageSlug, productPath } from '@/lib/products/productUrl';
+import { buildPageMetadata, hasBlocks, resolvePageMeta } from '@/lib/seo/metadata';
 
 export const revalidate = 60;
 
@@ -66,23 +60,35 @@ export async function generateMetadata({
   const staticKey = keyForSlug(slug, L);
   if (staticKey) return staticPageMetadata(staticKey, L);
 
+  // Product pages live at /{locale}/produit|product/<slug> (308, see below).
+  if (productSlugFromPageSlug(slug)) return {};
+
   const page = await loadDbPage(slug);
   if (page) {
-    const meta = (page.meta ?? {}) as Record<string, string> & { ogImage?: string; noIndex?: boolean };
-    return {
-      title: meta.title || page.title,
-      description: meta.description,
-      openGraph: {
-        images: meta.ogImage ? [meta.ogImage] : [],
+    const meta = (page.meta ?? {}) as { ogImage?: unknown; noIndex?: unknown };
+    const { title, description } = resolvePageMeta(page.meta, L, page.title);
+    return buildPageMetadata({
+      locale: L,
+      selfPath: `/${L}/${slug}`,
+      paths: {
+        fr: hasBlocks(page.published_blocks, 'fr') ? `/fr/${slug}` : undefined,
+        en: hasBlocks(page.published_blocks, 'en') ? `/en/${slug}` : undefined,
       },
-      robots: meta.noIndex ? { index: false } : undefined,
-    };
+      title,
+      description,
+      image: typeof meta.ogImage === 'string' && meta.ogImage.trim() ? meta.ogImage.trim() : null,
+      noIndex: meta.noIndex === true,
+    });
   }
 
   const idx = await loadCollectionIndex(slug);
   if (idx) {
     const meta = (idx.templatePage?.meta ?? {}) as Record<string, string>;
-    return { title: meta.title || idx.col.name };
+    return buildPageMetadata({
+      locale: L,
+      paths: { fr: `/fr/${slug}`, en: `/en/${slug}` },
+      title: meta.title || idx.col.name,
+    });
   }
 
   return {};
@@ -103,44 +109,28 @@ export default async function PublicPage({
     return renderStaticPage(staticKey, L);
   }
 
-  // 2) Standalone DB page match.
+  // 2) Product pages (DB slug `produit-<slug>`) have a single public URL per
+  //    locale; the old single-segment form 308s there. The proxy already does
+  //    this before the page is reached; this is the fallback.
+  const productSlug = productSlugFromPageSlug(slug);
+  if (productSlug) permanentRedirect(productPath(L, productSlug));
+
+  // 3) Standalone DB page match.
   const page = await loadDbPage(slug);
   if (page) {
     const blocks = ((page.published_blocks as Record<Locale, Block[]> | null)?.[L] ?? []) as Block[];
-    const isProduct = slug.startsWith('produit-');
-    const contentBlocks = isProduct
-      ? blocks.filter((b) => !FIXED_SECTION_BLOCK_TYPES.has(b.type))
-      : blocks;
-    const home = isProduct ? loadHome(L) : null;
     return (
       <main className="min-h-screen bg-background">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          {contentBlocks.map((block) => (
+          {blocks.map((block) => (
             <RenderPreview key={block.id} block={block} />
           ))}
         </div>
-        {home && (
-          <>
-            <CatalogueSection
-              heading={home.catalogue.heading}
-              ctaLabel={home.catalogue.ctaLabel}
-              imageUrl={home.catalogue.imageUrl}
-              imageAlt={home.catalogue.imageAlt}
-            />
-            <ContactSection
-              heading={home.contact.heading}
-              body={home.contact.body}
-              imageUrl="/home_page_img/Adriatica Web.jpg"
-              imageAlt={home.contact.imageAlt}
-              locale={L}
-            />
-          </>
-        )}
       </main>
     );
   }
 
-  // 3) Otherwise treat the slug as a collection basePath.
+  // 4) Otherwise treat the slug as a collection basePath.
   const idx = await loadCollectionIndex(slug);
   if (!idx) notFound();
 

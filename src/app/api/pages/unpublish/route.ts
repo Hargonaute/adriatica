@@ -3,6 +3,7 @@ import { pages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { revalidationPathsForPage } from '@/lib/products/productUrl';
 
 export async function POST(request: Request) {
   try {
@@ -28,8 +29,7 @@ export async function POST(request: Request) {
         .where(eq(pages.id, id));
 
     // Bust the ISR cache so the public route returns 404 immediately
-    revalidatePath(`/fr/${existing[0].slug}`);
-    revalidatePath(`/en/${existing[0].slug}`);
+    revalidationPathsForPage(existing[0].slug).forEach((p) => revalidatePath(p));
 
     return NextResponse.json({ success: true });
 

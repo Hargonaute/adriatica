@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Locale } from '@/lib/i18n/config';
+import { pathForKey } from '@/lib/i18n/pageSlugs';
+import { productPath } from '@/lib/products/productUrl';
 
 const COLLECTION_SLUG = 'produit';
 
@@ -112,9 +114,11 @@ export function HeroProductSearch({ placeholder, locale }: HeroProductSearchProp
     setActiveIdx(-1);
   }, [search]);
 
-  const basePath = collection?.basePath ?? collection?.slug ?? COLLECTION_SLUG;
+  // Legacy entries link to the product page with the same slug (its one public
+  // URL), not to the old /collections/produit/<slug> page. An entry without a
+  // slug falls back to the "Trouver une solution" page.
   const hrefFor = (entry: Entry) =>
-    `/${locale}/collections/${basePath}/${entry.slug ?? entry.id}`;
+    entry.slug ? productPath(locale, entry.slug) : pathForKey('solution', locale);
 
   const noResults = locale === 'fr' ? 'Aucun résultat' : 'No results';
   const loadingLabel = locale === 'fr' ? 'Chargement…' : 'Loading…';

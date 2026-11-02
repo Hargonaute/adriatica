@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { db, collections, entries, pages, fields } from '@/lib/db';
 import { and, eq, or, isNull } from 'drizzle-orm';
 import Link from 'next/link';
@@ -7,6 +7,12 @@ import { type Block } from '@/types';
 import { TemplateRenderer } from './TemplateRenderer';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { loadCommon } from '@/lib/i18n/loadPageData';
+import { buildPageMetadata } from '@/lib/seo/metadata';
+import {
+  LEGACY_PRODUCT_COLLECTION,
+  pageSlugForProduct,
+  productPath,
+} from '@/lib/products/productUrl';
 
 export const revalidate = 60;
 
@@ -61,8 +67,30 @@ async function getData(basePath: string, itemSlug: string) {
   return { col, entry, templatePage, colFields };
 }
 
+/**
+ * Legacy "Produit" collection entries: when a published product page exists for
+ * the entry slug, the product page is the one public URL (308 there). Entries
+ * without a product page (e.g. the two `idron` entries) keep this route.
+ */
+async function productRedirectTarget(locale: Locale, basePath: string, itemSlug: string) {
+  if (basePath !== LEGACY_PRODUCT_COLLECTION || UUID_RE.test(itemSlug)) return null;
+  const [page] = await db
+    .select({ id: pages.id })
+    .from(pages)
+    .where(
+      and(
+        eq(pages.slug, pageSlugForProduct(itemSlug)),
+        eq(pages.status, 'published'),
+        eq(pages.isTemplate, false)
+      )
+    )
+    .limit(1);
+  return page ? productPath(locale, itemSlug) : null;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { basePath, itemSlug } = await params;
+  const { locale, basePath, itemSlug } = await params;
+  if (!isLocale(locale)) return {};
   const data = await getData(basePath, itemSlug);
   if (!data) return {};
 
@@ -76,16 +104,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const meta = (data.templatePage?.meta ?? {}) as Record<string, string>;
 
-  return {
+  return buildPageMetadata({
+    locale,
+    paths: {
+      fr: `/fr/collections/${basePath}/${itemSlug}`,
+      en: `/en/collections/${basePath}/${itemSlug}`,
+    },
     title: entryTitle || meta.title || data.col.name,
     description: meta.description,
-  };
+  });
 }
 
 export default async function CollectionItemDetailPage({ params }: Props) {
   const { locale, basePath, itemSlug } = await params;
   if (!isLocale(locale)) notFound();
   const L = locale as Locale;
+
+  const productTarget = await productRedirectTarget(L, basePath, itemSlug);
+  if (productTarget) permanentRedirect(productTarget);
 
   const data = await getData(basePath, itemSlug);
   if (!data) notFound();

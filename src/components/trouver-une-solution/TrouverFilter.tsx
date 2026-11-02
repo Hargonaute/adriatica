@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Search, ChevronDown, Undo2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Locale } from '@/lib/i18n/config';
+import { publicPathForPage } from '@/lib/products/productUrl';
 import {
   facetOptions,
   matchesFilters,
@@ -298,9 +299,9 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filtered.map((item) => {
                   const name = item.name;
-                  // Product pages are DB pages with slug `produit-<slug>`, served by the
-                  // generic /[locale]/[slug] route (single segment, not /produit/<slug>).
-                  const href = item.pathSlug ? `/${locale}/${item.pathSlug}` : null;
+                  // Product pages are DB pages with slug `produit-<slug>`; their one
+                  // public URL is /fr/produit/<slug> | /en/product/<slug>.
+                  const href = item.pathSlug ? publicPathForPage(locale, item.pathSlug) : null;
                   const imageUrl = item.image || PLACEHOLDER_IMAGE;
                   const card = (
                     <>

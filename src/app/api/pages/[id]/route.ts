@@ -3,6 +3,7 @@ import { pages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { revalidationPathsForPage } from '@/lib/products/productUrl';
 import { migratePageData } from '@/lib/page-builder/json/migrate';
 
 export async function GET(
@@ -56,8 +57,7 @@ export async function DELETE(
     }
 
     // Bust public cache for the deleted slug
-    revalidatePath(`/fr/${result[0].slug}`);
-    revalidatePath(`/en/${result[0].slug}`);
+    revalidationPathsForPage(result[0].slug).forEach((p) => revalidatePath(p));
 
     return NextResponse.json({ success: true });
   } catch (error) {

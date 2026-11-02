@@ -3,6 +3,7 @@ import { pages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { revalidationPathsForPage } from '@/lib/products/productUrl';
 import { validatePageData } from '@/lib/page-builder/json/validate';
 
 export async function POST(request: Request) {
@@ -24,6 +25,8 @@ export async function POST(request: Request) {
       .select({
         isTemplate: pages.isTemplate,
         templateKind: pages.templateKind,
+        slug: pages.slug,
+        status: pages.status,
       })
       .from(pages)
       .where(eq(pages.id, data.id))
@@ -54,6 +57,13 @@ export async function POST(request: Request) {
     if (autoPublish) {
       revalidatePath('/fr/collections', 'layout');
       revalidatePath('/en/collections', 'layout');
+    }
+
+    // Save writes title / slug / meta to the live row of a published page, so
+    // refresh its public URLs (old and new slug; products: /produit|product/x).
+    if (existing && existing.status === 'published' && !existing.isTemplate) {
+      new Set([...revalidationPathsForPage(existing.slug), ...revalidationPathsForPage(data.slug)])
+        .forEach((p) => revalidatePath(p));
     }
 
     return NextResponse.json({ success: true, autoPublished: autoPublish });

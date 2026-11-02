@@ -35,6 +35,7 @@ import { SiteFooter } from '@/components/home/SiteFooter';
 import type { NavLink } from '@/components/home/nav-types';
 import commonJson from '@/data/common.json';
 import { pathForKey, type StaticPageKey } from '@/lib/i18n/pageSlugs';
+import { publicPathForPage } from '@/lib/products/productUrl';
 
 const NAV_KEY_TO_PAGE_EDITOR: Record<string, StaticPageKey> = {
   rd: 'research-and-development',
@@ -932,7 +933,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
         return `/${L}/collections/${templateBasePath}`;
       }
     }
-    if (data.status === 'published') return `/${L}/${data.slug}`;
+    if (data.status === 'published') return publicPathForPage(L, data.slug);
     return null;
   })();
 
