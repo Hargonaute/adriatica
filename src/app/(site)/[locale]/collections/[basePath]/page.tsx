@@ -7,6 +7,7 @@ import { RenderPreview } from '@/components/page-builder/renderPreview';
 import { type Block } from '@/types';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { loadCommon } from '@/lib/i18n/loadPageData';
+import { buildPageMetadata } from '@/lib/seo/metadata';
 
 export const revalidate = 60;
 
@@ -49,11 +50,16 @@ async function getData(basePath: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { basePath } = await params;
+  const { locale, basePath } = await params;
+  if (!isLocale(locale)) return {};
   const data = await getData(basePath);
   if (!data) return {};
   const meta = (data.templatePage?.meta ?? {}) as Record<string, string>;
-  return { title: meta.title || data.col.name };
+  return buildPageMetadata({
+    locale,
+    paths: { fr: `/fr/collections/${basePath}`, en: `/en/collections/${basePath}` },
+    title: meta.title || data.col.name,
+  });
 }
 
 export default async function CollectionIndexPage({ params }: Props) {

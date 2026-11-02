@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { Locale } from '@/lib/i18n/config';
-import type { StaticPageKey } from '@/lib/i18n/pageSlugs';
+import { pathForKey, type StaticPageKey } from '@/lib/i18n/pageSlugs';
+import { buildPageMetadata } from '@/lib/seo/metadata';
 import {
   loadHome,
   loadProducts,
@@ -40,7 +41,12 @@ export function staticPageMetadata(key: StaticPageKey, locale: Locale): Metadata
       meta = loadSolution(locale).meta;
       break;
   }
-  return { title: meta.title, description: meta.description };
+  return buildPageMetadata({
+    locale,
+    paths: { fr: pathForKey(key, 'fr'), en: pathForKey(key, 'en') },
+    title: meta.title,
+    description: meta.description,
+  });
 }
 
 export function renderStaticPage(key: StaticPageKey, locale: Locale) {

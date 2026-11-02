@@ -10,6 +10,9 @@ import { ContactSection } from '@/components/home/ContactSection';
 import { isLocale, type Locale } from '@/lib/i18n/config';
 import { loadHome, loadCommon, loadProducts } from '@/lib/i18n/loadPageData';
 import { pathForKey } from '@/lib/i18n/pageSlugs';
+import { buildPageMetadata } from '@/lib/seo/metadata';
+import { organizationJsonLd } from '@/lib/seo/jsonLd';
+import { JsonLd } from '@/components/seo/JsonLd';
 
 export async function generateMetadata({
   params,
@@ -19,10 +22,12 @@ export async function generateMetadata({
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const data = loadHome(locale as Locale);
-  return {
+  return buildPageMetadata({
+    locale: locale as Locale,
+    paths: { fr: '/fr', en: '/en' },
     title: data.meta.title,
     description: data.meta.description,
-  };
+  });
 }
 
 export default async function Home({
@@ -48,6 +53,7 @@ export default async function Home({
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-red-100 selection:text-red-900">
+      <JsonLd data={organizationJsonLd()} />
       <HeroSection
         headline={data.hero.headline}
         subheadline={data.hero.subheadline}
