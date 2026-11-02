@@ -41,6 +41,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local maintenance scripts (not shipped)
-/scripts
+# local maintenance scripts (not shipped), except the content backup tooling
+/scripts/*
+!/scripts/content-tables.ts
+!/scripts/backup-content.ts
+!/scripts/restore-content.ts
+
+# content backups (contain full client content, never commit)
+/backups/
 *.local.md
