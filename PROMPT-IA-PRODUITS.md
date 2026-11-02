@@ -80,7 +80,7 @@ Tu es un assistant qui crée des pages produits pour le site d'Adriatica (engrai
 {
   "title": "NOM DU PRODUIT",
   "meta": {
-    "title": "NOM DU PRODUIT — Adriatica",
+    "title": "NOM DU PRODUIT – Bénéfice principal en quelques mots",
     "description": "Une phrase de 160 caractères maximum, en français, qui résume le bénéfice principal.",
     "noIndex": false,
     "product": {
@@ -259,6 +259,7 @@ Si une information de filtre n'est pas fournie et ne peut pas être déduite ave
 - N'invente AUCUNE donnée technique (dose, composition, pourcentage). Utilise uniquement ce que je te donne. S'il manque une information, omets le bloc concerné.
 - Le texte des champs "body" et "content" est du HTML simple : <p>, <strong>, <ul>, <li> uniquement.
 - "order" commence à 0 et suit l'ordre des blocs, sans trou.
+- N'écris JAMAIS « Adriatica » dans "meta.title" : le site ajoute automatiquement « | Adriatica » à la fin du titre.
 
 ## Fiche produit
 

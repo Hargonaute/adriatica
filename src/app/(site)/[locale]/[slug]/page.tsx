@@ -12,6 +12,7 @@ import { loadCommon, loadHome } from '@/lib/i18n/loadPageData';
 import { renderStaticPage, staticPageMetadata } from './staticRoutes';
 import { CatalogueSection } from '@/components/home/CatalogueSection';
 import { ContactSection } from '@/components/home/ContactSection';
+import { brandTitle } from '@/lib/seo/brandTitle';
 
 // Product detail pages (DB slug `produit-…`) always end with the same fixed
 // catalogue + contact sections as the rest of the site — rendered from the real
@@ -70,7 +71,7 @@ export async function generateMetadata({
   if (page) {
     const meta = (page.meta ?? {}) as Record<string, string> & { ogImage?: string; noIndex?: boolean };
     return {
-      title: meta.title || page.title,
+      title: brandTitle(meta.title || page.title),
       description: meta.description,
       openGraph: {
         images: meta.ogImage ? [meta.ogImage] : [],
@@ -82,7 +83,7 @@ export async function generateMetadata({
   const idx = await loadCollectionIndex(slug);
   if (idx) {
     const meta = (idx.templatePage?.meta ?? {}) as Record<string, string>;
-    return { title: meta.title || idx.col.name };
+    return { title: brandTitle(meta.title || idx.col.name) };
   }
 
   return {};

@@ -65,7 +65,7 @@ Every product page uses the **static page envelope**. Do NOT use `mode`, `templa
   "status": "draft",
   "schemaVersion": 1,
   "meta": {
-    "title": "[Product Name] — Adriatica",
+    "title": "[Product Name] – [Main benefit in a few words]",
     "description": "[One sentence about the product, from description field]",
     "noIndex": false
   },
@@ -83,6 +83,7 @@ Every product page uses the **static page envelope**. Do NOT use `mode`, `templa
 - Block IDs must be unique **within each locale** and must **differ between `"fr"` and `"en"`**
 - Use a UUID v4 format for block IDs: `"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"`
 - `order` is a sequential integer starting at `0` within each array
+- Never put "Adriatica" in `meta.title`: the site title template appends " | Adriatica" automatically
 
 ---
 
@@ -365,7 +366,7 @@ Expected JSON output (abbreviated — show full in your actual output):
   "status": "draft",
   "schemaVersion": 1,
   "meta": {
-    "title": "ATRIUM ROOT — Adriatica",
+    "title": "ATRIUM ROOT – Biostimulant racinaire",
     "description": "Stimulateur racinaire organique liquide pour maraîchage, arboriculture et vigne.",
     "noIndex": false
   },
