@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { fields } from '@/lib/db/schema';
 import { NextResponse } from 'next/server';
+import { requireSession } from '@/lib/auth/require-session';
 
 const VALID_TYPES = [
   'text', 'number', 'email', 'date', 'textarea', 'checkbox', 'rich-text', 'image',
@@ -8,6 +9,9 @@ const VALID_TYPES = [
 ];
 
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
 

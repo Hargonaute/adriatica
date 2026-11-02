@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { requireDashboardSession } from '@/lib/auth/require-session';
 import { pages } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
 import { Plus, Edit, Globe, FileText } from 'lucide-react';
@@ -8,6 +9,7 @@ import { DeletePageButton } from '@/components/dashboard/DeletePageButton';
 export const dynamic = 'force-dynamic';
 
 export default async function PagesDashboard() {
+  await requireDashboardSession('/dashboard/pages');
   const allPages = await db.select().from(pages).orderBy(desc(pages.updatedAt));
   const staticPages = allPages.filter((p) => !p.isTemplate);
   const templatePages = allPages.filter((p) => p.isTemplate);

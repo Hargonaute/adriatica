@@ -2,11 +2,15 @@ import { db } from '@/lib/db';
 import { fields } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { requireSession } from '@/lib/auth/require-session';
 
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await params;
     const result = await db.delete(fields).where(eq(fields.id, id)).returning();

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import { requireDashboardSession } from '@/lib/auth/require-session';
 import { pages, assets, collections } from '@/lib/db/schema';
 import { count, desc } from 'drizzle-orm';
 import { FileText, Database, Image as ImageIcon, ArrowRight, Plus } from 'lucide-react';
@@ -7,6 +8,7 @@ import { FileText, Database, Image as ImageIcon, ArrowRight, Plus } from 'lucide
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
+  await requireDashboardSession('/dashboard');
   const [[pageCount], [assetCount], [collectionCount], recentPages] = await Promise.all([
     db.select({ count: count() }).from(pages),
     db.select({ count: count() }).from(assets),

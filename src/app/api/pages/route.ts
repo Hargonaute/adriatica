@@ -1,12 +1,15 @@
 import { db } from '@/lib/db';
 import { pages } from '@/lib/db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getValidSession, requireSession } from '@/lib/auth/require-session';
 
-// GET /api/pages — list all pages (lean, no blocks payload)
+// GET /api/pages — list pages (lean, no blocks payload).
+// Drafts are only listed for an authenticated dashboard session.
 export async function GET() {
   try {
+    const session = await getValidSession();
     const result = await db
       .select({
         id: pages.id,
@@ -17,6 +20,7 @@ export async function GET() {
         updatedAt: pages.updatedAt,
       })
       .from(pages)
+      .where(session ? undefined : eq(pages.status, 'published'))
       .orderBy(desc(pages.updatedAt));
 
     return NextResponse.json(result);
@@ -36,6 +40,9 @@ const CreatePageSchema = z.object({
 
 // POST /api/pages — create a new blank page
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const parsed = CreatePageSchema.safeParse(body);

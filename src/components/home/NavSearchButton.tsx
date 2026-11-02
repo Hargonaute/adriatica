@@ -2,54 +2,25 @@
 
 import Link from 'next/link';
 import { Search, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Locale } from '@/lib/i18n/config';
-
-const COLLECTION_SLUG = 'produit';
-
-type FieldDef = {
-  id: string;
-  key: string;
-  label: string;
-  type: string;
-  order: number | null;
-};
-
-type CollectionSummary = {
-  id: string;
-  slug: string;
-  basePath: string | null;
-};
-
-type CollectionMeta = CollectionSummary & {
-  name: string;
-  itemSlugField: string | null;
-  fields: FieldDef[];
-};
-
-type Entry = {
-  id: string;
-  slug: string | null;
-  collectionId: string;
-  data: Record<string, unknown>;
-};
-
-function getStringValue(entry: Entry, key: string): string {
-  const v = entry.data?.[key];
-  return typeof v === 'string' ? v : v == null ? '' : String(v);
-}
+import { useProductSearch } from './useProductSearch';
 
 export function NavSearchButton({ locale, searchLabel }: { locale: Locale; searchLabel: string }) {
   const [expanded, setExpanded] = useState(false);
-  const [collection, setCollection] = useState<CollectionMeta | null>(null);
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const { ensureLoaded, loaded, loading, filtered, hrefFor } = useProductSearch(locale, search);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const collapse = () => {
+    setExpanded(false);
+    setSearch('');
+    setIsOpen(false);
+    setActiveIdx(-1);
+  };
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -60,62 +31,6 @@ export function NavSearchButton({ locale, searchLabel }: { locale: Locale; searc
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
-
-  const collapse = () => {
-    setExpanded(false);
-    setSearch('');
-    setIsOpen(false);
-    setActiveIdx(-1);
-  };
-
-  const ensureLoaded = async () => {
-    if (loaded || loading) return;
-    setLoading(true);
-    try {
-      const listRes = await fetch('/api/collections');
-      if (!listRes.ok) return;
-      const list = (await listRes.json()) as CollectionSummary[];
-      const match = list.find((c) => c.slug === COLLECTION_SLUG);
-      if (!match) return;
-
-      const [metaRes, entriesRes] = await Promise.all([
-        fetch(`/api/collections/${match.id}`),
-        fetch(`/api/entries?collectionId=${match.id}`),
-      ]);
-      if (!metaRes.ok || !entriesRes.ok) return;
-
-      const meta = (await metaRes.json()) as CollectionMeta;
-      const data = (await entriesRes.json()) as Entry[];
-      setCollection(meta);
-      setEntries(data);
-      setLoaded(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const nameKey = useMemo(() => {
-    if (!collection) return null;
-    if (collection.itemSlugField) return collection.itemSlugField;
-    const ordered = [...collection.fields].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    const firstText = ordered.find((f) => f.type === 'text');
-    return (firstText ?? ordered[0])?.key ?? null;
-  }, [collection]);
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q || !nameKey) return [] as Entry[];
-    return entries
-      .filter((e) => getStringValue(e, nameKey).toLowerCase().includes(q))
-      .slice(0, 8);
-  }, [entries, search, nameKey]);
-
-  useEffect(() => {
-    setActiveIdx(-1);
-  }, [search]);
-
-  const basePath = collection?.basePath ?? collection?.slug ?? COLLECTION_SLUG;
-  const hrefFor = (entry: Entry) => `/${locale}/collections/${basePath}/${entry.slug ?? entry.id}`;
 
   const noResults = locale === 'fr' ? 'Aucun résultat' : 'No results';
   const loadingLabel = locale === 'fr' ? 'Chargement…' : 'Loading…';
@@ -170,6 +85,7 @@ export function NavSearchButton({ locale, searchLabel }: { locale: Locale; searc
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
+            setActiveIdx(-1);
             setIsOpen(true);
             void ensureLoaded();
           }}
@@ -198,13 +114,12 @@ export function NavSearchButton({ locale, searchLabel }: { locale: Locale; searc
           ) : filtered.length === 0 ? (
             <div className="px-4 py-3 text-sm text-slate-400">{noResults}</div>
           ) : (
-            filtered.map((entry, idx) => {
-              const name = nameKey ? getStringValue(entry, nameKey) : entry.id;
+            filtered.map((product, idx) => {
               const active = idx === activeIdx;
               return (
                 <Link
-                  key={entry.id}
-                  href={hrefFor(entry)}
+                  key={product.id}
+                  href={hrefFor(product)}
                   className={`block px-4 py-2.5 text-sm transition-colors ${
                     active
                       ? 'bg-slate-50 text-[#BC0D2A]'
@@ -213,7 +128,7 @@ export function NavSearchButton({ locale, searchLabel }: { locale: Locale; searc
                   onMouseEnter={() => setActiveIdx(idx)}
                   onClick={() => { setIsOpen(false); collapse(); }}
                 >
-                  {name || entry.id}
+                  {product.name}
                 </Link>
               );
             })

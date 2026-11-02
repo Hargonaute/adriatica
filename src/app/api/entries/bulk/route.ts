@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { generateEntrySlug, ensureUniqueEntrySlug } from '@/lib/db/generateEntrySlug';
 import { validateRows, type CsvField } from '@/lib/csv';
+import { requireSession } from '@/lib/auth/require-session';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -34,6 +35,9 @@ function normalizeRow(row: unknown): BulkRow {
 // are inserted. Every row's data is re-validated server-side through the same
 // validateRows() logic the client uses, so a forged request can't bypass the UI.
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const { collectionId, rows: rawRows } = body ?? {};
