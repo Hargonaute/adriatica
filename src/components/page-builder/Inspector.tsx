@@ -132,6 +132,11 @@ function PageSettingsPanel({
     onPageChange({ meta: { ...meta, [key]: value } });
   };
 
+  // EN overrides live in meta.en (same jsonb, no schema change).
+  const setMetaEn = (key: 'title' | 'description', value: string) => {
+    onPageChange({ meta: { ...meta, en: { ...(meta.en ?? {}), [key]: value } } });
+  };
+
   return (
     <div className="p-4 space-y-6">
       <div>
@@ -194,6 +199,35 @@ function PageSettingsPanel({
             maxLength={160}
           />
           <p className="text-xs text-muted-foreground">{(meta.description ?? '').length}/160 chars</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Meta Title EN <span className="text-muted-foreground">(English pages)</span></Label>
+          <Input
+            value={meta.en?.title ?? ''}
+            onChange={(e) => setMetaEn('title', e.target.value)}
+            placeholder={
+              pageData.slug.startsWith(PRODUCT_PAGE_PREFIX)
+                ? 'Falls back to the EN Product Hero title, then Meta Title'
+                : 'Falls back to Meta Title'
+            }
+            className="h-8 text-sm"
+            maxLength={60}
+          />
+          <p className="text-xs text-muted-foreground">{(meta.en?.title ?? '').length}/60 chars</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Meta Description EN <span className="text-muted-foreground">(English pages)</span></Label>
+          <Textarea
+            value={meta.en?.description ?? ''}
+            onChange={(e) => setMetaEn('description', e.target.value)}
+            placeholder="Falls back to Meta Description"
+            className="text-sm resize-none"
+            rows={3}
+            maxLength={160}
+          />
+          <p className="text-xs text-muted-foreground">{(meta.en?.description ?? '').length}/160 chars</p>
         </div>
 
         <div className="space-y-1.5">

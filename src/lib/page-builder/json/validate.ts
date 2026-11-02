@@ -84,6 +84,17 @@ const PageMetaSchema = z.object({
   canonical: z.string().optional(),
   noIndex: z.boolean().optional(),
   product: z.unknown().optional(),
+  // Per-locale overrides for the EN page (meta.title / meta.description stay
+  // the FR / default values). A malformed value is dropped rather than
+  // blocking the save.
+  en: z
+    .object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+    })
+    .passthrough()
+    .optional()
+    .catch(undefined),
 }).passthrough();
 
 const PageDataSchema = z.object({
