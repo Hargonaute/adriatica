@@ -74,6 +74,7 @@ function ProductsPage({ locale }: { locale: Locale }) {
         heading={data.productsSection.heading}
         body={data.productsSection.body}
         items={data.productsSection.items}
+        locale={locale}
       />
       <CatalogueSection
         heading={home.catalogue.heading}

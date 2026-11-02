@@ -73,6 +73,7 @@ export default async function Home({
         heading={data.products.heading}
         body={data.products.body}
         items={products.items}
+        locale={L}
       />
       <RDSection
         heading={data.rd.heading}

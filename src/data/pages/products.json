@@ -1,5 +1,9 @@
 {
-  "_TODO-CLIENT": "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
+  "_TODO-CLIENT": [
+    "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
+    "productsSection.items (B7): EN tile labels are translations to validate. Images of the new tiles 'Engrais nutritionnels' and 'Adjuvants et régulateurs de pH' reuse existing photos from removed tiles; final images pending from Adriatica.",
+    "productsSection.items[].filterQuery: link to the find-a-solution page; the filter ignores these params until Lot B (Phase 5) ships."
+  ],
   "fr": {
     "meta": {
       "title": "Nos produits : engrais et biostimulants",
@@ -20,16 +24,14 @@
       "heading": "Nos Produits",
       "body": "Une gamme complète de solutions agronomiques, formulée pour améliorer la productivité de vos cultures tout en respectant l'environnement.",
       "items": [
-        { "title": "Acide", "image": "/produit_page_img/Harissa Studio Documentary Photograph.png" },
-        { "title": "Engrais azotés", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph.png" },
-        { "title": "Engrais granulés conventionnels", "image": "/produit_page_img/Harissa Studio Macro Photograph.png" },
-        { "title": "Engrais granulés tertiaires", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph (1).png" },
-        { "title": "Engrais hydrosolubles", "image": "/produit_page_img/Harissa Studio Documentary Photograph (1).png" },
-        { "title": "NPK Hydrosolubles", "image": "/produit_page_img/Harissa Studio Documentary Macro Photograph.png" },
-        { "title": "NPK Gel", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph (2).png" },
-        { "title": "Biostimulants", "image": "/produit_page_img/Harissa Studio Documentary Product Photograph.png" },
-        { "title": "Correcteur de carence", "image": "/produit_page_img/Harissa Studio Documentary Macro Photograph (1).png" },
-        { "title": "Céréales", "image": "/produit_page_img/Harissa Studio Documentary Photograph Close-up of Ripe Golden.png" }
+        { "title": "Biostimulants", "image": "/produit_page_img/Harissa Studio Documentary Product Photograph.png", "filterQuery": "famille=biostimulants-et-engrais-organiques" },
+        { "title": "Correcteur de carence", "image": "/produit_page_img/Harissa Studio Documentary Macro Photograph (1).png", "filterQuery": "famille=correcteurs-de-carences" },
+        { "title": "Engrais nutritionnels", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph.png", "filterQuery": "famille=engrais-nutritionnels" },
+        { "title": "Adjuvants et régulateurs de pH", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph (2).png", "filterQuery": "famille=adjuvants-et-regulateurs-de-ph" },
+        { "title": "Acide", "image": "/produit_page_img/Harissa Studio Documentary Photograph.png", "filterQuery": "probleme=acidifiants-correcteurs-de-ph" },
+        { "title": "Engrais granulés conventionnels", "image": "/produit_page_img/Harissa Studio Macro Photograph.png", "filterQuery": "probleme=conventionnel-granule" },
+        { "title": "Engrais hydrosolubles", "image": "/produit_page_img/Harissa Studio Documentary Photograph (1).png", "filterQuery": "probleme=conventionnel-hydrosolubles" },
+        { "title": "NPK Hydrosolubles", "image": "/produit_page_img/Harissa Studio Documentary Macro Photograph.png", "filterQuery": "famille=npk-hydrosolubles" }
       ]
     }
   },
@@ -53,16 +55,14 @@
       "heading": "Our Products",
       "body": "A complete range of agronomic solutions, formulated to boost the productivity of your crops while respecting the environment.",
       "items": [
-        { "title": "Acid", "image": "/produit_page_img/Harissa Studio Documentary Photograph.png" },
-        { "title": "Nitrogen fertilizers", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph.png" },
-        { "title": "Conventional granulated fertilizers", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph (1).png" },
-        { "title": "Tertiary granulated fertilizers", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph (2).png" },
-        { "title": "Water-soluble fertilizers", "image": "/produit_page_img/Harissa Studio Documentary Macro Photograph.png" },
-        { "title": "Water-soluble NPK", "image": "/produit_page_img/Harissa Studio Documentary Macro Photograph (1).png" },
-        { "title": "NPK Gel", "image": "/produit_page_img/Harissa Studio Documentary Photograph (1).png" },
-        { "title": "Biostimulants", "image": "/produit_page_img/Harissa Studio Documentary Photograph Close-up of Ripe Golden.png" },
-        { "title": "Deficiency corrector", "image": "/produit_page_img/Harissa Studio Documentary Product Photograph.png" },
-        { "title": "Cereals", "image": "/produit_page_img/Harissa Studio Macro Photograph.png" }
+        { "title": "Biostimulants", "image": "/produit_page_img/Harissa Studio Documentary Product Photograph.png", "filterQuery": "famille=biostimulants-et-engrais-organiques" },
+        { "title": "Deficiency corrector", "image": "/produit_page_img/Harissa Studio Documentary Macro Photograph (1).png", "filterQuery": "famille=correcteurs-de-carences" },
+        { "title": "Nutritional fertilizers", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph.png", "filterQuery": "famille=engrais-nutritionnels" },
+        { "title": "Adjuvants and pH regulators", "image": "/produit_page_img/Harissa Studio Documentary Close-up Photograph (2).png", "filterQuery": "famille=adjuvants-et-regulateurs-de-ph" },
+        { "title": "Acid", "image": "/produit_page_img/Harissa Studio Documentary Photograph.png", "filterQuery": "probleme=acidifiants-correcteurs-de-ph" },
+        { "title": "Conventional granulated fertilizers", "image": "/produit_page_img/Harissa Studio Macro Photograph.png", "filterQuery": "probleme=conventionnel-granule" },
+        { "title": "Water-soluble fertilizers", "image": "/produit_page_img/Harissa Studio Documentary Photograph (1).png", "filterQuery": "probleme=conventionnel-hydrosolubles" },
+        { "title": "Water-soluble NPK", "image": "/produit_page_img/Harissa Studio Documentary Macro Photograph.png", "filterQuery": "famille=npk-hydrosolubles" }
       ]
     }
   }
