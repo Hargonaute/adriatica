@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { LOCALES, type Locale } from '@/lib/i18n/config';
 import { translateSlug, keyForSlug, STATIC_PAGE_SLUGS, type StaticPageKey } from '@/lib/i18n/pageSlugs';
+import { PRODUCT_SEGMENT, productPath } from '@/lib/products/productUrl';
 
 export interface LanguageSwitcherProps {
   locale: Locale;
@@ -26,6 +27,11 @@ function translatePath(suffix: string, from: Locale, to: Locale): string {
   if (!suffix) return '';
   const segments = suffix.split('/').filter(Boolean);
   if (segments.length === 0) return '';
+
+  // Product page: /fr/produit/<slug> ↔ /en/product/<slug>.
+  if (segments.length === 2 && segments[0] === PRODUCT_SEGMENT[from]) {
+    return productPath(to, segments[1]).slice(`/${to}`.length);
+  }
 
   // Static page at first segment?
   const key = keyForSlug(segments[0], from);

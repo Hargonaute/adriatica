@@ -3,6 +3,7 @@ import { pages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { revalidationPathsForPage } from '@/lib/products/productUrl';
 import { validatePageData } from '@/lib/page-builder/json/validate';
 import { requireSession } from '@/lib/auth/require-session';
 
@@ -41,8 +42,8 @@ export async function POST(request: Request) {
         .where(eq(pages.id, data.id));
 
     // Immediately bust the ISR cache so the public page reflects the new content.
-    revalidatePath(`/fr/${data.slug}`);
-    revalidatePath(`/en/${data.slug}`);
+    // (product pages: /fr/produit/<slug> + /en/product/<slug>)
+    revalidationPathsForPage(data.slug).forEach((p) => revalidatePath(p));
 
     return NextResponse.json({ success: true, publishedAt: new Date() });
 

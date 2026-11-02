@@ -29,12 +29,12 @@ function assert(description: string, condition: boolean) {
 
 const brandCount = (s: string | undefined) => (s ?? '').match(/adriatica/gi)?.length ?? 0;
 
-// ── template stays in sync with the root layout ─────────────────────────────
+// ── template stays in sync with the root metadata (src/app/_shell/rootMetadata.ts) ──
 
-console.log('\nroot layout template');
-const layout = readFileSync(join(process.cwd(), 'src/app/layout.tsx'), 'utf8');
+console.log('\nroot metadata template');
+const layout = readFileSync(join(process.cwd(), 'src/app/_shell/rootMetadata.ts'), 'utf8');
 assert(
-  `layout.tsx template is "%s${BRAND_SUFFIX}"`,
+  `rootMetadata.ts template is "%s${BRAND_SUFFIX}"`,
   layout.includes(`template: "%s${BRAND_SUFFIX}"`) || layout.includes(`template: '%s${BRAND_SUFFIX}'`),
 );
 

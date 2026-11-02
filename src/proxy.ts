@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n/config';
+import { legacyPublicRedirect } from '@/lib/products/productUrl';
 
 // Dashboard sub-paths that are publicly accessible (no auth required).
 // Only the login page itself is public; everything else under /dashboard
@@ -89,6 +90,15 @@ export function proxy(request: NextRequest) {
     const loginUrl = new URL('/dashboard/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Legacy / non-canonical public URLs (/fr/produit-x, /en/produit/x,
+  // /en/produits, …) → their canonical URL in a single 308 hop.
+  const canonicalPath = isLocaleReserved(pathname) ? null : legacyPublicRedirect(pathname);
+  if (canonicalPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = canonicalPath;
+    return NextResponse.redirect(url, 308);
   }
 
   // Locale prefix redirect: any public path that isn't reserved and lacks a

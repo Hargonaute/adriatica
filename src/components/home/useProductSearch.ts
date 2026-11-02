@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { Locale } from '@/lib/i18n/config';
 import type { ProductFilterItem } from '@/lib/products/productMeta';
+import { publicPathForPage } from '@/lib/products/productUrl';
 
 type SearchableProduct = ProductFilterItem & { pathSlug: string };
 
@@ -36,8 +37,8 @@ export function useProductSearch(locale: Locale, search: string) {
     return products.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 8);
   }, [products, search]);
 
-  // Same link as the "Trouver une solution" cards.
-  const hrefFor = (product: SearchableProduct) => `/${locale}/${product.pathSlug}`;
+  // Same link as the "Trouver une solution" cards (the product's one public URL).
+  const hrefFor = (product: SearchableProduct) => publicPathForPage(locale, product.pathSlug);
 
   return { ensureLoaded, loaded, loading, filtered, hrefFor };
 }

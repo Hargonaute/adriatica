@@ -1,7 +1,7 @@
 /**
  * Brand-once page titles (A6).
  *
- * The root layout's title template (`src/app/layout.tsx`) appends
+ * The root title template (`src/app/_shell/rootMetadata.ts`) appends
  * BRAND_SUFFIX to every page title. Titles that already mention the brand
  * (e.g. "Atrium Cu — Adriatica", "Maghreb Adriatica") must not get it a
  * second time, so they are returned as `{ absolute }`, which bypasses the
@@ -11,7 +11,7 @@
  */
 
 export const BRAND = 'Adriatica';
-/** Must match `title.template` in src/app/layout.tsx ("%s | Adriatica"). */
+/** Must match `title.template` in src/app/_shell/rootMetadata.ts ("%s | Adriatica"). */
 export const BRAND_SUFFIX = ` | ${BRAND}`;
 
 const BRAND_RE = new RegExp(`\\b${BRAND}\\b`, 'i');
