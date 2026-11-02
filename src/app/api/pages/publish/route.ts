@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { revalidationPathsForPage } from '@/lib/products/productUrl';
 import { validatePageData } from '@/lib/page-builder/json/validate';
 import { requireSession } from '@/lib/auth/require-session';
+import { isReservedPageSlug } from '@/lib/products/catalogueIntros';
 
 export async function POST(request: Request) {
   const unauthorized = await requireSession();
@@ -21,6 +22,11 @@ export async function POST(request: Request) {
     }
 
     const data = validation.data!; 
+
+    // Reserved rows (slug "_…", e.g. the catalogue intros store) are not pages.
+    if (isReservedPageSlug(data.slug)) {
+      return NextResponse.json({ error: 'Reserved slug' }, { status: 400 });
+    }
 
     // Publish logic:
     // 1. Save current state to draft (sync)

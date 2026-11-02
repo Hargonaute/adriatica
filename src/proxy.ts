@@ -20,6 +20,7 @@ const PROTECTED_API_PATHS: string[] = [
   '/api/fields',
   '/api/admin',
   '/api/import',
+  '/api/catalogue-intros',
 ];
 
 // Public exceptions — mutating endpoints that must remain unauthenticated.

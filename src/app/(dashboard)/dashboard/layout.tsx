@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { FileText, Database, Image as ImageIcon, Settings, LayoutDashboard, UserCog } from 'lucide-react';
+import { FileText, Database, Image as ImageIcon, Settings, LayoutDashboard, UserCog, Filter } from 'lucide-react';
 import { SidebarSignOut } from '@/components/dashboard/SidebarSignOut';
 import { db } from '@/lib/db';
 import { collections } from '@/lib/db/schema';
@@ -16,6 +16,7 @@ const NAV = [
   { href: '/dashboard/pages', label: 'Pages', icon: FileText },
   { href: '/dashboard/collections', label: 'Collections', icon: Database },
   { href: '/dashboard/assets', label: 'Assets', icon: ImageIcon },
+  { href: '/dashboard/catalogue', label: 'Catalogue intros', icon: Filter },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireDashboardSession } from '@/lib/auth/require-session';
 import { pages, assets, collections } from '@/lib/db/schema';
-import { count, desc } from 'drizzle-orm';
+import { count, desc, notLike } from 'drizzle-orm';
+import { RESERVED_SLUG_LIKE } from '@/lib/products/catalogueIntros';
 import { FileText, Database, Image as ImageIcon, ArrowRight, Plus } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function DashboardPage() {
   await requireDashboardSession('/dashboard');
   const [[pageCount], [assetCount], [collectionCount], recentPages] = await Promise.all([
-    db.select({ count: count() }).from(pages),
+    db.select({ count: count() }).from(pages).where(notLike(pages.slug, RESERVED_SLUG_LIKE)),
     db.select({ count: count() }).from(assets),
     db.select({ count: count() }).from(collections),
     db
@@ -22,6 +23,8 @@ export default async function DashboardPage() {
         updatedAt: pages.updatedAt,
       })
       .from(pages)
+      // Reserved rows (slug "_…", the catalogue intros store) are not pages.
+      .where(notLike(pages.slug, RESERVED_SLUG_LIKE))
       .orderBy(desc(pages.updatedAt))
       .limit(5),
   ]);
