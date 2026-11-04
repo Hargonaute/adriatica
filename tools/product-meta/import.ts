@@ -21,7 +21,9 @@ loadEnv({ path: '.env' });
  *   --overwrite         also replace pages that already have meta.product
  *
  * Safety:
- *   - Only the `product` key inside `meta` is written (jsonb_set); blocks, SEO
+ *   - Only the `product` key inside `meta` is written (jsonb_set), and the same
+ *     key in unpublished editor settings (draft_blocks._pending.meta) when
+ *     there are some; blocks, SEO
  *     fields, status and slugs are never touched. No page is created or deleted.
  *   - Writes run in one transaction; a JSON backup of every touched page's
  *     previous `meta` is written to tools/product-meta/backups/ first.
@@ -134,8 +136,15 @@ async function main() {
     try {
       for (const u of plan.updates) {
         const res = await client.query(
+          // Also patch unpublished editor settings (draft_blocks._pending, see
+          // src/lib/pages/draftState.ts) so a later Publish keeps the import.
           `UPDATE pages
-             SET meta = jsonb_set(COALESCE(meta, '{}'::jsonb), '{product}', $1::jsonb, true)
+             SET meta = jsonb_set(COALESCE(meta, '{}'::jsonb), '{product}', $1::jsonb, true),
+                 draft_blocks = CASE
+                   WHEN jsonb_typeof(draft_blocks -> '_pending' -> 'meta') = 'object'
+                   THEN jsonb_set(draft_blocks, '{_pending,meta,product}', $1::jsonb, true)
+                   ELSE draft_blocks
+                 END
            WHERE id = $2 AND slug = $3`,
           [JSON.stringify(u.product), u.pageId, u.slug]
         );

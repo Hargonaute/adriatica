@@ -1,6 +1,7 @@
 import { db } from './drizzle';
 import { pages } from './schema';
 import { eq } from 'drizzle-orm';
+import { stripPending } from '../pages/draftState';
 
 export type RepublishedTemplate = {
   id: string;
@@ -32,7 +33,8 @@ export async function republishAllTemplates(): Promise<RepublishedTemplate[]> {
     await db
       .update(pages)
       .set({
-        published_blocks: p.draft_blocks,
+        // Never publish the editor's reserved `_pending` key.
+        published_blocks: stripPending(p.draft_blocks),
         status: 'published',
         publishedAt: now,
         updatedAt: now,

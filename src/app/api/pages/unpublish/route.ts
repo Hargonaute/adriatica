@@ -23,6 +23,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
 
+    // draft_blocks (and any `_pending` settings saved while the page was
+    // live) are kept: the editor still shows the latest saved state, and the
+    // next Save of the now-draft page writes those settings directly.
     await db.update(pages)
         .set({
             status: 'draft',
