@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { DeletePageButton } from '@/components/dashboard/DeletePageButton';
 import { publicPathForPage } from '@/lib/products/productUrl';
 import { isReservedPageSlug } from '@/lib/products/catalogueIntros';
+import { hasUnpublishedChanges } from '@/lib/pages/draftState';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,6 +105,15 @@ export default async function PagesDashboard() {
                           >
                             {page.status === 'published' ? 'PUBLISHED' : 'DRAFT'}
                           </span>
+
+                          {!page.isTemplate && hasUnpublishedChanges(page) && (
+                            <span
+                              className="text-[10px] px-2 py-0.5 rounded-full font-semibold border bg-sky-50 text-sky-700 border-sky-200 uppercase"
+                              title="Saved changes are not public yet: open the page and click “Publish changes”."
+                            >
+                              Unpublished changes
+                            </span>
+                          )}
 
                           {page.status === 'published' && !page.isTemplate && (
                             <Link

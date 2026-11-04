@@ -8,11 +8,15 @@ import { useTemplateBuilderStore } from '@/lib/store/templateBuilderStore';
 
 export default function PageEditorWrapper({
     initialData,
+    initialHasUnpublishedChanges,
+    liveSlug,
     isTemplate,
     templateKind,
     templateCollectionId,
 }: {
     initialData: PageData;
+    initialHasUnpublishedChanges: boolean;
+    liveSlug: string;
     isTemplate: boolean;
     templateKind: 'index' | 'detail' | null;
     templateCollectionId: string | null;
@@ -34,7 +38,9 @@ export default function PageEditorWrapper({
             body: JSON.stringify(data),
         });
         if (!res.ok) throw new Error('Failed to save');
+        const json = (await res.json().catch(() => ({}))) as { hasUnpublishedChanges?: boolean };
         router.refresh();
+        return { hasUnpublishedChanges: json.hasUnpublishedChanges };
     };
 
     const handlePublish = async (data: PageData) => {
@@ -43,8 +49,11 @@ export default function PageEditorWrapper({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
-        if (!res.ok) throw new Error('Failed to publish');
+        const json = (await res.json().catch(() => ({}))) as { error?: string; slug?: string };
+        // 409 = slug already used by another page: show the server's message.
+        if (!res.ok) throw new Error(res.status === 409 && json.error ? json.error : 'Publish failed');
         router.refresh();
+        return { slug: json.slug };
     };
     
     const handleUnpublish = async (data: PageData) => {
@@ -61,6 +70,8 @@ export default function PageEditorWrapper({
         <div className="fixed inset-0 z-50 bg-background">
             <PageBuilderEditor
                 initialData={initialData}
+                initialHasUnpublishedChanges={initialHasUnpublishedChanges}
+                liveSlug={liveSlug}
                 mode={isTemplate ? 'template' : 'static'}
                 templateKind={isTemplate ? templateKind : null}
                 onSave={handleSave}

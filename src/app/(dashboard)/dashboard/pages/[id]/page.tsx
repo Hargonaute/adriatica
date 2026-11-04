@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { type PageData } from '@/types';
 import { migratePageData } from '@/lib/page-builder/json/migrate';
+import { draftView, hasUnpublishedChanges } from '@/lib/pages/draftState';
 import PageEditorWrapper from './PageEditorWrapper';
 
 export default async function PageEditorPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,14 +19,16 @@ export default async function PageEditorPage({ params }: { params: Promise<{ id:
       notFound();
   }
 
-  // Transform DB record to PageData
+  // Transform DB record to PageData: the latest SAVED state, i.e. pending
+  // title / slug / meta of a published page merged over the live values.
+  const view = draftView(page);
   const initialData: PageData = migratePageData({
       id: page.id,
-      title: page.title,
-      slug: page.slug,
+      title: view.title,
+      slug: view.slug,
       status: page.status as 'draft' | 'published',
-      blocks: page.draft_blocks as any,
-      meta: page.meta as any,
+      blocks: view.blocks as any,
+      meta: view.meta as any,
       publishedAt: page.publishedAt?.toISOString(),
       updatedAt: page.updatedAt.toISOString(),
   });
@@ -61,6 +64,8 @@ export default async function PageEditorPage({ params }: { params: Promise<{ id:
   return (
     <PageEditorWrapper
       initialData={initialData}
+      initialHasUnpublishedChanges={hasUnpublishedChanges(page)}
+      liveSlug={page.slug}
       isTemplate={isTemplate}
       templateKind={templateKind}
       templateCollectionId={templateCollectionId}

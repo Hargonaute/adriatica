@@ -58,9 +58,18 @@ interface PageBuilderEditorProps {
   mode?: 'static' | 'template';
   /** Kind of template being edited. Only meaningful when mode === 'template'. */
   templateKind?: 'index' | 'detail' | null;
-  onSave?: (data: PageData) => Promise<void>;
-  onPublish?: (data: PageData) => Promise<void>;
+  /** Resolves with the server's view of unpublished changes when it knows it. */
+  onSave?: (data: PageData) => Promise<void | { hasUnpublishedChanges?: boolean }>;
+  /** Rejects with an Error whose message is shown to the editor (e.g. slug conflict). */
+  onPublish?: (data: PageData) => Promise<void | { slug?: string }>;
   onUnpublish?: (data: PageData) => Promise<void>;
+  /**
+   * Published page only: saved changes (settings or blocks) that are not
+   * public yet. Drives the "Publish changes" button and indicator.
+   */
+  initialHasUnpublishedChanges?: boolean;
+  /** Slug of the live page (differs from initialData.slug while a slug change is pending). */
+  liveSlug?: string;
 }
 
 const AUTO_SAVE_DELAY = 30_000; // 30 seconds
@@ -124,7 +133,7 @@ function getBlockMeta(type: string): { icon: React.ElementType; label: string } 
   return { icon: Layout, label: type };
 }
 
-export default function PageBuilderEditor({ initialData, mode = 'static', templateKind = null, onSave, onPublish, onUnpublish }: PageBuilderEditorProps) {
+export default function PageBuilderEditor({ initialData, mode = 'static', templateKind = null, onSave, onPublish, onUnpublish, initialHasUnpublishedChanges = false, liveSlug: initialLiveSlug }: PageBuilderEditorProps) {
   const isTemplateMode = mode === 'template' && (templateKind === 'detail' || templateKind === 'index');
   const [data, setData] = useState<PageData>(initialData);
   const [language, setLanguage] = useState<'en' | 'fr'>('en');
@@ -136,6 +145,10 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  // Draft → publish cycle (published pages): saved but not yet public changes,
+  // and the slug the public URL still uses until Publish.
+  const [hasUnpublished, setHasUnpublished] = useState(initialHasUnpublishedChanges);
+  const [liveSlug, setLiveSlug] = useState(initialLiveSlug ?? initialData.slug);
   const savedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Split-view state ─────────────────────────────────────────────────────
@@ -356,8 +369,13 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
       savedTimeout.current = null;
     }
     try {
-      await onSave(latestData.current);
+      const result = await onSave(latestData.current);
       setIsDirty(false);
+      if (latestData.current.status === 'published') {
+        setHasUnpublished(
+          result && typeof result.hasUnpublishedChanges === 'boolean' ? result.hasUnpublishedChanges : true
+        );
+      }
       setSaveStatus('saved');
       savedTimeout.current = setTimeout(() => setSaveStatus('idle'), 3000);
       if (!silent) toast.success('Draft saved');
@@ -748,13 +766,23 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
     if (!onPublish) return;
     setIsSaving(true);
     try {
+      const wasPublished = latestData.current.status === 'published';
+      const publishedSlug = latestData.current.slug;
       await toast.promise(
         onPublish(latestData.current).then(() => {
           setIsDirty(false);
+          setHasUnpublished(false);
+          setLiveSlug(publishedSlug);
           setData((prev) => ({ ...prev, status: 'published' }));
         }),
-        { loading: 'Publishing…', success: 'Published!', error: 'Publish failed' }
+        {
+          loading: 'Publishing…',
+          success: wasPublished ? 'Changes published!' : 'Published!',
+          error: (e: unknown) => (e instanceof Error && e.message ? e.message : 'Publish failed'),
+        }
       );
+    } catch {
+      // Already reported by the toast.
     } finally {
       setIsSaving(false);
     }
@@ -768,6 +796,7 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
       await toast.promise(
         onUnpublish(latestData.current).then(() => {
           setIsDirty(false);
+          setHasUnpublished(false);
           setData((prev) => ({ ...prev, status: 'draft' }));
         }),
         { loading: 'Unpublishing…', success: 'Unpublished!', error: 'Unpublish failed' }
@@ -941,7 +970,8 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
         return `/${L}/collections/${templateBasePath}`;
       }
     }
-    if (data.status === 'published') return publicPathForPage(L, data.slug);
+    // The live URL keeps the published slug until a pending slug change is published.
+    if (data.status === 'published') return publicPathForPage(L, liveSlug);
     return null;
   })();
 
@@ -982,6 +1012,15 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
 
           {isDirty && (
             <span className="text-[10px] text-slate-400 hidden sm:block shrink-0">Unsaved changes</span>
+          )}
+
+          {!isTemplateMode && data.status === 'published' && hasUnpublished && (
+            <span
+              className="text-[10px] px-2 py-0.5 rounded-full font-semibold border bg-sky-50 text-sky-700 border-sky-200 hidden sm:block shrink-0"
+              title="Saved changes (content, title, SEO, filters) are not public yet. Click “Publish changes” to put them online."
+            >
+              Unpublished changes
+            </span>
           )}
         </div>
 
@@ -1184,19 +1223,45 @@ export default function PageBuilderEditor({ initialData, mode = 'static', templa
             </Button>
           )}
 
-          {/* Publish / Unpublish — hidden in template mode (auto-published) */}
+          {/* Publish / Unpublish — hidden in template mode (auto-published).
+              A published page keeps a primary "Publish changes" button: Save
+              (and autosave) only update the draft, Publish puts it online. */}
           {!isTemplateMode && (
             data.status === 'published' ? (
-              <Button
-                size="sm"
-                variant="destructive"
-                className="h-8 text-xs px-3"
-                onClick={handleUnpublish}
-                disabled={isSaving}
-              >
-                <Globe className="h-3.5 w-3.5 mr-1.5" />
-                Unpublish
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs px-3 text-red-700 border-red-200 hover:bg-red-50 hover:text-red-800"
+                  onClick={handleUnpublish}
+                  disabled={isSaving}
+                >
+                  <Globe className="h-3.5 w-3.5 mr-1.5" />
+                  Unpublish
+                </Button>
+                {hasUnpublished || isDirty ? (
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs px-3 bg-[#BC0D2A] hover:bg-[#9A0B22] text-white border-0"
+                    onClick={handlePublish}
+                    disabled={isSaving}
+                  >
+                    <Globe className="h-3.5 w-3.5 mr-1.5" />
+                    Publish changes
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs px-3"
+                    disabled
+                    title="The live page matches the saved version."
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1.5" />
+                    Up to date
+                  </Button>
+                )}
+              </>
             ) : (
               <Button
                 size="sm"
