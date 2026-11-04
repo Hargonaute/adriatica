@@ -3,9 +3,9 @@ import { and, eq } from 'drizzle-orm';
 import { db, pages } from '@/lib/db';
 import { LOCALES, type Locale } from '@/lib/i18n/config';
 import { STATIC_PAGE_KEYS, STATIC_PAGE_SLUGS, pathForKey } from '@/lib/i18n/pageSlugs';
-import { publicPathForPage } from '@/lib/products/productUrl';
+import { isProductPageSlug, publicPathForPage } from '@/lib/products/productUrl';
 import { buildLanguageAlternates, hasBlocks, type LocalePaths } from '@/lib/seo/metadata';
-import { absoluteUrl } from '@/lib/site';
+import { CODED_CONTENT_UPDATED_AT, absoluteUrl } from '@/lib/site';
 import { CATALOGUE_TERMS } from '@/lib/products/catalogueSlugs';
 import { catalogueQuery, catalogueSeo, type CatalogueFilters } from '@/lib/products/catalogueFilter';
 
@@ -18,6 +18,9 @@ import { catalogueQuery, catalogueSeo, type CatalogueFilters } from '@/lib/produ
 //     content;
 //   - the filtered catalogue for each famille and each culture
 //     (/{l}/trouver-une-solution?famille=<slug>, ?culture=<slug>).
+// Every URL has a <lastmod>: publish date for DB pages, CODED_CONTENT_UPDATED_AT
+// for coded pages, and for the catalogue pages (whose list changes with the
+// products) the later of that and the latest product publication.
 // Legacy collection pages (/collections/…) are deliberately left out.
 export const dynamic = 'force-dynamic';
 
@@ -36,17 +39,30 @@ function bothLocales(build: (l: Locale) => string): LocalePaths {
   return { fr: build('fr'), en: build('en') };
 }
 
-function codedPageEntries(): Entry[] {
+function codedPageEntries(catalogueUpdatedAt: Date): Entry[] {
   return [
-    bothLocales((l) => `/${l}`),
-    ...STATIC_PAGE_KEYS.map((key) => bothLocales((l) => pathForKey(key, l))),
-    bothLocales((l) => `/${l}/legal/terms`),
-    bothLocales((l) => `/${l}/legal/privacy`),
-  ].flatMap((paths) => entriesFor(paths));
+    ...entriesFor(bothLocales((l) => `/${l}`), CODED_CONTENT_UPDATED_AT),
+    ...STATIC_PAGE_KEYS.flatMap((key) =>
+      entriesFor(
+        bothLocales((l) => pathForKey(key, l)),
+        key === 'solution' ? catalogueUpdatedAt : CODED_CONTENT_UPDATED_AT
+      )
+    ),
+    ...entriesFor(bothLocales((l) => `/${l}/legal/terms`), CODED_CONTENT_UPDATED_AT),
+    ...entriesFor(bothLocales((l) => `/${l}/legal/privacy`), CODED_CONTENT_UPDATED_AT),
+  ];
 }
 
-async function dbPageEntries(): Promise<Entry[]> {
-  const rows = await db
+type DbPageRow = {
+  slug: string;
+  meta: unknown;
+  publishedBlocks: unknown;
+  publishedAt: Date | null;
+  updatedAt: Date;
+};
+
+async function loadPublishedPages(): Promise<DbPageRow[]> {
+  return db
     .select({
       slug: pages.slug,
       meta: pages.meta,
@@ -56,7 +72,17 @@ async function dbPageEntries(): Promise<Entry[]> {
     })
     .from(pages)
     .where(and(eq(pages.status, 'published'), eq(pages.isTemplate, false)));
+}
 
+/** Latest publication among product pages (drives the catalogue's lastmod). */
+function latestProductDate(rows: DbPageRow[]): Date | null {
+  return rows
+    .filter((p) => isProductPageSlug(p.slug))
+    .map((p) => p.publishedAt ?? p.updatedAt)
+    .reduce<Date | null>((max, d) => (!max || d > max ? d : max), null);
+}
+
+function dbPageEntries(rows: DbPageRow[]): Entry[] {
   // A DB page whose slug equals a static page slug is shadowed by the coded page.
   const staticSlugs = new Set(
     Object.values(STATIC_PAGE_SLUGS).flatMap((s) => [s.fr, s.en] as string[])
@@ -80,24 +106,31 @@ async function dbPageEntries(): Promise<Entry[]> {
  * listed; combinations are noindex. Every famille / culture of the frozen map
  * is listed, even one with no product today (the client wants them indexable).
  */
-function catalogueFilterEntries(): Entry[] {
+function catalogueFilterEntries(catalogueUpdatedAt: Date): Entry[] {
   const paths = bothLocales((l) => pathForKey('solution', l));
   const facets = ['famille', 'culture'] as const;
   return facets.flatMap((facet) =>
     CATALOGUE_TERMS[facet]
       .map((t): CatalogueFilters => ({ [facet]: t.slug }))
       .filter((f) => catalogueSeo(f).inSitemap)
-      .flatMap((f) => entriesFor(paths, null, catalogueQuery(f)))
+      .flatMap((f) => entriesFor(paths, catalogueUpdatedAt, catalogueQuery(f)))
   );
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let dynamicEntries: Entry[] = [];
+  let rows: DbPageRow[] = [];
   try {
-    dynamicEntries = await dbPageEntries();
+    rows = await loadPublishedPages();
   } catch (error) {
     // Never fail the whole sitemap: the coded pages are still listed.
     console.error('sitemap: failed to load DB pages', error);
   }
-  return [...codedPageEntries(), ...catalogueFilterEntries(), ...dynamicEntries];
+  const latestProduct = latestProductDate(rows);
+  const catalogueUpdatedAt =
+    latestProduct && latestProduct > CODED_CONTENT_UPDATED_AT ? latestProduct : CODED_CONTENT_UPDATED_AT;
+  return [
+    ...codedPageEntries(catalogueUpdatedAt),
+    ...catalogueFilterEntries(catalogueUpdatedAt),
+    ...dbPageEntries(rows),
+  ];
 }
