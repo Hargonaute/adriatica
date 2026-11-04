@@ -14,6 +14,13 @@ export const SITE_URL = (process.env.SITE_URL || 'https://www.adriatica.ma').rep
 
 export const SITE_NAME = 'Adriatica';
 
+/**
+ * Last change to the content that lives in code (src/data/*.json: home, static
+ * pages, legal pages). Used as <lastmod> for those pages in /sitemap.xml.
+ * Bump it when that content changes.
+ */
+export const CODED_CONTENT_UPDATED_AT = new Date('2026-11-02T00:00:00Z');
+
 export const OG_LOCALE: Record<Locale, string> = { fr: 'fr_FR', en: 'en_US' };
 
 /**
