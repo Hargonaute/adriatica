@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { revalidationPathsForPage } from '@/lib/products/productUrl';
 import { migratePageData } from '@/lib/page-builder/json/migrate';
 import { getValidSession, requireSession } from '@/lib/auth/require-session';
+import { draftView, hasUnpublishedChanges, stripPending } from '@/lib/pages/draftState';
 
 export async function GET(
   _request: Request,
@@ -28,18 +29,29 @@ export async function GET(
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
 
+    // Dashboard session: the latest SAVED state (pending title / slug / meta
+    // merged over the live ones, draft blocks). Anonymous: the published
+    // snapshot only. `_pending` itself is never returned.
+    const view = session ? draftView(page) : null;
     const pageData = {
       id: page.id,
-      slug: page.slug,
-      title: page.title,
+      slug: view ? view.slug : page.slug,
+      title: view ? view.title : page.title,
       status: page.status as 'draft' | 'published',
-      meta: page.meta as any,
-      blocks: (session ? page.draft_blocks : page.published_blocks) as any,
+      meta: (view ? view.meta : page.meta) as any,
+      blocks: (view ? view.blocks : stripPending(page.published_blocks)) as any,
       schemaVersion: 1,
     };
 
     const migratedData = migratePageData(pageData);
 
+    if (session) {
+      return NextResponse.json({
+        ...migratedData,
+        hasUnpublishedChanges: hasUnpublishedChanges(page),
+        live: { slug: page.slug, title: page.title },
+      });
+    }
     return NextResponse.json(migratedData);
   } catch (error) {
     console.error('Error fetching page:', error);

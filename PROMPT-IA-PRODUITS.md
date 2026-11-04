@@ -54,7 +54,7 @@ L'IA ne peut pas importer d'image sur le site. Vous le faites vous-même, et vou
    - l'image ;
    - **⚙ Settings → Product filters** : Famille, Problématiques et Cultures doivent être cochées.
 6. Corrigez si besoin directement dans les blocs.
-7. Cliquez sur **Save**, puis sur **Publish**.
+7. Cliquez sur **Save**, puis sur **Publish** (ou **Publish changes** si la page est déjà en ligne).
 
 > ⚠️ **Apply JSON to page remplace tout le contenu de la page.** Ne l'utilisez pas sur une page produit déjà terminée, sauf si vous voulez la refaire entièrement.
 

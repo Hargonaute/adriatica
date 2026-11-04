@@ -13,6 +13,7 @@ import { renderStaticPage, staticPageMetadata } from './staticRoutes';
 import { productSlugFromPageSlug, productPath } from '@/lib/products/productUrl';
 import { buildPageMetadata, hasBlocks, resolvePageMeta } from '@/lib/seo/metadata';
 import { brandTitle } from '@/lib/seo/brandTitle';
+import { previousSlugRedirect } from '@/lib/pages/previousSlugRedirect';
 
 export const revalidate = 60;
 
@@ -140,7 +141,13 @@ export default async function PublicPage({
 
   // 4) Otherwise treat the slug as a collection basePath.
   const idx = await loadCollectionIndex(slug);
-  if (!idx) notFound();
+  if (!idx) {
+    // 5) Old slug of a published page (renamed on publish): one 308 hop to
+    //    its current canonical URL (products included).
+    const moved = await previousSlugRedirect(L, slug);
+    if (moved) permanentRedirect(moved);
+    notFound();
+  }
 
   const common = loadCommon(L);
   const { col, templatePage } = idx;

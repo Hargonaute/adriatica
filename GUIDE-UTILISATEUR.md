@@ -80,7 +80,9 @@ Barre du haut, de gauche à droite :
 | **⚙ Settings** | Titre, adresse, réglages Google (SEO) et **filtres produit** |
 | **EN / FR** | Changer de langue. **Chaque langue a son propre contenu.** |
 | **Save** | Enregistrer en brouillon. Les visiteurs ne le voient pas encore. |
-| **Publish** | Mettre la page en ligne |
+| **Publish** | Page en brouillon : mettre la page en ligne |
+| **Publish changes** | Page déjà publiée : mettre en ligne les modifications enregistrées (contenu, titre, SEO, image de partage, filtres produit). Affiche **Up to date** quand le site est déjà à jour. |
+| **Unpublished changes** | Indicateur : des modifications sont enregistrées mais pas encore en ligne |
 | **Unpublish** | Retirer la page du site (elle est conservée en brouillon) |
 
 ### 1.4 Ajouter du contenu avec des blocs
@@ -148,7 +150,9 @@ Si une langue reste vide, cette version de la page sera vide.
 
 - L'éditeur **enregistre automatiquement un brouillon toutes les 30 secondes**. Vous pouvez aussi cliquer sur **Save** (ou appuyer sur **Ctrl+S** / **Cmd+S**).
 - « **Unsaved changes** » dans la barre du haut signifie que des modifications ne sont pas encore enregistrées.
-- **Enregistrer ne publie pas.** Les visiteurs ne voient la page qu'après un clic sur **Publish**.
+- **Enregistrer ne publie pas.** Les visiteurs ne voient la page qu'après un clic sur **Publish** (page en brouillon) ou **Publish changes** (page déjà publiée).
+- Sur une page déjà publiée, tout ce que vous enregistrez attend votre clic sur **Publish changes** : les blocs, mais aussi le titre, le Meta Title / la Meta Description (FR et EN), l'image de partage, le noIndex et les **filtres produit**. Tant que vous n'avez pas publié, le site, *Trouver une solution* et le plan du site gardent l'ancienne version. L'indicateur « **Unpublished changes** » (également visible dans la liste des pages) vous le rappelle.
+- Si l'adresse (slug) d'une page publiée change, l'ancienne adresse redirige automatiquement vers la nouvelle après la publication.
 - Après publication, une modification peut mettre **jusqu'à 1 minute** à apparaître sur le site. Rafraîchissez la page.
 
 ---
@@ -197,7 +201,7 @@ Ils déterminent où le produit apparaît sur **Trouver une solution**.
    - **Famille** : choisissez **une seule** famille dans la liste.
    - **Problématiques** : cliquez sur **toutes** les problématiques traitées par le produit. Les éléments sélectionnés sont surlignés. Cliquez à nouveau pour désélectionner.
    - **Cultures** : cliquez sur **toutes** les cultures concernées.
-4. Cliquez sur **Save**, puis sur **Publish**.
+4. Cliquez sur **Save**, puis sur **Publish changes** (ou **Publish** si le produit n'est pas encore en ligne). Les filtres ne changent sur *Trouver une solution* qu'après la publication.
 
 > La section **Product filters** n'apparaît que si le slug commence par `produit-`. Si vous ne la voyez pas, vérifiez le slug.
 >
@@ -218,7 +222,7 @@ Ils déterminent où le produit apparaît sur **Trouver une solution**.
 1. **Pages** : trouvez la page dont le slug commence par `produit-`.
 2. Cliquez dessus pour ouvrir l'éditeur.
 3. Modifiez le texte, les images, les filtres…
-4. Cliquez sur **Publish** pour mettre les modifications en ligne (**Save** seul ne suffit pas).
+4. Cliquez sur **Publish changes** pour mettre les modifications en ligne (**Save** seul ne suffit pas). Le bouton affiche ensuite **Up to date**.
 
 ### 2.5 Créer un produit plus vite avec l'IA (ChatGPT / Claude)
 
@@ -258,7 +262,7 @@ Un template est partagé par plusieurs pages : une erreur casse toutes ces pages
 
 **❌ Cliquer sur Save et croire que c'est en ligne**
 **Save** enregistre un brouillon que seuls les administrateurs voient.
-**✅ À la place :** cliquez sur **Publish** pour mettre en ligne, puis vérifiez sur le site avec l'icône œil (après 1 minute environ).
+**✅ À la place :** cliquez sur **Publish** (ou **Publish changes** si la page est déjà en ligne) pour mettre en ligne, puis vérifiez sur le site avec l'icône œil (après 1 minute environ).
 
 **❌ Fermer l'onglet alors que « Unsaved changes » est affiché**
 Les dernières modifications sont perdues. Le navigateur affiche normalement un avertissement : ne l'ignorez pas.
@@ -352,13 +356,13 @@ Les visiteurs voient le produit en double et Google ne sait pas quelle page affi
 - [ ] Vérifié dans **Preview** en **Desktop** et **Mobile**
 - [ ] Produit : le slug commence par **`produit-`**
 - [ ] Produit : **Famille**, **Problématiques** et **Cultures** sont renseignées
-- [ ] Clic sur **Publish** (pas seulement Save)
+- [ ] Clic sur **Publish** / **Publish changes** (pas seulement Save), le bouton affiche **Up to date**
 
 ## Problèmes fréquents
 
 | Problème | Solution |
 |---|---|
-| Mes modifications n'apparaissent pas sur le site | Avez-vous cliqué sur **Publish** ? Attendez 1 minute et rafraîchissez. |
+| Mes modifications n'apparaissent pas sur le site | Avez-vous cliqué sur **Publish** / **Publish changes** ? Tant que « Unpublished changes » est affiché, rien n'est en ligne. Attendez 1 minute et rafraîchissez. |
 | Le produit n'apparaît pas sur *Trouver une solution* | Vérifiez qu'il est **publié**, que le slug commence par `produit-` et que les filtres sont renseignés. |
 | Je ne vois pas « Product filters » | Le slug ne commence pas par `produit-`. Corrigez-le dans **⚙ Settings**. |
 | La page en français est vide | Le contenu est propre à chaque langue. Cliquez sur **FR** et ajoutez le contenu. |

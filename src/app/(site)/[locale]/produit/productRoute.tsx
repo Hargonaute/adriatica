@@ -20,6 +20,7 @@ import { buildPageMetadata, hasBlocks, resolvePageMeta } from '@/lib/seo/metadat
 import { breadcrumbJsonLd, productJsonLd } from '@/lib/seo/jsonLd';
 import { absoluteUrl } from '@/lib/site';
 import { brandTitle } from '@/lib/seo/brandTitle';
+import { previousSlugRedirect } from '@/lib/pages/previousSlugRedirect';
 
 // Single implementation of the product detail page, served at
 // /fr/produit/<slug> and /en/product/<slug> (full-bleed layout). The two route
@@ -98,7 +99,13 @@ export async function ProductRoutePage({
   if (segment !== PRODUCT_SEGMENT[L]) permanentRedirect(productPath(L, slug));
 
   const page = await loadProductPage(slug);
-  if (!page) notFound();
+  if (!page) {
+    // Old slug of a published page (renamed on publish): one 308 hop to its
+    // current canonical URL.
+    const moved = await previousSlugRedirect(L, pageSlugForProduct(slug));
+    if (moved) permanentRedirect(moved);
+    notFound();
+  }
 
   const blocks = blocksFor(page, L);
   const contentBlocks = blocks.filter((b) => !FIXED_SECTION_BLOCK_TYPES.has(b.type));
