@@ -23,7 +23,7 @@ export function ContactFormEditor({
     <div className="space-y-4 p-4 border rounded-md">
       <p className="text-xs text-muted-foreground">
         Renders the full contact page — info cards, form, and side image — identical to the live site.
-        The form posts to <code>/api/entries/create</code> against the <code>contact</code> collection.
+        Messages are emailed to Adriatica (Web3Forms).
       </p>
       <div className="space-y-1.5">
         <Label className="text-xs">Heading</Label>
@@ -56,8 +56,8 @@ export function ContactFormEditor({
 
 // ── Preview ───────────────────────────────────────────────────────────────
 // Pixel-perfect: reuses the real <ContactInfoSection> and <ContactSection>
-// from the live /contact page. The form inside ContactSection posts to
-// /api/entries/create — same endpoint as the live site.
+// from the live /contact page. The form inside ContactSection emails the
+// message via Web3Forms — same flow as the live site.
 
 export function ContactFormPreview({ block }: { block: BlockData & { type: 'contact-form' } }) {
   const info = contactData.fr.info;
