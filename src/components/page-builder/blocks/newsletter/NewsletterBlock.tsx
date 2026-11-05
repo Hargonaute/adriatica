@@ -25,7 +25,7 @@ export function NewsletterEditor({
   return (
     <div className="space-y-4 p-4 border rounded-md">
       <p className="text-xs text-muted-foreground">
-        Renders the real newsletter CTA. The form posts to <code>/api/entries/create</code> against the <code>newsletter</code> collection.
+        Renders the real newsletter CTA. Sign-ups are emailed to Adriatica (Web3Forms).
       </p>
       <div className="space-y-1.5">
         <Label className="text-xs">Heading</Label>
@@ -84,8 +84,8 @@ export function NewsletterEditor({
 }
 
 // ── Preview ───────────────────────────────────────────────────────────────
-// Pixel-perfect: reuses the real <NewsletterCTA>. The form posts to
-// /api/entries/create — same endpoint, same flow as the live site.
+// Pixel-perfect: reuses the real <NewsletterCTA>. Sign-ups are emailed via
+// Web3Forms — same flow as the live site.
 
 export function NewsletterPreview({ block }: { block: BlockData & { type: 'newsletter' } }) {
   return (

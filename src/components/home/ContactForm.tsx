@@ -2,6 +2,7 @@
 
 import { ChevronDown } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+import { sendWeb3Form, WEB3FORMS_HONEYPOT } from '@/lib/forms/web3forms';
 
 export interface ContactFormLabels {
   firstNameLabel: string;
@@ -27,16 +28,11 @@ export interface ContactFormLabels {
 
 export interface ContactFormProps {
   labels: ContactFormLabels;
-  /** Slug of the collection where submissions are stored. Default: "contact". */
+  /** @deprecated Ignored: submissions are emailed (see lib/forms/web3forms). */
   collectionSlug?: string;
 }
 
-interface CollectionLite {
-  id: string;
-  slug: string;
-}
-
-export function ContactForm({ labels, collectionSlug = 'contact' }: ContactFormProps) {
+export function ContactForm({ labels }: ContactFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,31 +45,26 @@ export function ContactForm({ labels, collectionSlug = 'contact' }: ContactFormP
 
     try {
       const fd = new FormData(e.currentTarget);
-      const data = {
-        firstName: fd.get('firstName') ?? '',
-        lastName: fd.get('lastName') ?? '',
-        email: fd.get('email') ?? '',
-        phoneCountry: fd.get('phoneCountry') ?? '',
-        phone: fd.get('phone') ?? '',
-        message: fd.get('message') ?? '',
-      };
+      const get = (k: string) => String(fd.get(k) ?? '').trim();
+      const phone = [get('phoneCountry'), get('phone')].filter(Boolean).join(' ');
+      const name = `${get('firstName')} ${get('lastName')}`.trim();
 
-      const collectionsRes = await fetch('/api/collections');
-      if (!collectionsRes.ok) throw new Error(labels.errorConfig);
-      const collections: CollectionLite[] = await collectionsRes.json();
-      const collection = collections.find((c) => c.slug === collectionSlug);
-      if (!collection) throw new Error(labels.errorNoCollection);
-
-      const res = await fetch('/api/entries/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ collectionId: collection.id, data }),
-      });
-      if (!res.ok) throw new Error(labels.errorSubmit);
+      await sendWeb3Form(
+        `Nouveau message de ${name} — site Adriatica`,
+        {
+          'Prénom': get('firstName'),
+          'Nom': get('lastName'),
+          email: get('email'),
+          'Téléphone': get('phone') ? phone : '',
+          'Message': get('message'),
+          'Page': window.location.href,
+        },
+        fd.get(WEB3FORMS_HONEYPOT) !== null
+      );
 
       setSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : labels.errorGeneric);
+    } catch {
+      setError(labels.errorSubmit);
     } finally {
       setSubmitting(false);
     }
@@ -90,6 +81,14 @@ export function ContactForm({ labels, collectionSlug = 'contact' }: ContactFormP
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-[500px]">
+      <input
+        type="checkbox"
+        name={WEB3FORMS_HONEYPOT}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="hidden"
+      />
       <div className="flex flex-col sm:flex-row gap-6">
         <div className="flex-1 space-y-2">
           <label className="text-[14px] font-medium text-[#334155]">

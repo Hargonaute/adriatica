@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState, type FormEvent } from 'react';
 import type { Locale } from '@/lib/i18n/config';
 import commonData from '@/data/common.json';
+import { sendWeb3Form, WEB3FORMS_HONEYPOT } from '@/lib/forms/web3forms';
 
 export type NewsletterSectionBg = 'brand-red' | 'brand-green' | 'navy' | 'gray';
 
@@ -25,13 +26,8 @@ export interface NewsletterCTAProps {
   imageUrl?: string;
   imageAlt?: string;
   sectionBg?: NewsletterSectionBg;
-  /** Slug of the collection storing subscribers. Default: "newsletter". */
+  /** @deprecated Ignored: sign-ups are emailed (see lib/forms/web3forms). */
   collectionSlug?: string;
-}
-
-interface CollectionLite {
-  id: string;
-  slug: string;
 }
 
 const sectionBgMap: Record<NewsletterSectionBg, string> = {
@@ -51,7 +47,6 @@ export function NewsletterCTA({
   imageUrl = DEFAULT_IMAGE_URL,
   imageAlt = DEFAULT_IMAGE_ALT,
   sectionBg = 'brand-red',
-  collectionSlug = 'newsletter',
 }: NewsletterCTAProps) {
   const common = (commonData as Record<Locale, { newsletter: NewsletterCTALabels }>)[locale];
   const L: NewsletterCTALabels = { ...common.newsletter, ...labels };
@@ -68,24 +63,16 @@ export function NewsletterCTA({
 
     try {
       const fd = new FormData(e.currentTarget);
-      const data = { email: fd.get('email') ?? '' };
-
-      const collectionsRes = await fetch('/api/collections');
-      if (!collectionsRes.ok) throw new Error(L.errorConfig);
-      const collections: CollectionLite[] = await collectionsRes.json();
-      const collection = collections.find((c) => c.slug === collectionSlug);
-      if (!collection) throw new Error(L.errorConfig);
-
-      const res = await fetch('/api/entries/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ collectionId: collection.id, data }),
-      });
-      if (!res.ok) throw new Error(L.errorSubmit);
+      const email = String(fd.get('email') ?? '').trim();
+      await sendWeb3Form(
+        `Nouvelle inscription à la newsletter — ${email}`,
+        { email, 'Langue': locale.toUpperCase(), 'Page': window.location.href },
+        fd.get(WEB3FORMS_HONEYPOT) !== null
+      );
 
       setSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : L.errorGeneric);
+    } catch {
+      setError(L.errorSubmit);
     } finally {
       setSubmitting(false);
     }
@@ -107,6 +94,14 @@ export function NewsletterCTA({
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="w-full max-w-[500px]">
+                <input
+                  type="checkbox"
+                  name={WEB3FORMS_HONEYPOT}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="hidden"
+                />
                 <div className="flex items-start gap-3 sm:gap-4">
                   <div className="flex-1 flex flex-col gap-3">
                     <input
