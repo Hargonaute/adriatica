@@ -1,10 +1,31 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { isLocale, type Locale } from '@/lib/i18n/config';
+import { brandTitle } from '@/lib/seo/brandTitle';
 
-export const metadata: Metadata = {
-  title: 'Terms & Conditions | Maghreb Adriatica',
+const pageMeta: Record<Locale, { title: string; description: string }> = {
+  fr: {
+    title: 'Conditions générales d\'utilisation',
+    description:
+      'Conditions générales d\'utilisation du site Maghreb Adriatica : utilisation du site, propriété intellectuelle, responsabilité et loi applicable.',
+  },
+  en: {
+    title: 'Terms & Conditions',
+    description:
+      'Terms and conditions of use of the Maghreb Adriatica website: use of the site, intellectual property, liability and governing law.',
+  },
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return {};
+  const meta = pageMeta[locale as Locale];
+  return { title: brandTitle(meta.title), description: meta.description };
+}
 
 const content: Record<Locale, { title: string; sections: { heading: string; body: string }[] }> = {
   fr: {

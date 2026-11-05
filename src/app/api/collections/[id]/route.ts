@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { collections, fields, pages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { requireSession } from '@/lib/auth/require-session';
 
 export async function GET(
   _request: Request,
@@ -35,6 +36,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -86,6 +90,9 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await params;
     // Cascade delete handles fields and entries (see schema FK onDelete: 'cascade')

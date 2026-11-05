@@ -22,8 +22,8 @@ export function ContactFormSimpleEditor({
     <div className="space-y-4 p-4 border rounded-md">
       <p className="text-xs text-muted-foreground">
         Renders the contact form and side image — same image as the contact
-        page, without the info cards above it. The image is fixed. The form
-        posts to <code>/api/entries/create</code> against the <code>contact</code> collection.
+        page, without the info cards above it. The image is fixed. Messages
+        are emailed to Adriatica (Web3Forms).
       </p>
       <div className="space-y-1.5">
         <Label className="text-xs">Heading</Label>

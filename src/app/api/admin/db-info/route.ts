@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { pool } from '@/lib/db/pool';
+import { requireSession } from '@/lib/auth/require-session';
 
 // Known tables (app + auth). We query each individually so unknown/missing
 // tables don't crash the whole request.
@@ -18,6 +19,9 @@ const KNOWN_TABLES = [
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   const client = await pool.connect();
   const start = Date.now();
 

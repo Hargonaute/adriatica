@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
 import { LOCALES, DEFAULT_LOCALE } from '@/lib/i18n/config';
+import { legacyPublicRedirect } from '@/lib/products/productUrl';
 
 // Dashboard sub-paths that are publicly accessible (no auth required).
 // Only the login page itself is public; everything else under /dashboard
@@ -18,11 +19,22 @@ const PROTECTED_API_PATHS: string[] = [
   '/api/entries',
   '/api/fields',
   '/api/admin',
+  '/api/import',
+  '/api/catalogue-intros',
 ];
 
-// Public exceptions — mutating endpoints that must remain unauthenticated
-// (e.g. public form submissions from the live site).
-const PUBLIC_API_PATHS: string[] = ['/api/entries/create'];
+// Public exceptions — mutating endpoints that must remain unauthenticated.
+// /api/entries/create is no longer public: it requires a dashboard session.
+const PUBLIC_API_PATHS: string[] = [];
+
+/**
+ * Vercel Blob's upload-completed callback to /api/upload carries no session
+ * cookie. Let it reach the route, which rejects it unless the
+ * x-vercel-signature matches (handleUpload verifies it with the Blob token).
+ */
+function isBlobUploadCallback(request: NextRequest): boolean {
+  return request.nextUrl.pathname === '/api/upload' && request.headers.has('x-vercel-signature');
+}
 
 // Paths that never need locale prefixing.
 const LOCALE_RESERVED_PREFIXES = ['/api', '/dashboard', '/login', '/_next', '/favicon'];
@@ -43,9 +55,10 @@ function isProtectedApiPath(pathname: string, method: string): boolean {
 }
 
 /**
- * Fast optimistic auth check using Better Auth's session cookie.
- * Full session validation (expiry, DB lookup) happens inside individual
- * Server Components via auth.api.getSession({ headers: await headers() }).
+ * Fast optimistic auth check using Better Auth's session cookie — presence
+ * only, so it is NOT sufficient on its own. Full validation (signature,
+ * expiry, DB lookup) happens in every route handler and in the dashboard
+ * layout via requireSession() / getValidSession() (src/lib/auth/require-session.ts).
  */
 function isAuthenticated(request: NextRequest): boolean {
   const cookie = getSessionCookie(request);
@@ -70,7 +83,7 @@ export function proxy(request: NextRequest) {
     isDashboardProtected(pathname) ||
     (process.env.NODE_ENV === 'production' && isProtectedApiPath(pathname, method));
 
-  if (requiresAuth && !isAuthenticated(request)) {
+  if (requiresAuth && !isAuthenticated(request) && !isBlobUploadCallback(request)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -80,12 +93,30 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Legacy / non-canonical public URLs (/fr/produit-x, /en/produit/x,
+  // /en/produits, …) → their canonical URL in a single 308 hop.
+  const canonicalPath = isLocaleReserved(pathname) ? null : legacyPublicRedirect(pathname);
+  if (canonicalPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = canonicalPath;
+    return NextResponse.redirect(url, 308);
+  }
+
   // Locale prefix redirect: any public path that isn't reserved and lacks a
   // locale prefix is redirected to the default locale (/fr).
   if (!isLocaleReserved(pathname) && !pathHasLocale(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = `/${DEFAULT_LOCALE}${pathname}`;
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(url, 308);
+  }
+
+  // Let the dashboard layout know which page is rendered (it skips its
+  // session redirect on the login page). Always overwritten here, so a
+  // client-supplied x-pathname header is never trusted.
+  if (pathname.startsWith('/dashboard')) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-pathname', pathname);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   return NextResponse.next();
@@ -104,6 +135,7 @@ export const config = {
     '/api/entries/:path*',
     '/api/fields/:path*',
     '/api/admin/:path*',
+    '/api/import/:path*',
     // Public site routes: match everything that isn't a reserved system path
     // so the locale-prefix redirect can fire when needed.
     '/((?!api|_next|dashboard|login|.*\\..*).*)',

@@ -1,11 +1,29 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Navbar } from '@/components/home/Navbar';
 import { SiteFooter } from '@/components/home/SiteFooter';
 import { ScrollReveal } from '@/components/shared/ScrollReveal';
 import { LOCALES, isLocale, type Locale } from '@/lib/i18n/config';
+import { OG_LOCALE } from '@/lib/site';
+import { RootDocument } from '../../_shell/RootDocument';
+import { ROOT_METADATA } from '../../_shell/rootMetadata';
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
+}
+
+// Root layout of the public site: <html lang> follows the [locale] segment.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return ROOT_METADATA;
+  return {
+    ...ROOT_METADATA,
+    openGraph: { ...ROOT_METADATA.openGraph, locale: OG_LOCALE[locale] },
+  };
 }
 
 export default async function LocaleLayout({
@@ -18,7 +36,7 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   return (
-    <>
+    <RootDocument lang={locale}>
       {/* Enable the reveal-on-view hidden state before first paint so there is
           no flash; without JS the class is never added and content stays shown. */}
       <script
@@ -30,6 +48,6 @@ export default async function LocaleLayout({
       {children}
       <SiteFooter locale={locale as Locale} />
       <ScrollReveal />
-    </>
+    </RootDocument>
   );
 }

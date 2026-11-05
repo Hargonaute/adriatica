@@ -1,8 +1,12 @@
 {
+  "_TODO-CLIENT": [
+    "en.meta.title / en.meta.description are a translation of the client's FR values (A11.7); final EN copy pending from Adriatica.",
+    "filter.emptyContactText / filter.emptyContactCta (Lot B empty state, FR and EN): our wording, to validate."
+  ],
   "fr": {
     "meta": {
-      "title": "Trouver une solution",
-      "description": "Trouvez la solution agronomique Adriatica adaptée à vos cultures et à vos besoins grâce à notre outil de recherche par filtres."
+      "title": "Trouver l'engrais adapté à votre culture",
+      "description": "Choisissez votre culture, votre famille de produits ou votre problématique : Adriatica vous recommande la solution adaptée parmi plus de 50 produits."
     },
     "hero": {
       "heading": "Trouver une solution",
@@ -24,6 +28,8 @@
       "productPlural": "produits",
       "loadingText": "Chargement des produits…",
       "emptyText": "Aucun produit ne correspond à ces critères.",
+      "emptyContactText": "Notre équipe peut vous orienter vers la solution adaptée.",
+      "emptyContactCta": "Nous contacter",
       "allOption": "Tous",
       "noOptions": "Aucune option",
       "untitled": "Sans titre"
@@ -31,8 +37,8 @@
   },
   "en": {
     "meta": {
-      "title": "Find a solution",
-      "description": "Find the Adriatica agronomic solution best suited to your crops and needs with our filter-based search tool."
+      "title": "Find the right fertilizer for your crop",
+      "description": "Choose your crop, product family or problem: Adriatica recommends the right solution from more than 50 products."
     },
     "hero": {
       "heading": "Find a solution",
@@ -54,6 +60,8 @@
       "productPlural": "products",
       "loadingText": "Loading products…",
       "emptyText": "No product matches these criteria.",
+      "emptyContactText": "Our team can point you to the right solution.",
+      "emptyContactCta": "Contact us",
       "allOption": "All",
       "noOptions": "No options",
       "untitled": "Untitled"

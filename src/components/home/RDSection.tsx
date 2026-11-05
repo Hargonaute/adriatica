@@ -26,7 +26,12 @@ export function RDSection({ heading, body, ctaLabel, ctaHref, imageUrl, imageAlt
               {headingLines.map((line, i) => (
                 <span key={i}>
                   {line}
-                  {i < headingLines.length - 1 && <br />}
+                  {i < headingLines.length - 1 && (
+                    <>
+                      {' '}
+                      <br />
+                    </>
+                  )}
                 </span>
               ))}
             </h2>

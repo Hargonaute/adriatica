@@ -3,6 +3,7 @@ import { assets } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { del } from '@vercel/blob';
 import { NextResponse } from 'next/server';
+import { requireSession } from '@/lib/auth/require-session';
 
 // GET /api/assets/[id]
 export async function GET(
@@ -29,6 +30,9 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await params;
     const result = await db.select().from(assets).where(eq(assets.id, id)).limit(1);

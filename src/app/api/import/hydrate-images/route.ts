@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { pages, assets } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { editableMeta, previousSlugsOf, stripPending } from '@/lib/pages/draftState';
+import { requireSession } from '@/lib/auth/require-session';
 
 /**
  * POST /api/import/hydrate-images
@@ -27,8 +29,16 @@ import { revalidatePath } from 'next/cache';
  *       }
  *   )
  *   result = r.json()
+ *
+ * Auth: open on `next dev` (the notebook above has no session cookie), like
+ * /api/admin/*. In any other environment a valid dashboard session is required.
  */
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV !== 'development') {
+    const unauthorized = await requireSession();
+    if (unauthorized) return unauthorized;
+  }
+
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json({ error: 'BLOB_NOT_CONFIGURED' }, { status: 503 });
   }
@@ -130,24 +140,29 @@ export async function POST(request: Request) {
       );
     }
 
-    const blocks = (parsed.blocks as { en: unknown[]; fr?: unknown[] }) ?? { en: [] };
+    // `_pending` is the editor's reserved draft key: never import it as content.
+    const blocks = stripPending((parsed.blocks as { en: unknown[]; fr?: unknown[] }) ?? { en: [] });
     const meta = (parsed.meta as object) ?? {};
 
     const [existing] = await db
-      .select({ id: pages.id })
+      .select({ id: pages.id, meta: pages.meta })
       .from(pages)
       .where(eq(pages.slug, slug))
       .limit(1);
 
     if (existing) {
-      // Update existing page (idempotent re-import)
+      // Update existing page (idempotent re-import). This publishes directly:
+      // draft_blocks is replaced, so any unpublished `_pending` settings are
+      // dropped. meta.previousSlugs (old-URL redirects) is server-managed and
+      // kept from the live row.
+      const prev = previousSlugsOf(existing.meta);
       await db
         .update(pages)
         .set({
           title,
           draft_blocks: blocks,
           published_blocks: blocks,
-          meta,
+          meta: { ...editableMeta(meta), ...(prev.length ? { previousSlugs: prev } : {}) },
           status: 'published',
           publishedAt: new Date(),
           updatedAt: new Date(),
@@ -163,7 +178,7 @@ export async function POST(request: Request) {
           slug,
           draft_blocks: blocks,
           published_blocks: blocks,
-          meta,
+          meta: editableMeta(meta),
           status: 'published',
           publishedAt: new Date(),
           isTemplate: false,

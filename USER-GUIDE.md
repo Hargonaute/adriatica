@@ -77,7 +77,9 @@ Top bar, from left to right:
 | **⚙ Settings** | Page title, address, Google (SEO) settings and **product filters** |
 | **EN / FR** | Switch language. **Each language has its own content.** |
 | **Save** | Save your work as a draft. Visitors don't see it yet. |
-| **Publish** | Put the page live on the website |
+| **Publish** | Draft page: put the page live on the website |
+| **Publish changes** | Page already live: put your saved changes online (content, title, SEO, share image, product filters). Shows **Up to date** when the website already matches. |
+| **Unpublished changes** | Indicator: changes are saved but not live yet |
 | **Unpublish** | Take the page off the website (it is kept as a draft) |
 
 ### 1.4 Adding content with blocks
@@ -145,7 +147,9 @@ If a language is left empty, that version of the page will be empty.
 
 - The editor **saves a draft automatically every 30 seconds**. You can also click **Save** (or press **Ctrl+S** / **Cmd+S**).
 - "**Unsaved changes**" in the top bar means something hasn't been saved yet.
-- **Saving does not publish.** Visitors only see the page after you click **Publish**.
+- **Saving does not publish.** Visitors only see the page after you click **Publish** (draft page) or **Publish changes** (page already live).
+- On a page that is already live, everything you save waits for **Publish changes**: the blocks, and also the title, Meta Title / Meta Description (FR and EN), share image, noIndex and **product filters**. Until you publish, the website, *Trouver une solution* and the sitemap keep the old version. The "**Unpublished changes**" indicator (also shown in the pages list) reminds you.
+- If the address (slug) of a live page changes, the old address automatically redirects to the new one once you publish.
 - After you publish a change, it can take **up to 1 minute** to appear on the live site. Refresh the page.
 
 ---
@@ -191,7 +195,7 @@ These decide where the product shows up on **Trouver une solution**.
    - **Famille**: pick **one** product family from the list.
    - **Problématiques**: click **all** the problems the product solves. Selected items are highlighted. Click again to unselect.
    - **Cultures**: click **all** the crops the product is for.
-4. Click **Save**, then **Publish**.
+4. Click **Save**, then **Publish changes** (or **Publish** if the product is not live yet). The filters only change on *Trouver une solution* after you publish.
 
 > The **Product filters** section only appears when the slug starts with `produit-`. If you don't see it, check the slug.
 >
@@ -212,7 +216,7 @@ These decide where the product shows up on **Trouver une solution**.
 1. **Pages**: find the page whose slug starts with `produit-`.
 2. Click it to open the editor.
 3. Change text, images, filters…
-4. Click **Publish** to put the changes live (**Save** alone is not enough).
+4. Click **Publish changes** to put the changes live (**Save** alone is not enough). The button then shows **Up to date**.
 
 ### 2.5 Removing a product
 
@@ -228,13 +232,13 @@ These decide where the product shows up on **Trouver une solution**.
 - [ ] Checked in **Preview** on **Desktop** and **Mobile**
 - [ ] Product: slug starts with **`produit-`**
 - [ ] Product: **Famille**, **Problématiques** and **Cultures** are set
-- [ ] Clicked **Publish** (not just Save)
+- [ ] Clicked **Publish** / **Publish changes** (not just Save); the button shows **Up to date**
 
 ## Common problems
 
 | Problem | Solution |
 |---|---|
-| My changes don't show on the website | Did you click **Publish**? Wait 1 minute and refresh. |
+| My changes don't show on the website | Did you click **Publish** / **Publish changes**? While "Unpublished changes" is shown, nothing is live. Wait 1 minute and refresh. |
 | The product isn't on *Trouver une solution* | Check it is **Published**, the slug starts with `produit-`, and the filters are set. |
 | I don't see "Product filters" | The slug doesn't start with `produit-`. Fix it in **⚙ Settings**. |
 | The French page is empty | Content is per language. Click **FR** and add the content. |

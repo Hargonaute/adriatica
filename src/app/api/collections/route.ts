@@ -3,6 +3,7 @@ import { collections, pages } from '@/lib/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
+import { requireSession } from '@/lib/auth/require-session';
 
 // Pre-fills the detail template with a Product Detail block sequence.
 // Bindings target common field keys (name/title, image, description/benefice)
@@ -162,6 +163,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     if (!body.name || !body.slug) {

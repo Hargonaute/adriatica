@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { LOCALES, type Locale } from '@/lib/i18n/config';
 import { translateSlug, keyForSlug, STATIC_PAGE_SLUGS, type StaticPageKey } from '@/lib/i18n/pageSlugs';
+import { PRODUCT_SEGMENT, productPath } from '@/lib/products/productUrl';
 
 export interface LanguageSwitcherProps {
   locale: Locale;
@@ -27,6 +28,11 @@ function translatePath(suffix: string, from: Locale, to: Locale): string {
   const segments = suffix.split('/').filter(Boolean);
   if (segments.length === 0) return '';
 
+  // Product page: /fr/produit/<slug> ↔ /en/product/<slug>.
+  if (segments.length === 2 && segments[0] === PRODUCT_SEGMENT[from]) {
+    return productPath(to, segments[1]).slice(`/${to}`.length);
+  }
+
   // Static page at first segment?
   const key = keyForSlug(segments[0], from);
   if (key) {
@@ -47,8 +53,13 @@ export function LanguageSwitcher({ locale, variant = 'desktop' }: LanguageSwitch
   function switchTo(next: Locale) {
     if (next === locale) return;
     const translated = translatePath(suffix, locale, next);
+    // The find-a-solution filters (?famille=…) use the same slugs in every
+    // locale: keep them when switching language.
+    const segments = suffix.split('/').filter(Boolean);
+    const keepQuery = segments.length === 1 && keyForSlug(segments[0], locale) === 'solution';
+    const query = keepQuery ? window.location.search : '';
     startTransition(() => {
-      router.push(`/${next}${translated}`);
+      router.push(`/${next}${translated}${query}`);
     });
   }
 

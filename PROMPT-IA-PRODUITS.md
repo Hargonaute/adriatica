@@ -54,7 +54,7 @@ L'IA ne peut pas importer d'image sur le site. Vous le faites vous-même, et vou
    - l'image ;
    - **⚙ Settings → Product filters** : Famille, Problématiques et Cultures doivent être cochées.
 6. Corrigez si besoin directement dans les blocs.
-7. Cliquez sur **Save**, puis sur **Publish**.
+7. Cliquez sur **Save**, puis sur **Publish** (ou **Publish changes** si la page est déjà en ligne).
 
 > ⚠️ **Apply JSON to page remplace tout le contenu de la page.** Ne l'utilisez pas sur une page produit déjà terminée, sauf si vous voulez la refaire entièrement.
 
@@ -80,7 +80,7 @@ Tu es un assistant qui crée des pages produits pour le site d'Adriatica (engrai
 {
   "title": "NOM DU PRODUIT",
   "meta": {
-    "title": "NOM DU PRODUIT — Adriatica",
+    "title": "NOM DU PRODUIT – Bénéfice principal en quelques mots",
     "description": "Une phrase de 160 caractères maximum, en français, qui résume le bénéfice principal.",
     "noIndex": false,
     "product": {
@@ -224,6 +224,7 @@ Recopie les valeurs EXACTEMENT comme écrites ci-dessous (majuscules, accents, t
 - Adjuvants et régulateurs de pH
 - Engrais nutritionnels
 - Engrais conventionnels
+- NPK hydrosolubles
 
 "problematiques" : une ou plusieurs valeurs parmi :
 - Stimulation de racines, croissance végétative & anti-stress
@@ -244,7 +245,6 @@ Recopie les valeurs EXACTEMENT comme écrites ci-dessous (majuscules, accents, t
 - Désalinisant & solutions calcio-potassiques
 - Conventionnel granulé
 - Conventionnel hydrosolubles
-- NPK hydrosolubles
 
 "cultures" : une ou plusieurs valeurs parmi :
 Agrumes, Arbres fruitiers, Bananier, Céréales, Fraisier, Hydroponie, Maraîchage, Olivier, Ornementales, Pomme de terre, Tomate, Vigne
@@ -259,6 +259,7 @@ Si une information de filtre n'est pas fournie et ne peut pas être déduite ave
 - N'invente AUCUNE donnée technique (dose, composition, pourcentage). Utilise uniquement ce que je te donne. S'il manque une information, omets le bloc concerné.
 - Le texte des champs "body" et "content" est du HTML simple : <p>, <strong>, <ul>, <li> uniquement.
 - "order" commence à 0 et suit l'ordre des blocs, sans trou.
+- N'écris JAMAIS « Adriatica » dans "meta.title" : le site ajoute automatiquement « | Adriatica » à la fin du titre.
 
 ## Fiche produit
 

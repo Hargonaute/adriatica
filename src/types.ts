@@ -430,6 +430,17 @@ export interface PageMeta {
   noIndex?: boolean;
   /** Filter metadata for product pages (slug `produit-…`), used by "Trouver une solution". */
   product?: ProductFilterMeta;
+  /**
+   * EN overrides of title / description (the top-level fields are the FR /
+   * default ones). EN pages fall back to the EN Product Hero title (product
+   * pages), then to the top-level fields.
+   */
+  en?: LocalizedPageMeta;
+}
+
+export interface LocalizedPageMeta {
+  title?: string;
+  description?: string;
 }
 
 export interface ProductFilterMeta {

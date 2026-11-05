@@ -1,4 +1,8 @@
 {
+  "_TODO-CLIENT": [
+    "fr.footer.description / en.footer.description: template sentence removed (A9). Replacement footer text pending from Adriatica. SiteFooter hides the paragraph while the value is empty.",
+    "newsletter.consent and contactForm.consent (fr + en): loi 09-08 wording to be validated by Adriatica / CNDP (optionally add the CNDP declaration number). EN is a translation of the FR text."
+  ],
   "fr": {
     "nav": {
       "links": [
@@ -15,7 +19,7 @@
       "contactCta": "Contact"
     },
     "footer": {
-      "description": "Concevez des expériences numériques exceptionnelles qui apportent plus de bonheur au monde.",
+      "description": "",
       "productHeading": "Produits",
       "socialHeading": "Réseaux",
       "productLinks": [
@@ -44,7 +48,7 @@
       "body": "Restez informé sur les dernières nouveautés de Maghreb Adriatica !",
       "buttonLabel": "S'inscrire",
       "emailPlaceholder": "Entrez votre e-mail",
-      "consent": "J'autorise le traitement de mes données personnelles aux termes du décret législatif 196/2003.",
+      "consent": "J'autorise Maghreb Adriatica à traiter mes données personnelles conformément à la loi n° 09-08 relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel.",
       "successMessage": "Merci ! Votre inscription a bien été prise en compte.",
       "errorGeneric": "Une erreur est survenue.",
       "errorConfig": "Configuration introuvable.",
@@ -61,7 +65,7 @@
       "phonePlaceholder": "+33 99 99 99 99 99",
       "messageLabel": "Message",
       "messagePlaceholder": "Laissez-nous votre message...",
-      "consent": "J'autorise le traitement de mes données personnelles aux termes du décret législatif 196/2003.",
+      "consent": "J'autorise Maghreb Adriatica à traiter mes données personnelles conformément à la loi n° 09-08 relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel.",
       "submitLabel": "Envoyer",
       "submittingLabel": "Envoi…",
       "successTitle": "Merci !",
@@ -98,7 +102,7 @@
       "contactCta": "Contact"
     },
     "footer": {
-      "description": "Design amazing digital experiences that create more happy in the world.",
+      "description": "",
       "productHeading": "Product",
       "socialHeading": "Social",
       "productLinks": [
@@ -127,7 +131,7 @@
       "body": "Stay up to date on the latest from Maghreb Adriatica!",
       "buttonLabel": "Subscribe",
       "emailPlaceholder": "Enter your email",
-      "consent": "I authorize the processing of my personal data under legislative decree 196/2003.",
+      "consent": "I authorise Maghreb Adriatica to process my personal data in accordance with Law No. 09-08 on the protection of individuals with regard to the processing of personal data.",
       "successMessage": "Thank you! Your subscription has been received.",
       "errorGeneric": "An error occurred.",
       "errorConfig": "Configuration not found.",
@@ -144,7 +148,7 @@
       "phonePlaceholder": "+1 555 555 5555",
       "messageLabel": "Message",
       "messagePlaceholder": "Leave us your message...",
-      "consent": "I authorize the processing of my personal data under legislative decree 196/2003.",
+      "consent": "I authorise Maghreb Adriatica to process my personal data in accordance with Law No. 09-08 on the protection of individuals with regard to the processing of personal data.",
       "submitLabel": "Send",
       "submittingLabel": "Sending…",
       "successTitle": "Thank you!",

@@ -2,14 +2,17 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Search, ChevronDown, Undo2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Locale } from '@/lib/i18n/config';
+import { foldKey } from '@/lib/products/foldKey';
+import type { CatalogueFacet } from '@/lib/products/catalogueSlugs';
 import {
-  facetOptions,
-  matchesFilters,
-  type ProductFilterItem,
-} from '@/lib/products/productMeta';
+  catalogueQuery,
+  matchesCatalogueFilters,
+  type CatalogueFilters,
+  type FacetSlugs,
+} from '@/lib/products/catalogueFilter';
 
 export interface TrouverFilterLabels {
   criteresHeading: string;
@@ -27,14 +30,40 @@ export interface TrouverFilterLabels {
   productPlural: string;
   loadingText: string;
   emptyText: string;
+  emptyContactText: string;
+  emptyContactCta: string;
   allOption: string;
   noOptions: string;
   untitled: string;
 }
 
+/** One product card, already resolved for the page locale on the server. */
+export interface TrouverItem {
+  id: string;
+  name: string;
+  /** Canonical product URL (publicPathForPage); null → card without link. */
+  href: string | null;
+  image: string | null;
+  facetSlugs: FacetSlugs;
+  /** Folded text the search box matches against (name + facet labels). */
+  searchText: string;
+}
+
+export interface FacetOption {
+  slug: string;
+  label: string;
+}
+
 export interface TrouverFilterProps {
   labels: TrouverFilterLabels;
-  locale: Locale;
+  /** Path of the page without query (pathForKey('solution', locale)). */
+  basePath: string;
+  /** Contact page path for the empty state. */
+  contactHref: string;
+  items: TrouverItem[];
+  options: Record<CatalogueFacet, FacetOption[]>;
+  /** Filters from the (already canonical) URL. */
+  initialFilters: CatalogueFilters;
 }
 
 const PLACEHOLDER_IMAGE = '/produit_page_img/Adriatica Web Featured Icon.png';
@@ -55,7 +84,7 @@ function CustomSelect({
   noOptions,
 }: {
   placeholder: string;
-  options: string[];
+  options: FacetOption[];
   value: string | null;
   onChange: (next: string | null) => void;
   allOption: string;
@@ -63,6 +92,7 @@ function CustomSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
+  const selectedLabel = options.find((o) => o.slug === value)?.label ?? null;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -79,15 +109,16 @@ function CustomSelect({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        title={value ?? undefined}
+        title={selectedLabel ?? undefined}
+        aria-expanded={isOpen}
         className="flex items-center justify-between gap-2 w-full h-11 px-3 bg-white border border-slate-200 rounded-lg text-sm transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#BC0D2A]/20 focus:border-[#BC0D2A]"
       >
         <span
           className={`flex-1 min-w-0 truncate text-left ${
-            value ? 'text-slate-900' : 'text-slate-500'
+            selectedLabel ? 'text-slate-900' : 'text-slate-500'
           }`}
         >
-          {value || placeholder}
+          {selectedLabel || placeholder}
         </span>
         <ChevronDown
           size={14}
@@ -116,19 +147,19 @@ function CustomSelect({
           ) : (
             options.map((option) => (
               <button
-                key={option}
+                key={option.slug}
                 type="button"
                 onClick={() => {
-                  onChange(option);
+                  onChange(option.slug);
                   setIsOpen(false);
                 }}
                 className={`w-full text-left px-3 py-2.5 text-sm transition-colors ${
-                  value === option
+                  value === option.slug
                     ? 'bg-[#BC0D2A]/10 text-[#BC0D2A] font-medium'
                     : 'text-slate-700 hover:bg-slate-50 hover:text-[#BC0D2A]'
                 }`}
               >
-                {option}
+                {option.label}
               </button>
             ))
           )}
@@ -138,53 +169,55 @@ function CustomSelect({
   );
 }
 
-export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
-  const [items, setItems] = useState<ProductFilterItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [culture, setCulture] = useState<string | null>(null);
-  const [famille, setFamille] = useState<string | null>(null);
-  const [problematique, setProblematique] = useState<string | null>(null);
+/**
+ * Filter + product grid of the "Trouver une solution" page. The server
+ * renders it with the products and the filters from the URL (so the filtered
+ * list is in the HTML); changing a filter updates the URL with router.replace
+ * (canonical order famille, culture, probleme) — no reload, no client fetch.
+ */
+export function TrouverFilter({
+  labels,
+  basePath,
+  contactHref,
+  items,
+  options,
+  initialFilters,
+}: TrouverFilterProps) {
+  const router = useRouter();
+  const [filters, setFilters] = useState<CatalogueFilters>(initialFilters);
   const [search, setSearch] = useState('');
 
+  // The URL is the source of truth: when the server re-renders with other
+  // params (back / forward, a link), follow them.
+  const initialQuery = catalogueQuery(initialFilters);
   useEffect(() => {
-    let cancelled = false;
+    setFilters(initialFilters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery]);
 
-    (async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch('/api/products');
-        if (!res.ok) throw new Error('Failed to load products');
-        const data = (await res.json()) as ProductFilterItem[];
-        if (!cancelled) setItems(data);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Unknown error');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
+  const applyFilters = (next: CatalogueFilters) => {
+    setFilters(next);
+    const q = catalogueQuery(next);
+    router.replace(q ? `${basePath}?${q}` : basePath, { scroll: false });
+  };
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const setFacet = (facet: CatalogueFacet) => (slug: string | null) => {
+    const next: CatalogueFilters = { ...filters };
+    if (slug) next[facet] = slug;
+    else delete next[facet];
+    applyFilters(next);
+  };
 
-  const cultureOptions = useMemo(() => facetOptions(items, 'cultures'), [items]);
-  const familleOptions = useMemo(() => facetOptions(items, 'familles'), [items]);
-  const problematiqueOptions = useMemo(() => facetOptions(items, 'problematiques'), [items]);
-
-  const filtered = useMemo(
-    () => items.filter((item) => matchesFilters(item, { culture, famille, problematique, search })),
-    [items, culture, famille, problematique, search]
-  );
+  const filtered = useMemo(() => {
+    const q = foldKey(search);
+    return items.filter(
+      (item) => matchesCatalogueFilters(item.facetSlugs, filters) && (!q || item.searchText.includes(q))
+    );
+  }, [items, filters, search]);
 
   const handleReset = () => {
-    setCulture(null);
-    setFamille(null);
-    setProblematique(null);
     setSearch('');
+    applyFilters({});
   };
 
   const resultLabel = filtered.length === 1 ? labels.productSingular : labels.productPlural;
@@ -210,6 +243,7 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={labels.searchPlaceholder}
+                aria-label={labels.searchPlaceholder}
                 className="w-full h-11 pl-10 pr-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#BC0D2A]/20 focus:border-[#BC0D2A] transition-colors text-sm placeholder:text-slate-400 text-slate-900"
               />
             </div>
@@ -221,9 +255,9 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
                 </label>
                 <CustomSelect
                   placeholder={labels.culturePlaceholder}
-                  options={cultureOptions}
-                  value={culture}
-                  onChange={setCulture}
+                  options={options.culture}
+                  value={filters.culture ?? null}
+                  onChange={setFacet('culture')}
                   allOption={labels.allOption}
                   noOptions={labels.noOptions}
                 />
@@ -235,9 +269,9 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
                 </label>
                 <CustomSelect
                   placeholder={labels.famillePlaceholder}
-                  options={familleOptions}
-                  value={famille}
-                  onChange={setFamille}
+                  options={options.famille}
+                  value={filters.famille ?? null}
+                  onChange={setFacet('famille')}
                   allOption={labels.allOption}
                   noOptions={labels.noOptions}
                 />
@@ -249,9 +283,9 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
                 </label>
                 <CustomSelect
                   placeholder={labels.problematiquePlaceholder}
-                  options={problematiqueOptions}
-                  value={problematique}
-                  onChange={setProblematique}
+                  options={options.probleme}
+                  value={filters.probleme ?? null}
+                  onChange={setFacet('probleme')}
                   allOption={labels.allOption}
                   noOptions={labels.noOptions}
                 />
@@ -274,33 +308,27 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
                 <h3 className="font-[family-name:var(--font-inter)] text-xl font-bold text-slate-900 tracking-tight">
                   {labels.recommendationHeading}
                 </h3>
-                {!loading && !error && (
-                  <span className="text-sm text-slate-500">
-                    {filtered.length} {resultLabel}
-                  </span>
-                )}
+                <span className="text-sm text-slate-500" aria-live="polite" data-testid="product-count">
+                  {filtered.length} {resultLabel}
+                </span>
               </div>
             </div>
 
-            {loading ? (
-              <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
-                {labels.loadingText}
-              </div>
-            ) : error ? (
-              <div className="flex-1 flex items-center justify-center text-red-500 text-sm">
-                {error}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
-                {labels.emptyText}
+            {filtered.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center text-sm">
+                <p className="text-slate-500">{labels.emptyText}</p>
+                <p className="text-slate-400">{labels.emptyContactText}</p>
+                <Link
+                  href={contactHref}
+                  className="inline-flex items-center px-4 py-2 rounded-lg bg-[#BC0D2A] text-white font-semibold hover:bg-[#9A0B22] transition-colors"
+                >
+                  {labels.emptyContactCta}
+                </Link>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filtered.map((item) => {
                   const name = item.name;
-                  // Product pages are DB pages with slug `produit-<slug>`, served by the
-                  // generic /[locale]/[slug] route (single segment, not /produit/<slug>).
-                  const href = item.pathSlug ? `/${locale}/${item.pathSlug}` : null;
                   const imageUrl = item.image || PLACEHOLDER_IMAGE;
                   const card = (
                     <>
@@ -322,12 +350,12 @@ export function TrouverFilter({ labels, locale }: TrouverFilterProps) {
                   const cardClassName =
                     'flex flex-col items-center p-6 bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow rounded-xl';
 
-                  return href ? (
-                    <Link key={item.id} href={href} className={cardClassName}>
+                  return item.href ? (
+                    <Link key={item.id} href={item.href} className={cardClassName} data-product-card>
                       {card}
                     </Link>
                   ) : (
-                    <div key={item.id} className={cardClassName}>
+                    <div key={item.id} className={cardClassName} data-product-card>
                       {card}
                     </div>
                   );

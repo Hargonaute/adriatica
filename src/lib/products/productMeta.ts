@@ -10,6 +10,10 @@
  */
 
 import type { ProductFilterMeta } from '@/types';
+import { foldKey } from './foldKey';
+import { CATALOGUE_FACETS, slugForLabel, type CatalogueFacet } from './catalogueSlugs';
+
+export { foldKey };
 
 export const PRODUCT_PAGE_PREFIX = 'produit-';
 
@@ -23,6 +27,9 @@ export const FAMILLES = [
   'Adjuvants et régulateurs de pH',
   'Engrais nutritionnels',
   'Engrais conventionnels',
+  // B8: was a problématique; products still tagged that way are read as this
+  // famille (see publicProductFacets) until scripts/reclassify-npk.ts runs.
+  'NPK hydrosolubles',
 ] as const;
 
 export const PROBLEMATIQUES = [
@@ -44,7 +51,6 @@ export const PROBLEMATIQUES = [
   'Désalinisant & solutions calcio-potassiques',
   'Conventionnel granulé',
   'Conventionnel hydrosolubles',
-  'NPK hydrosolubles',
 ] as const;
 
 export const CULTURES = [
@@ -63,18 +69,6 @@ export const CULTURES = [
 ] as const;
 
 // ── Normalisation ─────────────────────────────────────────────────────────────
-
-/** Comparison key: case-, accent-, apostrophe- and dash-insensitive. */
-export function foldKey(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[’‘`]/g, "'")
-    .replace(/[–—]/g, '-')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 function buildCanonicalMap(values: readonly string[]): Map<string, string> {
   const map = new Map<string, string>();
@@ -141,6 +135,68 @@ export function readProductMeta(meta: unknown): ProductFilterMeta | null {
   };
 }
 
+/**
+ * B8 compatibility bridge (read path only, until scripts/reclassify-npk.ts has
+ * run): "NPK hydrosolubles" used to be a problématique of products whose
+ * famille is "Engrais conventionnels". It is now a famille. A product still
+ * carrying the old problématique is read as famille "NPK hydrosolubles" and
+ * the problématique is dropped. Once the data is reclassified this is a no-op.
+ */
+export const NPK_FAMILLE = 'NPK hydrosolubles';
+const NPK_KEY = foldKey(NPK_FAMILLE);
+
+/** readProductMeta + the B8 bridge: the facet values shown publicly. */
+export function publicProductFacets(meta: unknown): ProductFilterMeta | null {
+  const pm = readProductMeta(meta);
+  if (!pm) return null;
+  const problematiques = pm.problematiques ?? [];
+  if (!problematiques.some((p) => foldKey(p) === NPK_KEY)) return pm;
+  return {
+    ...pm,
+    famille: NPK_FAMILLE,
+    problematiques: problematiques.filter((p) => foldKey(p) !== NPK_KEY),
+  };
+}
+
+/**
+ * Validation for imported metadata (editor "Import JSON", B8): every value of
+ * `meta.product` must be one of the editor options. Returns human-readable
+ * problems; [] = valid. Saving a page never runs this (a malformed value must
+ * not block a save; readers sanitise via readProductMeta).
+ */
+export function productMetaProblems(product: unknown): string[] {
+  if (product === undefined) return [];
+  if (!product || typeof product !== 'object' || Array.isArray(product)) {
+    return ['meta.product must be an object { famille, problematiques, cultures }'];
+  }
+  const p = product as Record<string, unknown>;
+  const problems: string[] = [];
+  const known = (facet: ProductFacet, v: string) => CANONICAL[facet].has(foldKey(v));
+  if (p.famille !== undefined && p.famille !== '') {
+    if (typeof p.famille !== 'string') problems.push('famille must be a string');
+    else if (!known('famille', p.famille)) problems.push(`unknown famille "${p.famille}"`);
+  }
+  const lists: [string, ProductFacet][] = [
+    ['problematiques', 'problematique'],
+    ['cultures', 'culture'],
+  ];
+  lists.forEach(([key, facet]) => {
+    const v = p[key];
+    if (v === undefined) return;
+    if (!Array.isArray(v)) {
+      problems.push(`${key} must be a list`);
+      return;
+    }
+    v.forEach((x) => {
+      if (typeof x !== 'string') problems.push(`${key}: every value must be a string`);
+      else if (facet === 'problematique' && foldKey(x) === NPK_KEY)
+        problems.push(`"${x}" is now a famille, not a problématique: use "famille": "${NPK_FAMILLE}"`);
+      else if (!known(facet, x)) problems.push(`unknown ${facet} "${x}"`);
+    });
+  });
+  return problems;
+}
+
 // ── Filter items ──────────────────────────────────────────────────────────────
 
 /** One card in the "Trouver une solution" filter. */
@@ -155,6 +211,36 @@ export interface ProductFilterItem {
   cultures: string[];
   /** Where the filter values came from (debug / admin visibility). */
   source: 'page' | 'collection';
+  /** EN Product Hero title of the page, when it has one (PUB-4). */
+  nameEn?: string;
+  /**
+   * URL slugs of the values above (frozen map, catalogueSlugs.ts); values that
+   * map to no slug are left out here (they stay in the label arrays).
+   */
+  facetSlugs: Record<CatalogueFacet, string[]>;
+}
+
+function slugsOf(facet: CatalogueFacet, labels: string[]): string[] {
+  const out: string[] = [];
+  labels.forEach((l) => {
+    const s = slugForLabel(facet, l);
+    if (s && !out.includes(s)) out.push(s);
+  });
+  return out;
+}
+
+/** facetSlugs for an item's label arrays. */
+export function facetSlugsOf(item: Pick<ProductFilterItem, 'familles' | 'cultures' | 'problematiques'>): Record<CatalogueFacet, string[]> {
+  const labels: Record<CatalogueFacet, string[]> = {
+    famille: item.familles,
+    culture: item.cultures,
+    probleme: item.problematiques,
+  };
+  const out = {} as Record<CatalogueFacet, string[]>;
+  CATALOGUE_FACETS.forEach((f) => {
+    out[f] = slugsOf(f, labels[f]);
+  });
+  return out;
 }
 
 export interface ProductPageInput {
@@ -164,6 +250,8 @@ export interface ProductPageInput {
   meta: unknown;
   /** published_blocks.fr — used for name / image fallback. */
   blocks: unknown;
+  /** published_blocks.en — EN name (Product Hero title), optional. */
+  blocksEn?: unknown;
 }
 
 export interface LegacyEntryInput {
@@ -225,7 +313,7 @@ export function buildProductFilterItems(
     if (img && !taggedPageByImage.has(img)) taggedPageByImage.set(img, p);
   });
 
-  const items: ProductFilterItem[] = [];
+  const items: Omit<ProductFilterItem, 'facetSlugs'>[] = [];
   const usedPageSlugs = new Set<string>();
 
   legacyEntries.forEach((e) => {
@@ -236,10 +324,11 @@ export function buildProductFilterItems(
       !slugPage && e.image ? taggedPageByImage.get(e.image) : undefined;
     // Two entries can't claim the same page: a second match keeps its old card.
     const page = slugPage ?? (imagePage && !usedPageSlugs.has(imagePage.slug) ? imagePage : undefined);
-    const pm = page ? readProductMeta(page.meta) : null;
+    const pm = page ? publicProductFacets(page.meta) : null;
     if (page) usedPageSlugs.add(page.slug);
     const hero = page ? heroFromBlocks(page.blocks) : { title: '', image: '' };
     const matchedByImage = !!page && page !== slugPage;
+    const nameEn = page ? heroFromBlocks(page.blocksEn).title : '';
 
     items.push({
       id: e.id,
@@ -253,14 +342,16 @@ export function buildProductFilterItems(
         : normalizeValues('problematique', [e.problematique]),
       cultures: pm ? pm.cultures ?? [] : normalizeValues('culture', [e.culture]),
       source: pm ? 'page' : 'collection',
+      ...(nameEn ? { nameEn } : {}),
     });
   });
 
   pages.forEach((p) => {
     if (usedPageSlugs.has(p.slug)) return;
-    const pm = readProductMeta(p.meta);
+    const pm = publicProductFacets(p.meta);
     if (!pm) return;
     const hero = heroFromBlocks(p.blocks);
+    const nameEn = heroFromBlocks(p.blocksEn).title;
     items.push({
       id: p.id,
       name: hero.title || p.title,
@@ -270,10 +361,13 @@ export function buildProductFilterItems(
       problematiques: pm.problematiques ?? [],
       cultures: pm.cultures ?? [],
       source: 'page',
+      ...(nameEn ? { nameEn } : {}),
     });
   });
 
-  return items.sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
+  return items
+    .map((i) => ({ ...i, facetSlugs: facetSlugsOf(i) }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
 }
 
 // ── Client-side filtering ─────────────────────────────────────────────────────

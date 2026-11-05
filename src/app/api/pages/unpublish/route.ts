@@ -3,8 +3,13 @@ import { pages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { requireSession } from '@/lib/auth/require-session';
+import { revalidationPathsForPage } from '@/lib/products/productUrl';
 
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await request.json();
 
@@ -18,6 +23,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     }
 
+    // draft_blocks (and any `_pending` settings saved while the page was
+    // live) are kept: the editor still shows the latest saved state, and the
+    // next Save of the now-draft page writes those settings directly.
     await db.update(pages)
         .set({
             status: 'draft',
@@ -28,8 +36,7 @@ export async function POST(request: Request) {
         .where(eq(pages.id, id));
 
     // Bust the ISR cache so the public route returns 404 immediately
-    revalidatePath(`/fr/${existing[0].slug}`);
-    revalidatePath(`/en/${existing[0].slug}`);
+    revalidationPathsForPage(existing[0].slug).forEach((p) => revalidatePath(p));
 
     return NextResponse.json({ success: true });
 

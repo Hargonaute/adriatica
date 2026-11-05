@@ -1,10 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { FileText, Database, Image as ImageIcon, Settings, LayoutDashboard, UserCog } from 'lucide-react';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { FileText, Database, Image as ImageIcon, Settings, LayoutDashboard, UserCog, Filter } from 'lucide-react';
 import { SidebarSignOut } from '@/components/dashboard/SidebarSignOut';
 import { db } from '@/lib/db';
 import { collections } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
+import { getValidSession } from '@/lib/auth/require-session';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,9 +16,18 @@ const NAV = [
   { href: '/dashboard/pages', label: 'Pages', icon: FileText },
   { href: '/dashboard/collections', label: 'Collections', icon: Database },
   { href: '/dashboard/assets', label: 'Assets', icon: ImageIcon },
+  { href: '/dashboard/catalogue', label: 'Catalogue intros', icon: Filter },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // The proxy only checks that a session cookie exists; validate it here.
+  // x-pathname is set by src/proxy.ts on every /dashboard request. If it is
+  // missing we fail closed (treat the page as protected).
+  const pathname = (await headers()).get('x-pathname') ?? '';
+  if (!pathname.startsWith('/dashboard/login') && !(await getValidSession())) {
+    redirect(`/dashboard/login?callbackUrl=${encodeURIComponent(pathname || '/dashboard')}`);
+  }
+
   const allCollections = await db.select().from(collections).orderBy(desc(collections.createdAt));
 
   return (

@@ -1,25 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
-import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/components/theme-provider";
+import { SITE_URL } from "@/lib/site";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
+// Site-wide default metadata, moved verbatim from the former src/app/layout.tsx
+// (plus metadataBase) and exported by every root layout. Pages override it
+// through buildPageMetadata() (src/lib/seo/metadata.ts).
+export const ROOT_METADATA: Metadata = {
+  // Resolves relative og:image / twitter:image URLs to absolute ones.
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Adriatica — Solutions agronomiques pour une agriculture durable",
     template: "%s | Adriatica",
@@ -61,26 +48,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="fr" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+/**
+ * title.template only applies to CHILD segments of the layout that defines it.
+ * The public home page (/[locale]) sits in the same segment as its root layout
+ * ((site)/[locale]/layout.tsx), so it applies the template explicitly to keep
+ * the title it had when the template lived in the old src/app/layout.tsx.
+ */
+export function templatedTitle(title: string): { absolute: string } {
+  const { template } = ROOT_METADATA.title as { template: string };
+  return { absolute: template.replace("%s", title) };
 }

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { FooterLinkColumn, type FooterLink } from './FooterLinkColumn';
+import { FooterNewsletterForm } from './FooterNewsletterForm';
 import type { Locale } from '@/lib/i18n/config';
 import { loadCommon } from '@/lib/i18n/loadPageData';
 import { pathForKey, type StaticPageKey } from '@/lib/i18n/pageSlugs';
@@ -37,9 +38,12 @@ export function SiteFooter({ locale }: { locale: Locale }) {
                 className="h-8 w-auto"
               />
             </div>
-            <p className="text-slate-400 text-[15px] leading-relaxed max-w-sm">
-              {common.footer.description}
-            </p>
+            {/* TODO-CLIENT: footer text pending from Adriatica (A9); hidden while empty. */}
+            {common.footer.description && (
+              <p className="text-slate-400 text-[15px] leading-relaxed max-w-sm">
+                {common.footer.description}
+              </p>
+            )}
           </div>
 
           <div className="w-full lg:w-[30%] flex gap-16 lg:justify-center">
@@ -51,19 +55,15 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             <h4 className="text-slate-300 text-[15px] font-semibold tracking-wide mb-1">
               {common.footer.newsletterHeading}
             </h4>
-            <form className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                placeholder={common.footer.newsletterPlaceholder}
-                className="flex-1 h-11 px-4 rounded-md border border-slate-700 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#BC0D2A]/50 placeholder:text-slate-500 text-[15px]"
-              />
-              <button
-                type="submit"
-                className="h-11 px-6 rounded-md bg-[#BC0D2A] text-white font-medium hover:bg-[#9A0B22] transition-colors whitespace-nowrap text-[15px]"
-              >
-                {common.footer.newsletterButton}
-              </button>
-            </form>
+            <FooterNewsletterForm
+              locale={locale}
+              labels={{
+                placeholder: common.footer.newsletterPlaceholder,
+                button: common.footer.newsletterButton,
+                success: common.newsletter.successMessage,
+                error: common.newsletter.errorSubmit,
+              }}
+            />
           </div>
         </div>
 

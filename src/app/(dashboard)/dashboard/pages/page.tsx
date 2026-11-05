@@ -1,14 +1,22 @@
 import { db } from '@/lib/db';
+import { requireDashboardSession } from '@/lib/auth/require-session';
 import { pages } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
 import { Plus, Edit, Globe, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { DeletePageButton } from '@/components/dashboard/DeletePageButton';
+import { publicPathForPage } from '@/lib/products/productUrl';
+import { isReservedPageSlug } from '@/lib/products/catalogueIntros';
+import { hasUnpublishedChanges } from '@/lib/pages/draftState';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PagesDashboard() {
-  const allPages = await db.select().from(pages).orderBy(desc(pages.updatedAt));
+  await requireDashboardSession('/dashboard/pages');
+  // Reserved rows (e.g. the catalogue intros store) are not editable pages.
+  const allPages = (await db.select().from(pages).orderBy(desc(pages.updatedAt))).filter(
+    (p) => !isReservedPageSlug(p.slug)
+  );
   const staticPages = allPages.filter((p) => !p.isTemplate);
   const templatePages = allPages.filter((p) => p.isTemplate);
 
@@ -98,9 +106,18 @@ export default async function PagesDashboard() {
                             {page.status === 'published' ? 'PUBLISHED' : 'DRAFT'}
                           </span>
 
+                          {!page.isTemplate && hasUnpublishedChanges(page) && (
+                            <span
+                              className="text-[10px] px-2 py-0.5 rounded-full font-semibold border bg-sky-50 text-sky-700 border-sky-200 uppercase"
+                              title="Saved changes are not public yet: open the page and click “Publish changes”."
+                            >
+                              Unpublished changes
+                            </span>
+                          )}
+
                           {page.status === 'published' && !page.isTemplate && (
                             <Link
-                              href={`/fr/${page.slug}`}
+                              href={publicPathForPage('fr', page.slug)}
                               target="_blank"
                               className="p-1.5 text-slate-400 hover:text-[#BC0D2A] transition-colors rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                               title="View live page"

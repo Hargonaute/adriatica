@@ -279,7 +279,7 @@ After deployment:
 ## Security Notes
 
 - The `middleware.ts` protects `/dashboard` and all mutating API routes with a session cookie check. **Replace** the `isAuthenticated` function with a real auth library (NextAuth.js, Lucia, Clerk) before going live.
-- Public form submissions at `/api/entries/create` include a honeypot field check.
+- Public forms (contact, newsletter) are emailed through Web3Forms (`src/lib/forms/web3forms.ts`), with a honeypot check. `/api/entries/create` requires a dashboard session.
 - File uploads are validated for type and size (max 10 MB) before hitting Vercel Blob.
 - The public slug renderer only exposes `published_blocks` — drafts are never leaked.
 

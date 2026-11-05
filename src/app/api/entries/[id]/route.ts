@@ -3,6 +3,7 @@ import { entries } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { ensureUniqueEntrySlug } from '@/lib/db/generateEntrySlug';
+import { getValidSession, requireSession } from '@/lib/auth/require-session';
 
 export async function GET(
   _request: Request,
@@ -12,6 +13,10 @@ export async function GET(
     const { id } = await params;
     const result = await db.select().from(entries).where(eq(entries.id, id)).limit(1);
     if (!result.length) {
+      return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
+    }
+    // Draft entries are only visible to a dashboard session.
+    if (result[0].status !== 'published' && !(await getValidSession())) {
       return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
     }
     return NextResponse.json(result[0]);
@@ -24,6 +29,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -80,6 +88,9 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = await params;
     const result = await db.delete(entries).where(eq(entries.id, id)).returning();

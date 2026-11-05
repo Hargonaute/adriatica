@@ -1,8 +1,11 @@
 import { db } from '@/lib/db';
-import { entries, fields } from '@/lib/db/schema';
+import { collections, entries, fields } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { generateEntrySlug } from '@/lib/db/generateEntrySlug';
+import { requireSession } from '@/lib/auth/require-session';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Simple in-memory rate limiter — 10 submissions per IP per minute.
 // Good enough for a single Node instance; move to Redis/KV if we scale out.
@@ -36,7 +39,13 @@ function isEmpty(v: unknown): boolean {
   return false;
 }
 
+// Requires a dashboard session: anonymous writes could create published
+// entries in any collection (rendered unsanitised on public pages). Public
+// forms (contact / newsletter) need their own endpoint.
 export async function POST(request: Request) {
+  const unauthorized = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const ip = getClientIp(request);
     if (!checkRateLimit(ip)) {
@@ -47,6 +56,19 @@ export async function POST(request: Request) {
 
     if (!body.collectionId || !body.data || typeof body.data !== 'object') {
       return NextResponse.json({ error: 'Collection ID and Data required' }, { status: 400 });
+    }
+
+    if (typeof body.collectionId !== 'string' || !UUID_RE.test(body.collectionId)) {
+      return NextResponse.json({ error: 'Invalid collection' }, { status: 400 });
+    }
+
+    const [collection] = await db
+      .select({ id: collections.id })
+      .from(collections)
+      .where(eq(collections.id, body.collectionId))
+      .limit(1);
+    if (!collection) {
+      return NextResponse.json({ error: 'Invalid collection' }, { status: 404 });
     }
 
     // Honeypot: silently reject bots that fill a hidden "website" field.
