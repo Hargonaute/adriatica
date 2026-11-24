@@ -13,23 +13,24 @@
           "icon": "message",
           "heading": "Discuter avec les ventes",
           "body": "Parlez à notre équipe sympathique.",
-          "contact": "maghreb@k-adriatica.ma",
-          "contactHref": "mailto:maghreb@k-adriatica.ma"
+          "contact": "contact@adriatica.ma",
+          "contactHref": "mailto:contact@adriatica.ma"
         },
         {
           "icon": "map",
           "heading": "Visitez notre siège.",
           "address": [
             "MAGHREB ADRIATICA F S.A.R.L.A.U.",
-            "LIè des Cactus n.18-3ème étage n.6 Sidi",
-            "Bernoussi- Casablanca"
+            "5ème étage, 73 Boulevard Anfa",
+            "Angle 1 rue Clos de Provence",
+            "20380 Casablanca, Maroc"
           ]
         },
         {
           "icon": "phone",
           "heading": "Appelez-nous",
           "body": "Du lundi au vendredi de 8h à 17h.",
-          "contact": "+21 2522674723",
+          "contact": "+212 5 22 67 47 23",
           "contactHref": "tel:+212522674723"
         }
       ]
@@ -48,23 +49,24 @@
           "icon": "message",
           "heading": "Chat with sales",
           "body": "Talk to our friendly team.",
-          "contact": "maghreb@k-adriatica.ma",
-          "contactHref": "mailto:maghreb@k-adriatica.ma"
+          "contact": "contact@adriatica.ma",
+          "contactHref": "mailto:contact@adriatica.ma"
         },
         {
           "icon": "map",
           "heading": "Visit our office.",
           "address": [
             "MAGHREB ADRIATICA F S.A.R.L.A.U.",
-            "LIè des Cactus n.18 — 3rd floor n.6 Sidi",
-            "Bernoussi — Casablanca"
+            "5th floor, 73 Boulevard Anfa",
+            "Corner of 1 rue Clos de Provence",
+            "20380 Casablanca, Morocco"
           ]
         },
         {
           "icon": "phone",
           "heading": "Call us",
           "body": "Monday to Friday, 8am to 5pm.",
-          "contact": "+21 2522674723",
+          "contact": "+212 5 22 67 47 23",
           "contactHref": "tel:+212522674723"
         }
       ]
