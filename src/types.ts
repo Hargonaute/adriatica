@@ -238,6 +238,13 @@ export interface ContactFormBlockData extends BaseBlockSettings {
   heading?: string;
   body?: string;
   imageUrl?: string;
+  /** Info-card overrides. Blank = fall back to src/data/pages/contact.json. */
+  contactEmail?: string;
+  /** One address line per array entry. */
+  contactAddress?: string[];
+  /** Displayed as typed; the tel: link strips spaces/dots/dashes. */
+  contactPhone?: string;
+  contactHours?: string;
 }
 
 export interface CollectionItemFieldsBlockData extends BaseBlockSettings {

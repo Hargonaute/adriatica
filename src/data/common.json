@@ -29,9 +29,9 @@
         { "key": "solution", "label": "Solutions" }
       ],
       "socialLinks": [
-        { "label": "Facebook", "href": "#" },
-        { "label": "Instagram", "href": "#" },
-        { "label": "Linkedin", "href": "#" }
+        { "label": "Facebook", "href": "https://www.facebook.com/MAGHREBADRIATICA" },
+        { "label": "Instagram", "href": "https://www.instagram.com/maghrebadriatica/" },
+        { "label": "Linkedin", "href": "https://www.linkedin.com/company/k-adriatica-maghreb" }
       ],
       "newsletterHeading": "Restez informé",
       "newsletterPlaceholder": "Entrez votre email",
@@ -112,9 +112,9 @@
         { "key": "solution", "label": "Solutions" }
       ],
       "socialLinks": [
-        { "label": "Facebook", "href": "#" },
-        { "label": "Instagram", "href": "#" },
-        { "label": "Linkedin", "href": "#" }
+        { "label": "Facebook", "href": "https://www.facebook.com/MAGHREBADRIATICA" },
+        { "label": "Instagram", "href": "https://www.instagram.com/maghrebadriatica/" },
+        { "label": "Linkedin", "href": "https://www.linkedin.com/company/k-adriatica-maghreb" }
       ],
       "newsletterHeading": "Stay up to date",
       "newsletterPlaceholder": "Enter your email",

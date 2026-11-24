@@ -2,11 +2,23 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { type BlockData } from '@/types';
-import { ContactInfoSection } from '@/components/contact/ContactInfoSection';
+import { ContactInfoSection, type ContactInfoCard } from '@/components/contact/ContactInfoSection';
 import { ContactSection } from '@/components/home/ContactSection';
 import contactData from '@/data/pages/contact.json';
 import homeData from '@/data/pages/home.json';
+
+const defaultCards = contactData.fr.info.cards;
+const defaultEmail = defaultCards[0].contact ?? '';
+const defaultAddress = ('address' in defaultCards[1] ? defaultCards[1].address : []) as string[];
+const defaultPhone = defaultCards[2].contact ?? '';
+const defaultHours = defaultCards[2].body ?? '';
+
+/** Textarea text → lines. Blank lines are kept while typing and dropped at render. */
+function toLines(text: string): string[] {
+  return text.split('\n');
+}
 
 // ── Editor ────────────────────────────────────────────────────────────────
 // Minimal: only heading/body/side-image are configurable; everything else is
@@ -50,6 +62,48 @@ export function ContactFormEditor({
         />
         <p className="text-[10px] text-muted-foreground">Leave blank to use the default image.</p>
       </div>
+
+      <div className="pt-2 border-t space-y-4">
+        <p className="text-xs font-medium">Contact details (info cards)</p>
+        <p className="text-[10px] text-muted-foreground">
+          Leave a field blank to use the site default shown as placeholder.
+        </p>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Email</Label>
+          <Input
+            type="email"
+            value={block.contactEmail ?? ''}
+            onChange={(e) => onChange({ contactEmail: e.target.value })}
+            placeholder={defaultEmail}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Address (one line per row)</Label>
+          <Textarea
+            rows={4}
+            value={(block.contactAddress ?? []).join('\n')}
+            onChange={(e) => onChange({ contactAddress: toLines(e.target.value) })}
+            placeholder={defaultAddress.join('\n')}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Phone</Label>
+          <Input
+            type="tel"
+            value={block.contactPhone ?? ''}
+            onChange={(e) => onChange({ contactPhone: e.target.value })}
+            placeholder={defaultPhone}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Opening hours</Label>
+          <Input
+            value={block.contactHours ?? ''}
+            onChange={(e) => onChange({ contactHours: e.target.value })}
+            placeholder={defaultHours}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -62,6 +116,18 @@ export function ContactFormEditor({
 export function ContactFormPreview({ block }: { block: BlockData & { type: 'contact-form' } }) {
   const info = contactData.fr.info;
   const home = homeData.fr.contact;
+  const email = block.contactEmail?.trim();
+  const phone = block.contactPhone?.trim();
+  const hours = block.contactHours?.trim();
+  const address = ((block.contactAddress ?? []) as string[]).map((l) => l.trim()).filter(Boolean);
+  const overrides: Record<string, Partial<ContactInfoCard>> = {
+    message: email ? { contact: email, contactHref: `mailto:${email}` } : {},
+    map: address.length ? { address } : {},
+    phone: {
+      ...(phone ? { contact: phone, contactHref: `tel:${phone.replace(/[^\d+]/g, '')}` } : {}),
+      ...(hours ? { body: hours } : {}),
+    },
+  };
   return (
     <div className="bg-white w-full">
       <ContactInfoSection
@@ -74,6 +140,7 @@ export function ContactFormPreview({ block }: { block: BlockData & { type: 'cont
           contact: 'contact' in c ? c.contact : undefined,
           contactHref: 'contactHref' in c ? c.contactHref : undefined,
           address: 'address' in c ? c.address : undefined,
+          ...overrides[c.icon],
         }))}
       />
       <ContactSection
