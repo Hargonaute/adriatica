@@ -13,19 +13,18 @@ export const ORGANIZATION = {
   name: 'Maghreb Adriatica',
   logoPath: '/images%20Adriatica/logo.png',
   // From src/data/pages/contact.json (contact cards).
-  email: 'maghreb@k-adriatica.ma',
+  email: 'contact@adriatica.ma',
   telephone: '+212522674723',
   addressLocality: 'Casablanca',
   addressCountry: 'MA',
-  // TODO-CLIENT: exact street address (contact.json reads "LIè des Cactus
-  // n.18-3ème étage n.6 Sidi Bernoussi", which looks garbled) and postal code.
-  streetAddress: '',
-  postalCode: '',
-  // TODO-CLIENT: real profile URLs (the footer links are still "#").
+  // Confirmed by the client (Nov 2026).
+  streetAddress: '5ème étage, 73 Boulevard Anfa, Angle 1 rue Clos de Provence',
+  postalCode: '20380',
+  // Confirmed by the client (Nov 2026). Same URLs as the footer (common.json).
   sameAs: {
-    linkedin: '',
-    facebook: '',
-    instagram: '',
+    linkedin: 'https://www.linkedin.com/company/k-adriatica-maghreb',
+    facebook: 'https://www.facebook.com/MAGHREBADRIATICA',
+    instagram: 'https://www.instagram.com/maghrebadriatica/',
   },
 } as const;
 

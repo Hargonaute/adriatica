@@ -17,16 +17,30 @@ export function FooterLinkColumn({ heading, links }: FooterLinkColumnProps) {
         {heading}
       </h4>
       <ul className="flex flex-col gap-3">
-        {links.map((link) => (
-          <li key={link.label}>
-            <Link
-              href={link.href}
-              className="text-slate-300 hover:text-white transition-colors text-[15px] font-medium"
-            >
-              {link.label}
-            </Link>
-          </li>
-        ))}
+        {links.map((link) => {
+          const className =
+            "text-slate-300 hover:text-white transition-colors text-[15px] font-medium";
+          // Social profiles are other sites: open them in a new tab.
+          const external = /^https?:\/\//.test(link.href);
+          return (
+            <li key={link.label}>
+              {external ? (
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={className}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link href={link.href} className={className}>
+                  {link.label}
+                </Link>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
